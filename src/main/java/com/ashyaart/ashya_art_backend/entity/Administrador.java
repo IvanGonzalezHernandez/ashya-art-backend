@@ -10,14 +10,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 
 @Entity
-@Table(name = "ADMIN")
-public class Admin {
+@Table(name = "ADMINISTRADOR")
+public class Administrador {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
-	private String username;
+	@NotBlank
+	private String usuario;
 	
 	@NotBlank
 	@Size(min = 6)
@@ -27,11 +27,10 @@ public class Admin {
 	@Email
 	private String email;
 
-	public Admin() {
-	}
+	public Administrador() {}
 
-	public Admin(String username, String password, String email) {
-		this.username = username;
+	public Administrador(String usuario, String password, String email) {
+		this.usuario = usuario;
 		this.password = password;
 		this.email = email;
 	}
@@ -45,12 +44,12 @@ public class Admin {
 		this.id = id;
 	}
 
-	public String getUsername() {
-		return username;
+	public String getUsuario() {
+		return usuario;
 	}
 
-	public void setUsername(String username) {
-		this.username = username;
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
 	}
 
 	public String getPassword() {

@@ -1,36 +1,47 @@
 package com.ashyaart.ashya_art_backend.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "CURSO")
-public class Curso {
+@Table(name = "PRODUCTO")
+public class Producto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
-    @Size(max = 100)
+    @Column(nullable = false)
     private String nombre;
 
-    @Size(max = 150)
+    @NotBlank
+    @Column(nullable = false)
     private String subtitulo;
 
-    @NotBlank
     @Lob
+    @NotBlank
+    @Column(nullable = false)
     private String descripcion;
 
     @NotNull
     @DecimalMin(value = "0.0", inclusive = false)
     @Digits(integer = 10, fraction = 2)
+    @Column(nullable = false)
     private BigDecimal precio;
 
-    @Size(max = 255)
+    @NotNull
+    @Column(nullable = false)
+    private Integer stock;
+
+    @NotBlank
+    @Column(nullable = false)
     private String img;
     
     @Column(name = "FECHA_BAJA")
@@ -39,23 +50,24 @@ public class Curso {
     @Column(nullable = false)
     private Boolean estado;
     
-    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<CursoFecha> fechas;
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<ProductoCompra> compras;
 
-    public Curso() {
-    }
+    public Producto() {}
 
-    public Curso(String nombre, String subtitulo, String descripcion, BigDecimal precio, String img, Boolean estado, LocalDate fechaBaja, List<CursoFecha> fechas) {
+    public Producto(String nombre, String subtitulo, String descripcion, BigDecimal precio, Integer stock, String img, Boolean estado, LocalDate fechaBaja, List<ProductoCompra> compras) {
         this.nombre = nombre;
         this.subtitulo = subtitulo;
         this.descripcion = descripcion;
         this.precio = precio;
+        this.stock = stock;
         this.img = img;
         this.estado = estado;
         this.fechaBaja = fechaBaja;
-        this.fechas = fechas;
+        this.compras = compras;
     }
 
+    // Getters y setters
     public Long getId() {
         return id;
     }
@@ -96,6 +108,14 @@ public class Curso {
         this.precio = precio;
     }
 
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
     public String getImg() {
         return img;
     }
@@ -120,11 +140,11 @@ public class Curso {
 		this.fechaBaja = fechaBaja;
 	}
 	
-	public List<CursoFecha> getFechas() {
-		return fechas;
+	public List<ProductoCompra> getCompras() {
+		return compras;
 	}
 	
-	public void setFechas(List<CursoFecha> fechas) {
-		this.fechas = fechas;
+	public void setCompras(List<ProductoCompra> compras) {
+		this.compras = compras;
 	}
 }
