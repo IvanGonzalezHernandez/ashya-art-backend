@@ -13,7 +13,10 @@ import com.ashyaart.ashya_art_backend.filter.CursoFilter;
 import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.service.CursoService;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+	    "http://localhost:4200",
+	    "https://ashya-art.onrender.com"
+})
 @RestController
 @RequestMapping("/api/cursos")
 public class CursoController {
