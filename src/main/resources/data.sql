@@ -38,9 +38,18 @@ VALUES
   (1, 1, 2, NOW());
 
 -- Productos
-INSERT INTO producto (estado, fecha_baja, precio, stock, img, nombre, subtitulo, descripcion)
-VALUES 
-  (1, NULL, 25.00, 10, 'taza1.jpg', 'Taza Artesanal', 'Hecha a mano', 'Taza de cerámica blanca con detalles en azul.');
+INSERT INTO producto (estado, fecha_baja, precio, stock, img, nombre, subtitulo, descripcion) VALUES
+  (1, NULL, 25.00, 10, 'taza1.jpg', 'Taza Artesanal', 'Hecha a mano', 'Taza de cerámica blanca con detalles en azul.'),
+  (1, NULL, 30.00, 15, 'taza2.jpg', 'Taza Rústica', 'Con acabado natural', 'Taza de cerámica con textura rústica y esmalte mate.'),
+  (1, NULL, 22.50, 20, 'plato1.jpg', 'Plato Decorativo', 'Diseño único', 'Plato de cerámica pintado a mano con motivos florales.'),
+  (1, NULL, 18.00, 12, 'plato2.jpg', 'Plato Vintage', 'Estilo clásico', 'Plato de cerámica con bordes decorados en tonos tierra.'),
+  (1, NULL, 40.00, 8, 'jarra1.jpg', 'Jarra Grande', 'Funcional y bonita', 'Jarra de cerámica ideal para agua o jugos, acabado brillante.'),
+  (1, NULL, 35.00, 7, 'jarra2.jpg', 'Jarra Pequeña', 'Compacta y elegante', 'Jarra de cerámica perfecta para leche o crema.'),
+  (1, NULL, 28.00, 14, 'vaso1.jpg', 'Vaso de Cerámica', 'Colores vivos', 'Vaso hecho a mano con acabado esmaltado y colores vibrantes.'),
+  (1, NULL, 26.50, 11, 'vaso2.jpg', 'Vaso Minimalista', 'Diseño limpio', 'Vaso de cerámica con líneas simples y moderno.'),
+  (1, NULL, 45.00, 5, 'jarron1.jpg', 'Jarrón Grande', 'Perfecto para flores', 'Jarrón de cerámica pintado a mano para decoración floral.'),
+  (1, NULL, 50.00, 6, 'jarron2.jpg', 'Jarrón Decorativo', 'Arte y función', 'Jarrón con acabado brillante y detalles artesanales.');
+
 
 -- Compra de productos
 INSERT INTO producto_compra (id_cliente, id_producto, cantidad, fecha_compra)

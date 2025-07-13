@@ -19,4 +19,19 @@ public class CursoAssembler {
 
         return dto;
     }
+    
+	public static Curso toEntity(CursoDto dto) {
+
+		Curso curso = new Curso();
+		curso.setId(dto.getId());
+		curso.setNombre(dto.getNombre());
+		curso.setSubtitulo(dto.getSubtitulo());
+		curso.setDescripcion(dto.getDescripcion());
+		curso.setPrecio(dto.getPrecio());
+		curso.setImg(dto.getImg());
+		curso.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
+		curso.setFechaBaja(dto.getFechaBaja());
+
+		return curso;
+	}
 }

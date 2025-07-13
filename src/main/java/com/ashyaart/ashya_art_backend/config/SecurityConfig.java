@@ -20,6 +20,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/cursos/**").permitAll()
+                .requestMatchers("/api/productos/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();
@@ -29,8 +30,8 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-        	    "http://localhost:4200",
-        	    "https://ashya-art-frontend.onrender.com"
+            "http://localhost:4200",
+            "https://ashya-art-frontend.onrender.com"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
@@ -40,3 +41,4 @@ public class SecurityConfig {
         return source;
     }
 }
+
