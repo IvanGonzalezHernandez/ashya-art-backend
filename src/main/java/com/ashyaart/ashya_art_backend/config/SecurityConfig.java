@@ -21,6 +21,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/cursos/**").permitAll()
                 .requestMatchers("/api/productos/**").permitAll()
+                .requestMatchers("/api/tarjetas-regalo/**").permitAll()
+                .requestMatchers("/api/clientes/**").permitAll()
+                .requestMatchers("/api/newsletters/**").permitAll()
+                .requestMatchers("/api/cursos-compra/**").permitAll()
+                .requestMatchers("/api/cursos-fecha/**").permitAll()
+                .requestMatchers("/api/productos-compra/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();
