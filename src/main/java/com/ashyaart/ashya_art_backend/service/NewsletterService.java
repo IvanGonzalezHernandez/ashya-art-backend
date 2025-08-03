@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -40,6 +41,7 @@ public class NewsletterService {
         logger.info("crearNewsletter - Creando nuevo newsletter: {}", newsletterDto);
         Newsletter newsletter = NewsletterAssembler.toEntity(newsletterDto);
         newsletter.setId(null);
+        newsletter.setFechaRegistro(newsletterDto.getFechaRegistro() != null ? newsletterDto.getFechaRegistro() : LocalDate.now());
         Newsletter newsletterGuardado = newsletterDao.save(newsletter);
         NewsletterDto dtoGuardado = NewsletterAssembler.toDto(newsletterGuardado);
         logger.info("crearNewsletter - Newsletter creado con ID: {}", dtoGuardado.getId());

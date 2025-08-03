@@ -53,4 +53,15 @@ public class NewsletterController {
         logger.info("eliminarNewsletter - Newsletter con ID {} eliminado (borrado lógico)", id);
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/suscribirse")
+    public ResponseEntity<NewsletterDto> suscribirse(@RequestBody NewsletterDto newsletterDto) {
+        logger.info("suscribirse - Solicitud POST para suscripción con email: {}", newsletterDto.getEmail());
+        NewsletterDto nuevoNewsletter = newsletterService.crearNewsletter(newsletterDto);
+        logger.info("suscribirse - Newsletter creado con ID: {}", nuevoNewsletter.getId());
+        return ResponseEntity.ok(nuevoNewsletter);
+    }
+
+    
+    
 }
