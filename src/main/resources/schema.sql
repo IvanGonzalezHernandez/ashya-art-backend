@@ -57,10 +57,22 @@ CREATE TABLE curso (
     precio DECIMAL(12,2) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     subtitulo VARCHAR(150),
-    img VARCHAR(255),
     descripcion LONGTEXT NOT NULL,
+    img1 LONGBLOB,
+    img2 LONGBLOB,
+    img3 LONGBLOB,
+    img4 LONGBLOB,
+    img5 LONGBLOB,
+    nivel TEXT,
+    duracion TEXT,
+    piezas TEXT,
+    materiales TEXT,
+    plazas_maximas TINYINT UNSIGNED,
+    informacion_extra TEXT,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
+
+
 
 -- Tabla curso_fecha
 CREATE TABLE curso_fecha (

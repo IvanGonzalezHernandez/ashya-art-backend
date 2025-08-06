@@ -54,7 +54,6 @@ public class CursoService {
         curso.setSubtitulo(cursoDto.getSubtitulo());
         curso.setDescripcion(cursoDto.getDescripcion());
         curso.setPrecio(cursoDto.getPrecio());
-        curso.setImg(cursoDto.getImg());
         curso.setEstado(cursoDto.getEstado());
         curso.setFechaBaja(cursoDto.getFechaBaja());
 

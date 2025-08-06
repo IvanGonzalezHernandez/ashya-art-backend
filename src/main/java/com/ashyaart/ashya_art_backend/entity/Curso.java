@@ -24,14 +24,43 @@ public class Curso {
     @NotBlank
     @Lob
     private String descripcion;
+    
+    @Lob
+    private String nivel;
+
+    @Lob
+    private String duracion;
+
+    @Lob
+    private String piezas;
+
+    @Lob
+    private String materiales;
 
     @NotNull
     @DecimalMin(value = "0.0", inclusive = false)
     @Digits(integer = 10, fraction = 2)
     private BigDecimal precio;
 
-    @Size(max = 255)
-    private String img;
+    @Lob
+    @Column(name = "img1", columnDefinition = "LONGBLOB")
+    private byte[] img1;
+
+    @Lob
+    @Column(name = "img2", columnDefinition = "LONGBLOB")
+    private byte[] img2;
+
+    @Lob
+    @Column(name = "img3", columnDefinition = "LONGBLOB")
+    private byte[] img3;
+
+    @Lob
+    @Column(name = "img4", columnDefinition = "LONGBLOB")
+    private byte[] img4;
+
+    @Lob
+    @Column(name = "img5", columnDefinition = "LONGBLOB")
+    private byte[] img5;
     
     @Column(name = "FECHA_BAJA")
     private LocalDate fechaBaja;
@@ -45,16 +74,24 @@ public class Curso {
     public Curso() {
     }
 
-    public Curso(String nombre, String subtitulo, String descripcion, BigDecimal precio, String img, Boolean estado, LocalDate fechaBaja, List<CursoFecha> fechas) {
-        this.nombre = nombre;
-        this.subtitulo = subtitulo;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.img = img;
-        this.estado = estado;
-        this.fechaBaja = fechaBaja;
-        this.fechas = fechas;
-    }
+    public Curso(String nombre, String subtitulo, String descripcion, BigDecimal precio, Boolean estado, LocalDate fechaBaja,
+            List<CursoFecha> fechas, String nivel, String duracion, String piezas, String materiales,
+            Integer plazasMaximas, String informacionExtra) {
+	   this.nombre = nombre;
+	   this.subtitulo = subtitulo;
+	   this.descripcion = descripcion;
+	   this.precio = precio;
+	   this.estado = estado;
+	   this.fechaBaja = fechaBaja;
+	   this.fechas = fechas;
+	   this.nivel = nivel;
+	   this.duracion = duracion;
+	   this.piezas = piezas;
+	   this.materiales = materiales;
+	   this.plazasMaximas = plazasMaximas;
+	   this.informacionExtra = informacionExtra;
+	}
+
 
     public Long getId() {
         return id;
@@ -87,6 +124,38 @@ public class Curso {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+    
+    public String getNivel() {
+        return nivel;
+    }
+
+    public void setNivel(String nivel) {
+        this.nivel = nivel;
+    }
+
+    public String getDuracion() {
+        return duracion;
+    }
+
+    public void setDuracion(String duracion) {
+        this.duracion = duracion;
+    }
+
+    public String getPiezas() {
+        return piezas;
+    }
+
+    public void setPiezas(String piezas) {
+        this.piezas = piezas;
+    }
+
+    public String getMateriales() {
+        return materiales;
+    }
+
+    public void setMateriales(String materiales) {
+        this.materiales = materiales;
+    }
 
     public BigDecimal getPrecio() {
         return precio;
@@ -95,14 +164,53 @@ public class Curso {
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
+    
+    @Column(name = "plazas_maximas")
+    private Integer plazasMaximas;
 
-    public String getImg() {
-        return img;
+    @Lob
+    @Column(name = "informacion_extra")
+    private String informacionExtra;
+    
+    public byte[] getImg1() {
+    	return img1;
     }
-
-    public void setImg(String img) {
-        this.img = img;
-    }
+    
+	public void setImg1(byte[] img1) {
+		this.img1 = img1;
+	}
+	
+	public byte[] getImg2() {
+		return img2;
+	}
+	
+	public void setImg2(byte[] img2) {
+		this.img2 = img2;
+	}
+	
+	public byte[] getImg3() {
+		return img3;
+	}
+	
+	public void setImg3(byte[] img3) {
+		this.img3 = img3;
+	}
+	
+	public byte[] getImg4() {
+		return img4;
+	}
+	
+	public void setImg4(byte[] img4) {
+		this.img4 = img4;
+	}
+	
+	public byte[] getImg5() {
+		return img5;
+	}
+	
+	public void setImg5(byte[] img5) {
+		this.img5 = img5;
+	}
 
 	public Boolean getEstado() {
 		return estado;
@@ -127,4 +235,20 @@ public class Curso {
 	public void setFechas(List<CursoFecha> fechas) {
 		this.fechas = fechas;
 	}
+	
+    public Integer getPlazasMaximas() {
+        return plazasMaximas;
+    }
+
+    public void setPlazasMaximas(Integer plazasMaximas) {
+        this.plazasMaximas = plazasMaximas;
+    }
+
+    public String getInformacionExtra() {
+        return informacionExtra;
+    }
+
+    public void setInformacionExtra(String informacionExtra) {
+        this.informacionExtra = informacionExtra;
+    }
 }
