@@ -37,6 +37,14 @@ public class CursoFechaService {
         logger.info("findByFilter - Se encontraron {} fechas con el filtro", resultado.size());
         return resultado;
     }
+    
+    public List<CursoFechaDto> findByIdCurso(Long id) {
+    	logger.info("findByIdCurso - Iniciando búsqueda de fechas para curso con ID: {}", id);
+        List<CursoFecha> fechas = cursoFechaDao.findByIdCurso(id);
+        List<CursoFechaDto> resultado = fechas.stream().map(CursoFechaAssembler::toDto).toList();
+        logger.info("findByIdCurso - Se encontraron {} fechas para el curso con ID: {}", resultado.size(), id);
+        return resultado;
+    }
 
     @Transactional
     public CursoFechaDto crearFecha(CursoFechaDto cursoFechaDto) {

@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -32,6 +33,23 @@ public class CursoService {
         logger.info("findByFilter - Se encontraron {} cursos con el filtro", resultado.size());
         return resultado;
     }
+    
+
+    public CursoDto obtenerCursoPorId(Long id) {
+        logger.info("obtenerCursoPorId - Buscando curso con ID: {}", id);
+        Optional<Curso> cursoOpt = cursoDao.findById(id);
+
+        if (cursoOpt.isPresent()) {
+            CursoDto dto = CursoAssembler.toDto(cursoOpt.get());
+            logger.info("obtenerCursoPorId - Curso encontrado con ID: {}", id);
+            return dto;
+        } else {
+            logger.warn("obtenerCursoPorId - Curso con ID {} no encontrado", id);
+            return null;
+        }
+    }
+
+
 
     @Transactional
     public CursoDto crearCurso(CursoDto cursoDto) {

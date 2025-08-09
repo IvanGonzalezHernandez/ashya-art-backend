@@ -28,4 +28,8 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     @Transactional
     @Query("DELETE FROM CursoFecha cf WHERE cf.id = :id")
     int borradoLogico(@Param("id") Long id);
+    
+    // Método para buscar fechas por id del curso
+    @Query("SELECT cf FROM CursoFecha cf WHERE cf.curso.id = :idCurso")
+    List<CursoFecha> findByIdCurso(@Param("idCurso") Long idCurso);
 }

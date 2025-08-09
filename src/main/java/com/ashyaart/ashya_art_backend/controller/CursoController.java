@@ -35,6 +35,20 @@ public class CursoController {
         return ResponseEntity.ok(cursosDto);
     }
     
+    @GetMapping("/{id}")
+    public ResponseEntity<CursoDto> getCursoById(@PathVariable Long id) {
+        logger.info("getCursoById - Solicitud GET para obtener curso con ID: {}", id);
+        CursoDto curso = cursoService.obtenerCursoPorId(id);
+
+        if (curso != null) {
+            logger.info("getCursoById - Curso encontrado con ID: {}", id);
+            return ResponseEntity.ok(curso);
+        } else {
+            logger.warn("getCursoById - Curso no encontrado con ID: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CursoDto> crearCurso(
         @RequestPart("curso") CursoDto cursoDto,

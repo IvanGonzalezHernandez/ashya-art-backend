@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.ashyaart.ashya_art_backend.filter.CursoFechaFilter;
+import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.model.CursoFechaDto;
 import com.ashyaart.ashya_art_backend.service.CursoFechaService;
 
@@ -27,6 +28,14 @@ public class CursoFechaController {
         logger.info("findByFilter - Solicitud GET para filtrar fechas con filtro: {}", filter);
         List<CursoFechaDto> fechasDto = cursoFechaService.findByFilter(filter);
         logger.info("findByFilter - Se encontraron {} fechas con el filtro proporcionado", fechasDto.size());
+        return ResponseEntity.ok(fechasDto);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<List<CursoFechaDto>> findByIdCurso(@PathVariable Long id) {
+        logger.info("findByIdCurso - Solicitud de fechas para curso con ID: {}", id);
+        List<CursoFechaDto> fechasDto = cursoFechaService.findByIdCurso(id);
+        logger.info("findByIdCurso - Se encontraron {} fechas para el curso con ID: {}", fechasDto.size(), id);
         return ResponseEntity.ok(fechasDto);
     }
 
