@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ashyaart.ashya_art_backend.assembler.CursoAssembler;
 import com.ashyaart.ashya_art_backend.entity.Curso;
 import com.ashyaart.ashya_art_backend.filter.CursoFilter;
+import com.ashyaart.ashya_art_backend.model.ClienteSolicitudCursoDto;
 import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.repository.CursoDao;
 
@@ -25,6 +26,9 @@ public class CursoService {
 
     @Autowired
     private CursoDao cursoDao;
+    
+    @Autowired
+    private EmailService emailService;
 
     public List<CursoDto> findByFilter(CursoFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de cursos con filtro: {}", filter);
@@ -95,4 +99,31 @@ public class CursoService {
         }
         logger.info("eliminarCurso - Curso con ID {} eliminado correctamente (borrado lógico)", id);
     }
+    
+    public void solicitarCurso(ClienteSolicitudCursoDto solicitud) {
+        logger.info("Procesando solicitud de curso para el cliente: {} {}", solicitud.getNombre(), solicitud.getApellido());
+        
+        // Email de confirmación al cliente
+        String destinatario = solicitud.getEmail();
+        String asunto = "Course request confirmation";
+        String cuerpo = "Hello " + solicitud.getNombre() + ",\n\n" +
+                        "We have received your request for the course: " + solicitud.getTipoClase() + ".\n" +
+                        "We will contact you soon to coordinate the details.\n\n" +
+                        "Best regards,\nAshya Art";
+
+        emailService.enviarEmailConfirmacion(destinatario, asunto, cuerpo);
+
+        // Email de notificación al administrador
+        emailService.enviarSolicitudCursoAdmin(
+            solicitud.getNombre(),
+            solicitud.getApellido(),
+            solicitud.getEmail(),
+            solicitud.getTelefono(),
+            solicitud.getTipoClase(),
+            solicitud.getPersonasInteresadas(),
+            solicitud.getDisponibilidad(),
+            solicitud.getPreguntasAdicionales()
+        );
+    }
+
 }

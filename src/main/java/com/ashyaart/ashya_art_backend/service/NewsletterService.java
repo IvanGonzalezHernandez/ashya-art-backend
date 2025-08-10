@@ -49,8 +49,8 @@ public class NewsletterService {
         
         // Enviar email de confirmación
         String destinatario = newsletterDto.getEmail();
-        String asunto = "Confirmación de suscripción a la newsletter";
-        String cuerpo = "Gracias por suscribirte a nuestra newsletter. ¡Estarás recibiendo novedades pronto!";
+        String asunto = "Newsletter Subscription Confirmation";
+        String cuerpo = "Thank you for subscribing to our newsletter. You will be receiving updates soon!";
 
         emailService.enviarEmailConfirmacion(destinatario, asunto, cuerpo);
         

@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import com.ashyaart.ashya_art_backend.filter.CursoFilter;
+import com.ashyaart.ashya_art_backend.model.ClienteSolicitudCursoDto;
 import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.service.CursoService;
 
@@ -101,4 +102,12 @@ public class CursoController {
         logger.info("eliminarCurso - Curso con ID {} eliminado (borrado lógico)", id);
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/solicitud-curso")
+    public ResponseEntity<Void> solicitarCurso(@RequestBody ClienteSolicitudCursoDto solicitud) {
+        logger.info("solicitarCurso - Solicitud de curso recibida: {}", solicitud);
+        cursoService.solicitarCurso(solicitud);
+        return ResponseEntity.ok().build();
+    }
+
 }
