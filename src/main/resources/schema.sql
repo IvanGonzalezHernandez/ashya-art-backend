@@ -105,10 +105,17 @@ CREATE TABLE producto (
     fecha_baja DATE,
     precio DECIMAL(12,2) NOT NULL,
     stock INT NOT NULL,
-    img VARCHAR(255) NOT NULL,
     nombre VARCHAR(255) NOT NULL,
     subtitulo VARCHAR(255) NOT NULL,
     descripcion TINYTEXT NOT NULL,
+    categoria VARCHAR(100) NOT NULL,
+    medidas VARCHAR(100) NOT NULL,
+    material VARCHAR(100) NOT NULL,
+    img1 LONGBLOB,
+    img2 LONGBLOB,
+    img3 LONGBLOB,
+    img4 LONGBLOB,
+    img5 LONGBLOB,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
@@ -122,6 +129,38 @@ CREATE TABLE producto_compra (
     PRIMARY KEY (id),
     CONSTRAINT FK_producto_compra_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id),
     CONSTRAINT FK_producto_compra_producto FOREIGN KEY (id_producto) REFERENCES producto(id)
+) ENGINE=InnoDB;
+
+-- Tabla secretos
+CREATE TABLE secreto (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    estado BIT NOT NULL,
+    fecha_baja DATE,
+    precio DECIMAL(12,2) NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    subtitulo VARCHAR(255) NOT NULL,
+    descripcion TINYTEXT NOT NULL,
+    categoria VARCHAR(100) NOT NULL,
+    pdf LONGBLOB,
+    img1 LONGBLOB,
+    img2 LONGBLOB,
+    img3 LONGBLOB,
+    img4 LONGBLOB,
+    img5 LONGBLOB,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+
+
+-- Tabla secretos_compra
+CREATE TABLE secreto_compra (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    id_cliente BIGINT NOT NULL,
+    id_secreto BIGINT NOT NULL,
+    fecha_compra DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT FK_secretos_compra_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id),
+    CONSTRAINT FK_secretos_compra_secreto FOREIGN KEY (id_secreto) REFERENCES secretos(id)
 ) ENGINE=InnoDB;
 
 -- Tabla tarjeta_regalo

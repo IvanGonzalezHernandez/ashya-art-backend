@@ -57,7 +57,6 @@ public class ProductoService {
         producto.setDescripcion(productoDto.getDescripcion());
         producto.setStock(productoDto.getStock());
         producto.setPrecio(productoDto.getPrecio());
-        producto.setImg(productoDto.getImg());
         producto.setEstado(productoDto.getEstado());
         producto.setFechaBaja(productoDto.getFechaBaja());
 

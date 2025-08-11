@@ -13,9 +13,19 @@ public class ProductoAssembler {
         dto.setDescripcion(producto.getDescripcion());
         dto.setPrecio(producto.getPrecio());
         dto.setStock(producto.getStock());
-        dto.setImg(producto.getImg());
         dto.setEstado(producto.getEstado());
         dto.setFechaBaja(producto.getFechaBaja());
+
+        dto.setCategoria(producto.getCategoria());
+        dto.setMedidas(producto.getMedidas());
+        dto.setMaterial(producto.getMaterial());
+
+        dto.setImg1(producto.getImg1());
+        dto.setImg2(producto.getImg2());
+        dto.setImg3(producto.getImg3());
+        dto.setImg4(producto.getImg4());
+        dto.setImg5(producto.getImg5());
+
         return dto;
     }
 
@@ -27,9 +37,19 @@ public class ProductoAssembler {
         producto.setDescripcion(dto.getDescripcion());
         producto.setPrecio(dto.getPrecio());
         producto.setStock(dto.getStock());
-        producto.setImg(dto.getImg());
         producto.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
         producto.setFechaBaja(dto.getFechaBaja());
+
+        producto.setCategoria(dto.getCategoria());
+        producto.setMedidas(dto.getMedidas());
+        producto.setMaterial(dto.getMaterial());
+
+        producto.setImg1(dto.getImg1());
+        producto.setImg2(dto.getImg2());
+        producto.setImg3(dto.getImg3());
+        producto.setImg4(dto.getImg4());
+        producto.setImg5(dto.getImg5());
+
         return producto;
     }
 }
