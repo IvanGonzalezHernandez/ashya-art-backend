@@ -3,6 +3,7 @@ package com.ashyaart.ashya_art_backend.controller;
 import java.util.List;
 
 import com.ashyaart.ashya_art_backend.filter.ProductoFilter;
+import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.model.ProductoDto;
 import com.ashyaart.ashya_art_backend.service.ProductoService;
 
@@ -28,6 +29,21 @@ public class ProductoController {
         logger.info("findByFilter - Se encontraron {} productos", productosDto.size());
         return ResponseEntity.ok(productosDto);
     }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductoDto> getProductoById(@PathVariable Long id) {
+        logger.info("getProductoById - Solicitud GET para obtener producto con ID: {}", id);
+        ProductoDto producto = productoService.obtenerProductoPorId(id);
+
+        if (producto != null) {
+            logger.info("getProductoById - Producto encontrado con ID: {}", id);
+            return ResponseEntity.ok(producto);
+        } else {
+            logger.warn("getProductoById - Producto no encontrado con ID: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @PostMapping
     public ResponseEntity<ProductoDto> crearProducto(@RequestBody ProductoDto productoDto) {

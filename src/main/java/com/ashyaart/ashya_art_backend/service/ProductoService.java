@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -34,6 +35,21 @@ public class ProductoService {
         logger.info("findByFilter - Se encontraron {} productos", resultado.size());
         return resultado;
     }
+    
+    public ProductoDto obtenerProductoPorId(Long id) {
+        logger.info("obtenerProductoPorId - Buscando producto con ID: {}", id);
+        Optional<Producto> productoOpt = productoDao.findById(id);
+
+        if (productoOpt.isPresent()) {
+            ProductoDto dto = ProductoAssembler.toDto(productoOpt.get());
+            logger.info("obtenerProductoPorId - Producto encontrado con ID: {}", id);
+            return dto;
+        } else {
+            logger.warn("obtenerProductoPorId - Producto con ID {} no encontrado", id);
+            return null;
+        }
+    }
+
 
     @Transactional
     public ProductoDto crearProducto(ProductoDto productoDto) {
