@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/productos-compra/**").permitAll()
                 .requestMatchers("/api/secretos/**").permitAll()
                 .requestMatchers("/api/secretos-compra/**").permitAll()
+                .requestMatchers("/api/carrito/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();

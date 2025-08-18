@@ -28,6 +28,21 @@ public class TarjetaRegaloController {
         logger.info("findByFilter - Se encontraron {} tarjetas regalo", tarjetasDto.size());
         return ResponseEntity.ok(tarjetasDto);
     }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<TarjetaRegaloDto> getTarjetaRegaloById(@PathVariable Long id) {
+        logger.info("getTarjetaRegaloById - Solicitud GET para obtener tarjeta regalo con ID: {}", id);
+        TarjetaRegaloDto tarjeta = tarjetaRegaloService.obtenerTarjetaPorId(id);
+
+        if (tarjeta != null) {
+            logger.info("getTarjetaRegaloById - Tarjeta encontrada con ID: {}", id);
+            return ResponseEntity.ok(tarjeta);
+        } else {
+            logger.warn("getTarjetaRegaloById - Tarjeta no encontrada con ID: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @PostMapping
     public ResponseEntity<TarjetaRegaloDto> crearTarjetaRegalo(@RequestBody TarjetaRegaloDto tarjetaDto) {

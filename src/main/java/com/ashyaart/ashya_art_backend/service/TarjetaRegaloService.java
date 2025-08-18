@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TarjetaRegaloService {
@@ -34,6 +35,21 @@ public class TarjetaRegaloService {
         logger.info("findByFilter - Se encontraron {} tarjetas regalo", resultado.size());
         return resultado;
     }
+    
+    public TarjetaRegaloDto obtenerTarjetaPorId(Long id) {
+        logger.info("obtenerTarjetaPorId - Buscando tarjeta regalo con ID: {}", id);
+        Optional<TarjetaRegalo> tarjetaOpt = tarjetaRegaloDao.findById(id);
+
+        if (tarjetaOpt.isPresent()) {
+            TarjetaRegaloDto dto = TarjetaRegaloAssembler.toDto(tarjetaOpt.get());
+            logger.info("obtenerTarjetaPorId - Tarjeta encontrada con ID: {}", id);
+            return dto;
+        } else {
+            logger.warn("obtenerTarjetaPorId - Tarjeta con ID {} no encontrada", id);
+            return null;
+        }
+    }
+
 
     @Transactional
     public TarjetaRegaloDto crearTarjetaRegalo(TarjetaRegaloDto tarjetaDto) {
