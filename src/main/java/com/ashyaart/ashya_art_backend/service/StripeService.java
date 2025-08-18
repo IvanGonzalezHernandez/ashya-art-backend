@@ -15,7 +15,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 public class StripeService {
 
     public StripeService() {
-        Stripe.apiKey = "sk_test_51R1AfzQsK7W2R2yG8WVaLsvv1BRvqO4LKG8RAtZXhUYhgijhzjcETNftYFhFafv67fYfMTKJNkGEyMHRd2qxEajp00j2cVA5bx";
+        Stripe.apiKey = System.getenv("STRIPE_TEST_KEY");
     }
 
     public String crearSesion(CarritoDto carritoDto, String successUrl, String cancelUrl) throws Exception {
