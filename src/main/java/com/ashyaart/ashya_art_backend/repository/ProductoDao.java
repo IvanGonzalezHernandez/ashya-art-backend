@@ -25,5 +25,9 @@ public interface ProductoDao extends JpaRepository<Producto, Long> {
     @Transactional
     @Query("UPDATE Producto p SET p.estado = false WHERE p.id = :id")
     int borradoLogico(@Param("id") Long id);
+    
+    @Query("SELECT p.stock FROM Producto p WHERE p.id = :idProducto")
+    Integer obtenerStockPorId(@Param("idProducto") Long idProducto);
+
 
 }

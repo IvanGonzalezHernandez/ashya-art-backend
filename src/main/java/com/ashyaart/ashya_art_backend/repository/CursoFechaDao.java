@@ -32,4 +32,7 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     // Método para buscar fechas por id del curso
     @Query("SELECT cf FROM CursoFecha cf WHERE cf.curso.id = :idCurso")
     List<CursoFecha> findByIdCurso(@Param("idCurso") Long idCurso);
+    
+    @Query("SELECT cf.plazasDisponibles FROM CursoFecha cf WHERE cf.id = :idCursoFecha")
+    Integer obtenerPlazasPorIdCursoFecha(@Param("idCursoFecha") Long idCursoFecha);
 }

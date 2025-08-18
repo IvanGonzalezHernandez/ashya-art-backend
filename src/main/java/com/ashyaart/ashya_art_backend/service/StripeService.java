@@ -3,6 +3,7 @@ package com.ashyaart.ashya_art_backend.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
@@ -13,14 +14,29 @@ import com.stripe.param.checkout.SessionCreateParams;
 
 @Service
 public class StripeService {
+	
+	@Autowired
+	private StockService stockService;
 
     public StripeService() {
         Stripe.apiKey = System.getenv("STRIPE_TEST_KEY");
     }
+    
+    
 
     public String crearSesion(CarritoDto carritoDto, String successUrl, String cancelUrl) throws Exception {
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
-
+        
+        // 1. Validar stock/plazas
+        for (ItemCarritoDto item : carritoDto.getItems()) {
+            if (!stockService.hayStockSuficiente(item)) {
+                throw new IllegalArgumentException(
+                    "No hay suficiente stock o plazas para el item: " + item.getNombre()
+                );
+            }
+        }
+        
+        // 2. Crear los lineItems para Stripe
         for (ItemCarritoDto item : carritoDto.getItems()) {
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setQuantity((long) item.getCantidad())
