@@ -27,10 +27,11 @@ public class StripeService {
                     .setPriceData(
                         SessionCreateParams.LineItem.PriceData.builder()
                             .setCurrency("eur")
-                            .setUnitAmount((long) (item.getPrecio() * 100)) // Stripe usa centimos
+                            .setUnitAmount((long) (item.getPrecio() * 100))
                             .setProductData(
                                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                     .setName(item.getNombre())
+                                    .setDescription(item.getSubtitulo())
                                     .build()
                             )
                             .build()
