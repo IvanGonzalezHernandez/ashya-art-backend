@@ -3,6 +3,8 @@ package com.ashyaart.ashya_art_backend.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import com.stripe.param.checkout.SessionCreateParams;
 @Service
 public class StripeService {
 
+    private static final Logger logger = LoggerFactory.getLogger(StripeService.class);
+
     @Autowired
     private StockService stockService;
 
@@ -25,6 +29,7 @@ public class StripeService {
 
     public StripeService() {
         Stripe.apiKey = System.getenv("STRIPE_TEST_KEY");
+        logger.info("Stripe API Key configurada");
     }
 
     public String crearSesion(CarritoClienteDto carritoClienteDto, String successUrl, String cancelUrl) throws Exception {
@@ -32,11 +37,16 @@ public class StripeService {
         CarritoDto carritoDto = carritoClienteDto.getCarrito();
         ClienteDto clienteDto = carritoClienteDto.getCliente();
 
+        logger.info("Creando sesión Stripe para cliente: {}", clienteDto.getEmail());
+        logger.info("Carrito contiene {} items", carritoDto.getItems().size());
+
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
 
         // 1. Validar stock/plazas
         for (ItemCarritoDto item : carritoDto.getItems()) {
+            logger.info("Validando stock para item: {} - Cantidad: {}", item.getNombre(), item.getCantidad());
             if (!stockService.hayStockSuficiente(item)) {
+                logger.warn("No hay suficiente stock o plazas para el item: {}", item.getNombre());
                 throw new IllegalArgumentException(
                     "No hay suficiente stock o plazas para el item: " + item.getNombre()
                 );
@@ -45,6 +55,7 @@ public class StripeService {
 
         // 2. Crear los lineItems para Stripe
         for (ItemCarritoDto item : carritoDto.getItems()) {
+            logger.info("Añadiendo lineItem a Stripe: {} - Precio: {} € - Cantidad: {}", item.getNombre(), item.getPrecio(), item.getCantidad());
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setQuantity((long) item.getCantidad())
                     .setPriceData(
@@ -68,6 +79,9 @@ public class StripeService {
         String carritoJson = objectMapper.writeValueAsString(carritoDto);
         String clienteJson = objectMapper.writeValueAsString(clienteDto);
 
+        logger.info("Metadata carrito: {}", carritoJson);
+        logger.info("Metadata cliente: {}", clienteJson);
+
         SessionCreateParams params = SessionCreateParams.builder()
                 .addAllLineItem(lineItems)
                 .putMetadata("cliente", clienteJson)
@@ -77,7 +91,10 @@ public class StripeService {
                 .setCancelUrl(cancelUrl)
                 .build();
 
+        logger.info("Creando sesión en Stripe...");
         Session session = Session.create(params);
+        logger.info("Sesión Stripe creada. URL: {}", session.getUrl());
+
         return session.getUrl();
     }
 }
