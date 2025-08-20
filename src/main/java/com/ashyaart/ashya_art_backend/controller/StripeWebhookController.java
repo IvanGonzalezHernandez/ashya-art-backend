@@ -18,8 +18,10 @@ import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
+import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 
@@ -38,55 +40,49 @@ public class StripeWebhookController {
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String sigHeader) {
 
-        // 1️⃣ Log del payload completo
-        logger.info("✅ Webhook recibido: {}", payload);
+        logger.info("📩 Webhook recibido: {}", payload);
 
         String endpointSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
         Event event;
 
         try {
-            // 2️⃣ Validación de la firma
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
             logger.info("🔑 Firma verificada correctamente");
         } catch (SignatureVerificationException e) {
-            logger.warn("⚠️ Firma del webhook no válida: {}", e.getMessage());
+            logger.warn("⚠️ Firma no válida: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Firma no válida");
         }
 
-        // 3️⃣ Procesar evento de pago completado
         if ("checkout.session.completed".equals(event.getType())) {
-            logger.info("💰 Evento checkout.session.completed recibido");
+            logger.info("💰 Pago completado");
 
-            Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-            if (session != null) {
-                try {
-                    // 4️⃣ Obtener metadata
-                    String clienteJson = session.getMetadata().get("cliente");
-                    String carritoJson = session.getMetadata().get("carrito");
-                    logger.info("📦 Metadata recibida: cliente={}, carrito={}", clienteJson, carritoJson);
+            Session session;
+            try {
+                session = (Session) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElseThrow(() -> new RuntimeException("No se pudo deserializar la sesión"));
 
-                    // 5️⃣ Deserializar a objetos Java
-                    ClienteDto clienteDto = objectMapper.readValue(clienteJson, ClienteDto.class);
-                    CarritoDto carritoDto = objectMapper.readValue(carritoJson, CarritoDto.class);
-                    logger.info("🧑 Cliente deserializado: {}", clienteDto.getNombre());
+                String sessionId = session.getId();  // ✅ Aquí obtienes el ID sin deprecated
 
-                    // 6️⃣ Guardar cliente
-                    Cliente cliente = ClienteAssembler.toEntity(clienteDto);
-                    clienteDao.save(cliente);
-                    logger.info("✅ Cliente guardado en DB: {}", cliente.getNombre());
+                // Obtener metadata
+                String clienteJson = session.getMetadata().get("cliente");
+                logger.info("📦 Metadata cliente: {}", clienteJson);
 
-                } catch (IOException e) {
-                    logger.error("❌ Error al deserializar metadata", e);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Error al deserializar metadata");
-                }
-            } else {
-                logger.warn("⚠️ Session deserializada es null");
+                // Deserializar
+                ClienteDto clienteDto = objectMapper.readValue(clienteJson, ClienteDto.class);
+                Cliente cliente = ClienteAssembler.toEntity(clienteDto);
+
+                // Guardar en DB
+                clienteDao.save(cliente);
+                logger.info("✅ Cliente guardado en DB: {}", cliente.getNombre());
+
+            } catch (Exception e) {
+                logger.error("❌ Error procesando sesión Stripe", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar sesión Stripe");
             }
-        } else {
-            logger.info("ℹ️ Evento ignorado: {}", event.getType());
         }
 
         return ResponseEntity.ok("Webhook recibido");
     }
+
 }
