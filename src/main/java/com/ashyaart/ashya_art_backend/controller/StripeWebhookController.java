@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.controller;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +90,7 @@ public class StripeWebhookController {
 	                 // Crear nuevo cliente
 	                 Cliente cliente = ClienteAssembler.toEntity(clienteDto);
 	                 cliente.setId(null); // asegurar que Hibernate lo inserte
+	                 cliente.setFechaAlta(LocalDate.now());
 	                 clienteDao.save(cliente);
 	                 logger.info("✅ Cliente guardado en DB: {}", cliente.getNombre());
 	            } else {
