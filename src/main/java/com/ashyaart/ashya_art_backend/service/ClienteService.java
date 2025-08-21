@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -84,5 +85,35 @@ public class ClienteService {
             throw new RuntimeException("No se pudo eliminar el cliente con id " + id);
         }
         logger.info("eliminarCliente - Cliente con ID {} eliminado correctamente (borrado lógico)", id);
+    }
+    
+    @Transactional
+    public Cliente crearActualizarCliente(ClienteDto clienteDto) {
+        Cliente clienteExistente = clienteDao.findByEmail(clienteDto.getEmail());
+
+        if (clienteExistente == null) {
+            // Cliente nuevo
+            Cliente nuevoCliente = ClienteAssembler.toEntity(clienteDto);
+            nuevoCliente.setId(null);
+            nuevoCliente.setFechaAlta(LocalDate.now());
+            clienteDao.save(nuevoCliente);
+            logger.info("Cliente creado en DB: {}", nuevoCliente.getNombre());
+            return nuevoCliente;
+        } else {
+            // Cliente existente: actualizar datos
+            clienteExistente.setNombre(clienteDto.getNombre());
+            clienteExistente.setApellido(clienteDto.getApellido());
+            clienteExistente.setCalle(clienteDto.getCalle());
+            clienteExistente.setNumero(clienteDto.getNumero());
+            clienteExistente.setPiso(clienteDto.getPiso());
+            clienteExistente.setCiudad(clienteDto.getCiudad());
+            clienteExistente.setCodigoPostal(clienteDto.getCodigoPostal());
+            clienteExistente.setProvincia(clienteDto.getProvincia());
+            clienteExistente.setTelefono(clienteDto.getTelefono());
+            // No tocar fechaAlta ni fechaBaja
+            clienteDao.save(clienteExistente);
+            logger.info("Cliente existente actualizado: {}", clienteExistente.getEmail());
+            return clienteExistente;
+        }
     }
 }

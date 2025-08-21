@@ -32,16 +32,16 @@ public class CarritoController {
 
     @PostMapping
     public ResponseEntity<?> crearSesionStripe(@RequestBody CarritoClienteDto carritoClienteDto) {
-        logger.info("📥 Request recibido para crear sesión Stripe");
-        logger.info("🧑 Cliente: {}", carritoClienteDto.getCliente());
-        logger.info("📦 Carrito: {}", carritoClienteDto.getCarrito());
+        logger.info("Request recibido para crear sesión Stripe");
+        logger.info("Cliente: {}", carritoClienteDto.getCliente());
+        logger.info("Carrito: {}", carritoClienteDto.getCarrito());
 
         try {
             String url = stripeService.crearSesion(carritoClienteDto, successUrl, cancelUrl);
-            logger.info("✅ Sesión Stripe creada correctamente. URL: {}", url);
+            logger.info("Sesión Stripe creada correctamente. URL: {}", url);
             return ResponseEntity.ok().body(new UrlResponse(url));
         } catch (Exception e) {
-            logger.error("❌ Error creando sesión Stripe", e);
+            logger.error("Error creando sesión Stripe", e);
             return ResponseEntity.status(500).body("Error creando sesión Stripe: " + e.getMessage());
         }
     }
