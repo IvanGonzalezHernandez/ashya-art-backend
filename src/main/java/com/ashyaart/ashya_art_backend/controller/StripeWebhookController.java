@@ -81,11 +81,19 @@ public class StripeWebhookController {
                 }
 
                 ClienteDto clienteDto = objectMapper.readValue(clienteJson, ClienteDto.class);
-                Cliente cliente = ClienteAssembler.toEntity(clienteDto);
 
-                // Guardar cliente
-                clienteDao.save(cliente);
-                logger.info("✅ Cliente guardado en DB: {}", cliente.getNombre());
+	            // Buscar por email
+	            Cliente clienteExistente = clienteDao.findByEmail(clienteDto.getEmail());
+	            if (clienteExistente == null) {
+	                 // Crear nuevo cliente
+	                 Cliente cliente = ClienteAssembler.toEntity(clienteDto);
+	                 cliente.setId(null); // asegurar que Hibernate lo inserte
+	                 clienteDao.save(cliente);
+	                 logger.info("✅ Cliente guardado en DB: {}", cliente.getNombre());
+	            } else {
+	                 logger.info("⚠️ Cliente con email {} ya existe, no se crea", clienteDto.getEmail());
+	            }
+
 
             } catch (Exception e) {
                 logger.error("❌ Error procesando sesión Stripe", e);

@@ -24,6 +24,8 @@ public interface ClienteDao extends JpaRepository<Cliente, Long> {
 	@Transactional
 	@Query("UPDATE Cliente cli SET cli.fechaBaja = CURRENT_DATE WHERE cli.id = :id")
 	int borradoLogico(@Param("id") Long id);
+	
+	Cliente findByEmail(String email);
 
 
 }
