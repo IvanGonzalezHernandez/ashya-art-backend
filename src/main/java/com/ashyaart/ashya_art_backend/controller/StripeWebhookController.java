@@ -98,50 +98,59 @@ public class StripeWebhookController {
                 // Crear o actualizar cliente usando el service
 	            Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 	            
-	            String carritoJson = session.getMetadata().get("carrito");
+	            
+	            
+	            
+	            String itemsCarrito = session.getMetadata().get("carrito");
+	            if (itemsCarrito == null || itemsCarrito.isEmpty()) {
+	                logger.warn("No se encontró metadata de curso en sesión {}", sessionId);
+	                return ResponseEntity.ok("Sin metadata de curso");
+	            }
+	            
 	            List<ItemCarritoDto> items = objectMapper.readValue(
-	                    carritoJson,
-	                    new TypeReference<List<ItemCarritoDto>>() {}
+	            	    itemsCarrito, 
+	            	    new TypeReference<List<ItemCarritoDto>>() {}
 	            );
+	            logger.info("Carrito recibido: {}", objectMapper.writeValueAsString(items));
 
 	            for (ItemCarritoDto item : items) {
-	                switch (item.getTipo().toUpperCase()) {
-	                    case "CURSO":
-	                        // 1. Obtener el CursoFecha correspondiente
-	                        Long idCursoFecha = Long.valueOf(item.getId());
-	                        CursoFecha cursoFecha = cursoFechaDao.findById(idCursoFecha)
-	                            .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
+	                try {
+	                    switch (item.getTipo().toUpperCase()) {
+	                        case "CURSO":
+	                            Long idCursoFecha = Long.valueOf(item.getId());
+	                            CursoFecha cursoFecha = cursoFechaDao.findById(idCursoFecha)
+	                                    .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
 
-	                        // 2. Crear Compra
-	                        CursoCompra compra = new CursoCompra();
-	                        compra.setCursoFecha(cursoFecha);
-	                        compra.setCliente(cliente);
-	                        compra.setPlazasReservadas(item.getCantidad());
-	                        compra.setFechaReserva(LocalDateTime.now());
+	                            CursoCompra compra = new CursoCompra();
+	                            compra.setCursoFecha(cursoFecha);
+	                            compra.setCliente(cliente);
+	                            compra.setPlazasReservadas(item.getCantidad());
+	                            compra.setFechaReserva(LocalDateTime.now());
 
-	                        cursoCompraDao.save(compra);
-	                        logger.info("Compra de curso registrada: {} plazas para cliente {}", item.getCantidad(), cliente.getEmail());
-	                        break;
+	                            cursoCompraDao.save(compra);
+	                            logger.info("Compra de curso registrada: {} plazas para cliente {}", item.getCantidad(), cliente.getEmail());
+	                            break;
 
-	                    case "PRODUCTO":
+	                        case "PRODUCTO":
+	                            logger.info("Compra de producto procesada: {} unidades", item.getCantidad());
+	                            break;
 
-	                        logger.info("Compra de producto procesada: {} unidades", item.getCantidad());
-	                        break;
+	                        case "TARJETA_REGALO":
+	                            logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
+	                            break;
 
-	                    case "TARJETA_REGALO":
+	                        case "SECRETO":
+	                            logger.info("Secreto registrado para cliente {}", cliente.getEmail());
+	                            break;
 
-	                        logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
-	                        break;
-
-	                    case "BONO":
-
-	                        logger.info("Bono registrado para cliente {}", cliente.getEmail());
-	                        break;
-
-	                    default:
-	                        logger.warn("Tipo de item desconocido en el carrito: {}", item.getTipo());
+	                        default:
+	                            logger.warn("Tipo de item desconocido en el carrito: {}", item.getTipo());
+	                    }
+	                } catch (Exception e) {
+	                    logger.error("Error procesando item del carrito: {}", item, e);
 	                }
 	            }
+
 
 	             
 	             
