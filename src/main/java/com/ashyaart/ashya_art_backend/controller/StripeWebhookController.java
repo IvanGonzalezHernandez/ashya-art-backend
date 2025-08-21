@@ -1,7 +1,5 @@
 package com.ashyaart.ashya_art_backend.controller;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +14,8 @@ import com.ashyaart.ashya_art_backend.assembler.ClienteAssembler;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
@@ -61,13 +59,15 @@ public class StripeWebhookController {
                         .orElse(null);
 
                 if (session == null) {
-                    // ⚡ Si viene como referencia, obtener el JSON bruto y luego recuperar con API
-                	String rawJson = event.getDataObjectDeserializer().getRawJson();
-                	if (rawJson == null) {
-                	    throw new RuntimeException("No se encontró JSON en el evento");
-                	}
-                	Session temp = objectMapper.readValue(rawJson, Session.class);
-                	session = Session.retrieve(temp.getId());
+                    // ⚡ Si viene como referencia, obtener solo el id del JSON
+                    String rawJson = event.getDataObjectDeserializer().getRawJson();
+                    if (rawJson == null) {
+                        throw new RuntimeException("No se encontró JSON en el evento");
+                    }
+
+                    JsonNode node = objectMapper.readTree(rawJson);
+                    String sessionId = node.get("id").asText();
+                    session = Session.retrieve(sessionId);
                 }
 
                 String sessionId = session.getId();
@@ -90,7 +90,7 @@ public class StripeWebhookController {
             } catch (Exception e) {
                 logger.error("❌ Error procesando sesión Stripe", e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                     .body("Error al procesar sesión Stripe");
+                        .body("Error al procesar sesión Stripe");
             }
         }
 
