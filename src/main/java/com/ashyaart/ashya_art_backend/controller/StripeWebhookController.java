@@ -2,7 +2,6 @@ package com.ashyaart.ashya_art_backend.controller;
 
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,14 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
+import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.service.ClienteService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
@@ -108,25 +106,18 @@ public class StripeWebhookController {
 	                return ResponseEntity.ok("Sin metadata de curso");
 	            }
 
-	            List<ItemCarritoDto> items;
+	            CarritoDto carritoDto;
 	            try {
-	                // Permite aceptar un objeto único como lista de un solo elemento
-	                objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-
-	                items = objectMapper.readValue(
-	                    itemsCarrito,
-	                    new TypeReference<List<ItemCarritoDto>>() {}
-	                );
-
-	                logger.info("Carrito recibido: {}", objectMapper.writeValueAsString(items));
+	                carritoDto = objectMapper.readValue(itemsCarrito, CarritoDto.class);
+	                logger.info("Carrito recibido: {}", objectMapper.writeValueAsString(carritoDto.getItems()));
 	            } catch (JsonProcessingException e) {
 	                logger.error("Error deserializando items del carrito", e);
 	                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                                     .body("Error al procesar el carrito");
 	            }
 
-	            // Iterar y procesar cada item
-	            for (ItemCarritoDto item : items) {
+	            // Iterar sobre cada item
+	            for (ItemCarritoDto item : carritoDto.getItems()) {
 	                try {
 	                    switch (item.getTipo().toUpperCase()) {
 	                        case "CURSO":
@@ -163,6 +154,7 @@ public class StripeWebhookController {
 	                    logger.error("Error procesando item del carrito: {}", item, e);
 	                }
 	            }
+
 
 
 	             
