@@ -22,7 +22,9 @@ import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.service.ClienteService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
@@ -100,19 +102,30 @@ public class StripeWebhookController {
 	            
 	            
 	            
-	            
 	            String itemsCarrito = session.getMetadata().get("carrito");
 	            if (itemsCarrito == null || itemsCarrito.isEmpty()) {
 	                logger.warn("No se encontró metadata de curso en sesión {}", sessionId);
 	                return ResponseEntity.ok("Sin metadata de curso");
 	            }
-	            
-	            List<ItemCarritoDto> items = objectMapper.readValue(
-	            	    itemsCarrito, 
-	            	    new TypeReference<List<ItemCarritoDto>>() {}
-	            );
-	            logger.info("Carrito recibido: {}", objectMapper.writeValueAsString(items));
 
+	            List<ItemCarritoDto> items;
+	            try {
+	                // Permite aceptar un objeto único como lista de un solo elemento
+	                objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+
+	                items = objectMapper.readValue(
+	                    itemsCarrito,
+	                    new TypeReference<List<ItemCarritoDto>>() {}
+	                );
+
+	                logger.info("Carrito recibido: {}", objectMapper.writeValueAsString(items));
+	            } catch (JsonProcessingException e) {
+	                logger.error("Error deserializando items del carrito", e);
+	                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                                     .body("Error al procesar el carrito");
+	            }
+
+	            // Iterar y procesar cada item
 	            for (ItemCarritoDto item : items) {
 	                try {
 	                    switch (item.getTipo().toUpperCase()) {
