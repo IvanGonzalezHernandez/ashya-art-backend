@@ -14,8 +14,6 @@ public class Curso {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     private String nombre;
 
     private String subtitulo;
@@ -35,7 +33,7 @@ public class Curso {
     @Lob
     private String materiales;
 
-    @DecimalMin(value = "0.0", inclusive = false)
+    @DecimalMin(value = "0.0", inclusive = true)
     @Digits(integer = 10, fraction = 2)
     private BigDecimal precio;
 
