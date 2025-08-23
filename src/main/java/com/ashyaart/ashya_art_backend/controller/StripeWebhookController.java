@@ -97,8 +97,7 @@ public class StripeWebhookController {
 
                 // Crear o actualizar cliente usando el service
 	            Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
-	            
-	            
+	        
 	            
 	            String itemsCarrito = session.getMetadata().get("carrito");
 	            if (itemsCarrito == null || itemsCarrito.isEmpty()) {
@@ -133,6 +132,10 @@ public class StripeWebhookController {
 
 	                            cursoCompraDao.save(compra);
 	                            logger.info("Compra de curso registrada: {} plazas para cliente {}", item.getCantidad(), cliente.getEmail());
+	                            
+	                            cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
+	                            cursoFechaDao.save(cursoFecha);
+								logger.info("Plazas actualizadas para curso {}: ahora quedan {} plazas disponibles", cursoFecha.getCurso().getNombre(), cursoFecha.getPlazasDisponibles());
 	                            break;
 
 	                        case "PRODUCTO":
