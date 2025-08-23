@@ -22,6 +22,7 @@ import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.service.ClienteService;
+import com.ashyaart.ashya_art_backend.service.EmailService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +42,8 @@ public class StripeWebhookController {
     private CursoCompraDao cursoCompraDao;
     @Autowired
     private CursoFechaDao cursoFechaDao;
+    @Autowired
+    private EmailService emailService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -136,6 +139,17 @@ public class StripeWebhookController {
 	                            cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
 	                            cursoFechaDao.save(cursoFecha);
 								logger.info("Plazas actualizadas para curso {}: ahora quedan {} plazas disponibles", cursoFecha.getCurso().getNombre(), cursoFecha.getPlazasDisponibles());
+								
+								// Enviar email individual
+								emailService.enviarConfirmacionCursoIndividual(
+								    cliente.getEmail(),
+								    cliente.getNombre(),
+								    cursoFecha.getCurso().getNombre(),
+								    cursoFecha.getFecha().toString(),
+								    item.getCantidad(),
+								    cursoFecha.getCurso().getPrecio(),
+								    cursoFecha.getCurso().getInformacionExtra()
+								);
 	                            break;
 
 	                        case "PRODUCTO":
