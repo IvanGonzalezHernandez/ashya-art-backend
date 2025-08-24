@@ -222,6 +222,15 @@ public class StripeService {
 		compra.setCantidad(item.getCantidad());
 		
 		productoCompraDao.save(compra);
+		
+		// Enviar email confirmación producto
+		emailService.enviarConfirmacionProductoIndividual(
+			    cliente.getEmail(),
+			    cliente.getNombre(),
+			    producto.getNombre(),
+			    item.getCantidad(),
+			    producto.getPrecio()
+			);
     }
     
     

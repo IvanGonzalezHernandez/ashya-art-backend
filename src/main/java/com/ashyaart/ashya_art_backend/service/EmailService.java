@@ -70,8 +70,6 @@ public class EmailService {
 
         mailSender.send(mensaje);
     }
-
-
     
     public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
             String nombreCurso, String fechaCurso,
@@ -100,6 +98,33 @@ public class EmailService {
 			
 			mailSender.send(mensaje);
 	}
+    
+    public void enviarConfirmacionProductoIndividual(String emailCliente, String nombreCliente,
+            String nombreProducto, int cantidad, BigDecimal precioUnitario) {
+
+			String asunto = "Confirmation for your product purchase - " + nombreProducto;
+			
+			BigDecimal total = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+			
+			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
+			"Thank you for your purchase! Here are the details of your product:\n\n" +
+			"🛍️ Product: " + nombreProducto + "\n" +
+			"👥 Quantity: " + cantidad + "\n" +
+			"💶 Unit Price: " + precioUnitario + " EUR\n" +
+			"💰 Total: " + total + " EUR\n\n" +
+			"We hope you enjoy your product!\n\n" +
+			"Best regards,\n" +
+			"Ashya Art Team";
+			
+			SimpleMailMessage mensaje = new SimpleMailMessage();
+			mensaje.setTo(emailCliente);
+			mensaje.setSubject(asunto);
+			mensaje.setText(cuerpo);
+			mensaje.setFrom("ivangonzalez.code@gmail.com");
+			
+			mailSender.send(mensaje);
+			}
+
 
 
 }
