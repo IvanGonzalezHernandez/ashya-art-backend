@@ -3,11 +3,16 @@ package com.ashyaart.ashya_art_backend.service;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
@@ -123,7 +128,37 @@ public class EmailService {
 			mensaje.setFrom("ivangonzalez.code@gmail.com");
 			
 			mailSender.send(mensaje);
+	}
+    
+    public void enviarInformacionSecretoIndividual(String emailCliente, String nombreCliente, String nombreSecreto, byte[] pdfBytes) {
+
+			String asunto = "Your Secret Purchase - " + nombreSecreto;
+			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
+			"Thank you for your purchase! Please find your secret attached as a PDF.\n\n" +
+			"We hope you enjoy it!\n\n" +
+			"Best regards,\n" +
+			"Ashya Art Team";
+			
+			try {
+			MimeMessage mensaje = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(mensaje, true); // true = multipart
+			
+			helper.setTo(emailCliente);
+			helper.setSubject(asunto);
+			helper.setText(cuerpo);
+			helper.setFrom("ivangonzalez.code@gmail.com");
+			
+			// Adjuntar PDF
+			ByteArrayResource pdfResource = new ByteArrayResource(pdfBytes);
+			helper.addAttachment(nombreSecreto + ".pdf", pdfResource);
+			
+			mailSender.send(mensaje);
+			
+			} catch (MessagingException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error sending email with attachment", e);
 			}
+	}
 
 
 

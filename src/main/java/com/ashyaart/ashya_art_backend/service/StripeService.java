@@ -18,6 +18,8 @@ import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
 import com.ashyaart.ashya_art_backend.entity.Producto;
 import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
+import com.ashyaart.ashya_art_backend.entity.Secreto;
+import com.ashyaart.ashya_art_backend.entity.SecretoCompra;
 import com.ashyaart.ashya_art_backend.model.CarritoClienteDto;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
@@ -27,6 +29,8 @@ import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoDao;
+import com.ashyaart.ashya_art_backend.repository.SecretoCompraDao;
+import com.ashyaart.ashya_art_backend.repository.SecretoDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
@@ -53,6 +57,10 @@ public class StripeService {
     private ProductoDao productoDao;
     @Autowired
     private ProductoCompraDao productoCompraDao;
+    @Autowired
+    private SecretoDao secretoDao;
+    @Autowired
+    private SecretoCompraDao secretoCompraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -167,7 +175,7 @@ public class StripeService {
                         logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
                         break;
                     case "SECRETO":
-                        logger.info("Secreto registrado para cliente {}", cliente.getEmail());
+                    	procesarSecreto(cliente, compraTotal, item);
                         break;
                     default:
                         logger.warn("Tipo de item desconocido en el carrito: {}", item.getTipo());
@@ -222,6 +230,10 @@ public class StripeService {
 		compra.setCantidad(item.getCantidad());
 		
 		productoCompraDao.save(compra);
+		logger.info("Compra de producto registrada: {} unidades para cliente {}", item.getCantidad(), cliente.getEmail());
+		
+		producto.setStock(producto.getStock() - item.getCantidad());
+		logger.info("Actualizando stock del producto {}: ahora quedan {} unidades", producto.getNombre(), producto.getStock());
 		
 		// Enviar email confirmación producto
 		emailService.enviarConfirmacionProductoIndividual(
@@ -232,6 +244,31 @@ public class StripeService {
 			    producto.getPrecio()
 			);
     }
+    
+	private void procesarSecreto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+		Long idSecreto = Long.valueOf(item.getId());
+		Secreto secreto = secretoDao.findById(idSecreto)
+				.orElseThrow(() -> new RuntimeException("Secreto no encontrado: " + idSecreto));
+		
+		SecretoCompra compra = new SecretoCompra();
+		compra.setCompra(compraTotal);
+		compra.setFechaCompra(LocalDate.now());
+		compra.setCliente(cliente);
+		compra.setSecreto(secreto);
+		
+		secretoCompraDao.save(compra);
+		logger.info("Compra de secreto registrada para cliente {}", cliente.getEmail());
+		
+		// Enviar email confirmación secreto
+	    emailService.enviarInformacionSecretoIndividual(
+	            cliente.getEmail(),
+	            cliente.getNombre(),
+	            secreto.getNombre(),
+	            secreto.getPdf()
+	    );
+		
+
+	}
     
     
     

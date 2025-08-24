@@ -39,10 +39,6 @@ public class Producto {
     @NotNull
     @Column(nullable = false)
     private Integer stock;
-
-    @NotBlank
-    @Column(nullable = false)
-    private String img;
     
     @Column(name = "FECHA_BAJA")
     private LocalDate fechaBaja;
