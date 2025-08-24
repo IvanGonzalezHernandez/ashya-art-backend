@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -69,6 +71,10 @@ public class Secreto {
     @Lob
     @Column(columnDefinition = "LONGBLOB")
     private byte[] img5;
+    
+    @ManyToOne
+    @JoinColumn(name = "id_compra", nullable = false)
+    private Compra compra;
 
     public Secreto() {}
 
@@ -185,4 +191,7 @@ public class Secreto {
     public void setImg5(byte[] img5) {
         this.img5 = img5;
     }
+    
+    public Compra getCompra() { return compra; }
+    public void setCompra(Compra compra) { this.compra = compra; }
 }

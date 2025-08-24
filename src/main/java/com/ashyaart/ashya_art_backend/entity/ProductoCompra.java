@@ -29,6 +29,10 @@ public class ProductoCompra {
     @ManyToOne(optional = false)
     @JoinColumn(name = "ID_PRODUCTO", nullable = false)
     private Producto producto;
+    
+    @ManyToOne
+    @JoinColumn(name = "id_compra", nullable = false)
+    private Compra compra;
 
     public ProductoCompra() {}
 
@@ -79,4 +83,7 @@ public class ProductoCompra {
     public void setFechaCompra(LocalDateTime fechaCompra) {
         this.fechaCompra = fechaCompra;
     }
+    
+    public Compra getCompra() { return compra; }
+    public void setCompra(Compra compra) { this.compra = compra; }
 }

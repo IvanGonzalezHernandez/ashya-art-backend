@@ -39,6 +39,10 @@ public class TarjetaRegaloCompra {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
     private Cliente cliente;
+    
+    @ManyToOne
+    @JoinColumn(name = "id_compra", nullable = false)
+    private Compra compra;
 
     public TarjetaRegaloCompra() {}
 
@@ -133,4 +137,7 @@ public class TarjetaRegaloCompra {
     public void setIdReferencia(String idReferencia) {
         this.idReferencia = idReferencia;
     }
+    
+    public Compra getCompra() { return compra; }
+    public void setCompra(Compra compra) { this.compra = compra; }
 }

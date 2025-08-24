@@ -140,7 +140,7 @@ public class StripeWebhookController {
 	                            cursoFechaDao.save(cursoFecha);
 								logger.info("Plazas actualizadas para curso {}: ahora quedan {} plazas disponibles", cursoFecha.getCurso().getNombre(), cursoFecha.getPlazasDisponibles());
 								
-								// Enviar email individual
+								// Enviar email confirmación curso
 								emailService.enviarConfirmacionCursoIndividual(
 								    cliente.getEmail(),
 								    cliente.getNombre(),

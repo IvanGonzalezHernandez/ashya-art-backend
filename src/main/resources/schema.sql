@@ -38,6 +38,18 @@ CREATE TABLE cliente (
     UNIQUE (email)
 ) ENGINE=InnoDB;
 
+-- Tabla compra
+CREATE TABLE compra (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    codigo_compra CHAR(36) NOT NULL,
+    id_cliente BIGINT NOT NULL,
+    fecha_compra DATETIME NOT NULL,
+    total DECIMAL(12,2) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (codigo_compra),
+    CONSTRAINT FK_compra_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id)
+) ENGINE=InnoDB;
+
 -- Tabla newsletter
 CREATE TABLE newsletter (
     id BIGINT NOT NULL AUTO_INCREMENT,

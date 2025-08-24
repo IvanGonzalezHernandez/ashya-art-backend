@@ -30,6 +30,10 @@ public class CursoCompra {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
     private Cliente cliente;
+    
+    @ManyToOne
+    @JoinColumn(name = "id_compra", nullable = false)
+    private Compra compra;
 
     public CursoCompra() {}
 
@@ -76,4 +80,7 @@ public class CursoCompra {
     public void setFechaReserva(LocalDateTime fechaReserva) {
         this.fechaReserva = fechaReserva;
     }
+    
+    public Compra getCompra() { return compra; }
+    public void setCompra(Compra compra) { this.compra = compra; }
 }
