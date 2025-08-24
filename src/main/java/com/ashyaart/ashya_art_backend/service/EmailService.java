@@ -7,6 +7,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import com.ashyaart.ashya_art_backend.entity.Compra;
+
 @Service
 public class EmailService {
 
@@ -47,6 +49,29 @@ public class EmailService {
 		
 		mailSender.send(mensaje);
 	}
+    
+    public void enviarConfirmacionCompraTotal(String emailCliente, String nombreCliente, Compra compra) {
+
+        String asunto = "Confirmation of your purchase on Ashya Art";
+
+        String cuerpo = "Hello " + nombreCliente + ",\n\n" +
+                        "Thank you for your purchase!\n\n" +
+                        "💳 Purchase code: " + compra.getCodigoCompra() + "\n" +
+                        "💶 Total: " + compra.getTotal() + " EUR\n\n" +
+                        "We look forward to seeing you!\n\n" +
+                        "Best regards,\n" +
+                        "Ashya Art Team";
+
+        SimpleMailMessage mensaje = new SimpleMailMessage();
+        mensaje.setTo(emailCliente);
+        mensaje.setSubject(asunto);
+        mensaje.setText(cuerpo);
+        mensaje.setFrom("ivangonzalez.code@gmail.com");
+
+        mailSender.send(mensaje);
+    }
+
+
     
     public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
             String nombreCurso, String fechaCurso,

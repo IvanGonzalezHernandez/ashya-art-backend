@@ -1,17 +1,28 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ashyaart.ashya_art_backend.entity.Cliente;
+import com.ashyaart.ashya_art_backend.entity.Compra;
+import com.ashyaart.ashya_art_backend.entity.CursoCompra;
+import com.ashyaart.ashya_art_backend.entity.CursoFecha;
 import com.ashyaart.ashya_art_backend.model.CarritoClienteDto;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
+import com.ashyaart.ashya_art_backend.repository.CompraDao;
+import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
+import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
@@ -24,6 +35,16 @@ public class StripeService {
 
     @Autowired
     private StockService stockService;
+    @Autowired
+    private ClienteService clienteService;
+    @Autowired
+    private CursoCompraDao cursoCompraDao;
+    @Autowired
+    private CursoFechaDao cursoFechaDao;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private CompraDao compraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -97,4 +118,91 @@ public class StripeService {
 
         return session.getUrl();
     }
+    
+    
+    public void procesarSesionStripe(ClienteDto clienteDto, CarritoDto carritoDto) {
+
+        // Crear o actualizar cliente
+        Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
+
+        // Calcular total
+        BigDecimal total = carritoDto.getItems().stream()
+                .map(i -> BigDecimal.valueOf(i.getPrecio())
+                        .multiply(BigDecimal.valueOf(i.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Crear compra total
+        Compra compraTotal = new Compra();
+        compraTotal.setCliente(cliente);
+        compraTotal.setCodigoCompra(UUID.randomUUID().toString());
+        compraTotal.setFechaCompra(LocalDate.now());
+        compraTotal.setTotal(total);
+
+        compraDao.save(compraTotal);
+        logger.info("Compra registrada con ID: {}", compraTotal.getId());
+
+        // Enviar email de confirmación general
+        emailService.enviarConfirmacionCompraTotal(cliente.getEmail(), cliente.getNombre(), compraTotal);
+        logger.info("Email de confirmación enviado a {}", cliente.getEmail());
+
+        // Procesar items del carrito
+        for (ItemCarritoDto item : carritoDto.getItems()) {
+            try {
+                switch (item.getTipo().toUpperCase()) {
+                    case "CURSO":
+                        procesarCurso(cliente, compraTotal, item);
+                        break;
+                    case "PRODUCTO":
+                        logger.info("Compra de producto procesada: {} unidades", item.getCantidad());
+                        break;
+                    case "TARJETA_REGALO":
+                        logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
+                        break;
+                    case "SECRETO":
+                        logger.info("Secreto registrado para cliente {}", cliente.getEmail());
+                        break;
+                    default:
+                        logger.warn("Tipo de item desconocido en el carrito: {}", item.getTipo());
+                }
+            } catch (Exception e) {
+                logger.error("Error procesando item del carrito: {}", item, e);
+            }
+        }
+    }
+
+    private void procesarCurso(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+        Long idCursoFecha = Long.valueOf(item.getId());
+        CursoFecha cursoFecha = cursoFechaDao.findById(idCursoFecha)
+                .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
+
+        CursoCompra compra = new CursoCompra();
+        compra.setCompra(compraTotal);
+        compra.setCursoFecha(cursoFecha);
+        compra.setCliente(cliente);
+        compra.setPlazasReservadas(item.getCantidad());
+        compra.setFechaReserva(LocalDateTime.now());
+
+        cursoCompraDao.save(compra);
+        logger.info("Compra de curso registrada: {} plazas para cliente {}", item.getCantidad(), cliente.getEmail());
+
+        cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
+        cursoFechaDao.save(cursoFecha);
+        logger.info("Plazas actualizadas para curso {}: ahora quedan {} plazas disponibles", cursoFecha.getCurso().getNombre(), cursoFecha.getPlazasDisponibles());
+
+        // Enviar email confirmación curso
+        emailService.enviarConfirmacionCursoIndividual(
+                cliente.getEmail(),
+                cliente.getNombre(),
+                cursoFecha.getCurso().getNombre(),
+                cursoFecha.getFecha().toString(),
+                item.getCantidad(),
+                cursoFecha.getCurso().getPrecio(),
+                cursoFecha.getCurso().getInformacionExtra()
+        );
+    }
+    
+    
+    
+    
+    
 }
