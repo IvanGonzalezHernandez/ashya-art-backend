@@ -16,6 +16,8 @@ import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.Compra;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
+import com.ashyaart.ashya_art_backend.entity.Producto;
+import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
 import com.ashyaart.ashya_art_backend.model.CarritoClienteDto;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
@@ -23,6 +25,8 @@ import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
 import com.ashyaart.ashya_art_backend.repository.CompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
+import com.ashyaart.ashya_art_backend.repository.ProductoCompraDao;
+import com.ashyaart.ashya_art_backend.repository.ProductoDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
@@ -45,6 +49,10 @@ public class StripeService {
     private EmailService emailService;
     @Autowired
     private CompraDao compraDao;
+    @Autowired
+    private ProductoDao productoDao;
+    @Autowired
+    private ProductoCompraDao productoCompraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -153,7 +161,7 @@ public class StripeService {
                         procesarCurso(cliente, compraTotal, item);
                         break;
                     case "PRODUCTO":
-                        logger.info("Compra de producto procesada: {} unidades", item.getCantidad());
+                    	procesarProducto(cliente, compraTotal, item);
                         break;
                     case "TARJETA_REGALO":
                         logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
@@ -199,6 +207,21 @@ public class StripeService {
                 cursoFecha.getCurso().getPrecio(),
                 cursoFecha.getCurso().getInformacionExtra()
         );
+    }
+    
+    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+    	Long idProducto = Long.valueOf(item.getId());
+		Producto producto = productoDao.findById(idProducto)
+				.orElseThrow(() -> new RuntimeException("Producto no encontrado: " + idProducto));
+		
+		ProductoCompra compra = new ProductoCompra();
+		compra.setCompra(compraTotal);
+		compra.setFechaCompra(LocalDateTime.now());
+		compra.setCliente(cliente);
+		compra.setProducto(producto);
+		compra.setCantidad(item.getCantidad());
+		
+		productoCompraDao.save(compra);
     }
     
     
