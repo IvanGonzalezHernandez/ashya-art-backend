@@ -1,7 +1,10 @@
 package com.ashyaart.ashya_art_backend.controller;
 
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +17,13 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.entity.Cliente;
+import com.ashyaart.ashya_art_backend.entity.Compra;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.model.ItemCarritoDto;
+import com.ashyaart.ashya_art_backend.repository.CompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.service.ClienteService;
@@ -44,6 +49,8 @@ public class StripeWebhookController {
     private CursoFechaDao cursoFechaDao;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private CompraDao compraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -100,6 +107,8 @@ public class StripeWebhookController {
 
                 // Crear o actualizar cliente usando el service
 	            Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
+	            
+
 	        
 	            
 	            String itemsCarrito = session.getMetadata().get("carrito");
@@ -117,6 +126,20 @@ public class StripeWebhookController {
 	                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                                     .body("Error al procesar el carrito");
 	            }
+	            
+	            BigDecimal total = carritoDto.getItems().stream()
+	            	    .map(i -> BigDecimal.valueOf(i.getPrecio())   // convertir double a BigDecimal
+	            	                        .multiply(BigDecimal.valueOf(i.getCantidad())))
+	            	    .reduce(BigDecimal.ZERO, BigDecimal::add);
+	            
+	            // Calcular el total y guardar la compra
+	            Compra compraTotal = new Compra();
+	            compraTotal.setCliente(cliente);
+	            compraTotal.setCodigoCompra(UUID.randomUUID().toString());
+	            compraTotal.setFechaCompra(LocalDate.now());
+	            compraTotal.setTotal(total);
+
+	            compraDao.save(compraTotal);
 
 	            // Iterar sobre cada item
 	            for (ItemCarritoDto item : carritoDto.getItems()) {
@@ -128,6 +151,7 @@ public class StripeWebhookController {
 	                                    .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
 
 	                            CursoCompra compra = new CursoCompra();
+	                            compra.setCompra(compraTotal);
 	                            compra.setCursoFecha(cursoFecha);
 	                            compra.setCliente(cliente);
 	                            compra.setPlazasReservadas(item.getCantidad());
