@@ -71,10 +71,6 @@ public class Secreto {
     @Lob
     @Column(columnDefinition = "LONGBLOB")
     private byte[] img5;
-    
-    @ManyToOne
-    @JoinColumn(name = "id_compra", nullable = false)
-    private Compra compra;
 
     public Secreto() {}
 
@@ -192,6 +188,4 @@ public class Secreto {
         this.img5 = img5;
     }
     
-    public Compra getCompra() { return compra; }
-    public void setCompra(Compra compra) { this.compra = compra; }
 }
