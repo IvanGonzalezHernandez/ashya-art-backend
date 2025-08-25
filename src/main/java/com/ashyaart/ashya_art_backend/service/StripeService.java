@@ -179,7 +179,7 @@ public class StripeService {
                     case "PRODUCTO":
                     	procesarProducto(cliente, compraTotal, item);
                         break;
-                    case "TARJETA_REGALO":
+                    case "TARJETA":
                         procesarTarjetaRegalo(cliente, compraTotal, item);
                         break;
                     case "SECRETO":
