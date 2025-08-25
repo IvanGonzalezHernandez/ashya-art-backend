@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -130,7 +131,7 @@ public class EmailService {
 			mailSender.send(mensaje);
 	}
     
-    public void enviarInformacionSecretoIndividual(String emailCliente, String nombreCliente, String nombreSecreto, byte[] pdfBytes) {
+    public void enviarConfirmacionSecretoIndividual(String emailCliente, String nombreCliente, String nombreSecreto, byte[] pdfBytes) {
 
 			String asunto = "Your Secret Purchase - " + nombreSecreto;
 			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
@@ -159,6 +160,38 @@ public class EmailService {
 				throw new RuntimeException("Error sending email with attachment", e);
 			}
 	}
+    
+    public void enviarConfirmacionTarjetaRegaloIndividual(
+            String destinatario,
+            String codigo,
+            String nombreCliente,
+            String nombreReceptor,
+            BigDecimal cantidad,
+            LocalDate fechaExpiracion) {
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+
+            helper.setTo(destinatario);
+            helper.setSubject("🎁 Your AshYa Art Gift Card");
+
+            String contenido = "<h2>Hello " + nombreReceptor + "!</h2>" +
+                    "<p>You have received a gift card from <b>" + nombreCliente + "</b>.</p>" +
+                    "<p><b>Gift Card Code:</b> " + codigo + "</p>" +
+                    "<p><b>Amount:</b> €" + cantidad + "</p>" +
+                    "<p>This gift card is valid until <b>" + fechaExpiracion + "</b> (6 months).</p>" +
+                    "<p>You can redeem it in our online shop or courses at <a href='https://ashya-art.com'>Ashya Art</a>.</p>" +
+                    "<br><p>Enjoy your gift! 🎨</p>";
+
+            helper.setText(contenido, true);
+
+            mailSender.send(mensaje);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error enviando la confirmación de la tarjeta regalo", e);
+        }
+    }
+
 
 
 

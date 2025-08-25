@@ -20,6 +20,8 @@ import com.ashyaart.ashya_art_backend.entity.Producto;
 import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
 import com.ashyaart.ashya_art_backend.entity.Secreto;
 import com.ashyaart.ashya_art_backend.entity.SecretoCompra;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.model.CarritoClienteDto;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
@@ -31,6 +33,8 @@ import com.ashyaart.ashya_art_backend.repository.ProductoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoDao;
 import com.ashyaart.ashya_art_backend.repository.SecretoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.SecretoDao;
+import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
+import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
@@ -61,6 +65,10 @@ public class StripeService {
     private SecretoDao secretoDao;
     @Autowired
     private SecretoCompraDao secretoCompraDao;
+    @Autowired
+    private TarjetaRegaloDao tarjetaRegaloDao;
+    @Autowired
+    private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -172,7 +180,7 @@ public class StripeService {
                     	procesarProducto(cliente, compraTotal, item);
                         break;
                     case "TARJETA_REGALO":
-                        logger.info("Tarjeta regalo generada para cliente {}", cliente.getEmail());
+                        procesarTarjetaRegalo(cliente, compraTotal, item);
                         break;
                     case "SECRETO":
                     	procesarSecreto(cliente, compraTotal, item);
@@ -260,7 +268,7 @@ public class StripeService {
 		logger.info("Compra de secreto registrada para cliente {}", cliente.getEmail());
 		
 		// Enviar email confirmación secreto
-	    emailService.enviarInformacionSecretoIndividual(
+	    emailService.enviarConfirmacionSecretoIndividual(
 	            cliente.getEmail(),
 	            cliente.getNombre(),
 	            secreto.getNombre(),
@@ -269,6 +277,41 @@ public class StripeService {
 		
 
 	}
+	
+	private void procesarTarjetaRegalo(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+	    Long idTarjeta = Long.valueOf(item.getId());
+	    TarjetaRegalo plantilla = tarjetaRegaloDao.findById(idTarjeta)
+	            .orElseThrow(() -> new RuntimeException("Tarjeta Regalo no encontrada: " + idTarjeta));
+
+	    // Generar código único
+	    String codigoUnico = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+
+	    // Crear la tarjeta regalo personalizada para el cliente
+	    TarjetaRegaloCompra tarjetaCompra = new TarjetaRegaloCompra();
+	    tarjetaCompra.setCodigo(codigoUnico);
+	    tarjetaCompra.setTarjetaRegalo(plantilla);
+	    tarjetaCompra.setCliente(cliente);
+	    tarjetaCompra.setCompra(compraTotal);
+	    tarjetaCompra.setCanjeada(false);
+	    tarjetaCompra.setEstado(true);
+	    tarjetaCompra.setFechaCompra(LocalDate.now());
+	    tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6)); // 6 meses de validez
+	    tarjetaCompra.setIdReferencia(plantilla.getIdReferencia());
+
+	    // Guardar en la base de datos
+	    tarjetaRegaloCompraDao.save(tarjetaCompra);
+
+	    logger.info("Tarjeta regalo generada para cliente {} con código {} y 6 meses de validez", cliente.getEmail(), codigoUnico);
+
+		emailService.enviarConfirmacionTarjetaRegaloIndividual(
+				cliente.getEmail(),
+				cliente.getNombre(),
+				plantilla.getNombre(),
+				codigoUnico, plantilla.getPrecio(),
+				tarjetaCompra.getFechaCaducidad());
+	}
+
+
     
     
     
