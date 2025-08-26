@@ -2,8 +2,10 @@ package com.ashyaart.ashya_art_backend.service;
 
 import com.ashyaart.ashya_art_backend.assembler.TarjetaRegaloAssembler;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.filter.TarjetaRegaloFilter;
 import com.ashyaart.ashya_art_backend.model.TarjetaRegaloDto;
+import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +27,8 @@ public class TarjetaRegaloService {
 
     @Autowired
     private TarjetaRegaloDao tarjetaRegaloDao;
+    @Autowired
+    private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
 
     public List<TarjetaRegaloDto> findByFilter(TarjetaRegaloFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de tarjetas regalo");
@@ -95,5 +99,12 @@ public class TarjetaRegaloService {
             throw new RuntimeException("No se pudo eliminar la tarjeta regalo con id " + id);
         }
         logger.info("eliminarTarjetaRegalo - Tarjeta regalo con ID {} eliminada correctamente (borrado lógico)", id);
+    }
+    
+    public TarjetaRegaloCompra obtenerTarjetaPorCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) return null;
+
+        Optional<TarjetaRegaloCompra> tarjetaOpt = tarjetaRegaloCompraDao.findByCodigo(codigo.trim().toUpperCase());
+        return tarjetaOpt.orElse(null);
     }
 }

@@ -173,7 +173,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
             helper.setTo(destinatario);
-            helper.setSubject("🎁 Your AshYa Art Gift Card");
+            helper.setSubject("🎁 Your Ashya Art Gift Card");
 
             String contenido = "<h2>Hello " + nombreReceptor + "!</h2>" +
                     "<p>You have received a gift card from <b>" + nombreCliente + "</b>.</p>" +

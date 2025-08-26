@@ -1,7 +1,9 @@
 package com.ashyaart.ashya_art_backend.controller;
 
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.filter.TarjetaRegaloFilter;
 import com.ashyaart.ashya_art_backend.model.TarjetaRegaloDto;
+import com.ashyaart.ashya_art_backend.model.ValidacionTarjetaDto;
 import com.ashyaart.ashya_art_backend.service.TarjetaRegaloService;
 
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -68,4 +71,26 @@ public class TarjetaRegaloController {
         logger.info("eliminarTarjetaRegalo - Tarjeta regalo con ID {} eliminada (borrado lógico)", id);
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/validar")
+    public ResponseEntity<?> validarCodigo(@RequestBody ValidacionTarjetaDto request) {
+        String codigo = request.getCodigo().trim().toUpperCase();
+        logger.info("Validando código de tarjeta regalo: {}", codigo);
+
+        TarjetaRegaloCompra tarjeta = tarjetaRegaloService.obtenerTarjetaPorCodigo(codigo);
+
+        if (tarjeta == null) {
+            logger.warn("Código inválido: {}", codigo);
+            return ResponseEntity.badRequest().body("Código inválido");
+        }
+
+        if (!tarjeta.isEstado() || tarjeta.isCanjeada() || tarjeta.getFechaCaducidad().isBefore(LocalDate.now())) {
+            logger.warn("Código inválido o ya canjeado: {}", codigo);
+            return ResponseEntity.badRequest().body("Código inválido o ya canjeado");
+        }
+
+        logger.info("Código válido, importe de descuento: {}€", tarjeta.getTarjetaRegalo().getPrecio());
+        return ResponseEntity.ok(tarjeta.getTarjetaRegalo().getPrecio());
+    }
+
 }

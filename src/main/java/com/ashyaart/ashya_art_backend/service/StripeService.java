@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -37,6 +40,7 @@ import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
+import com.stripe.model.Coupon;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 
@@ -87,7 +91,7 @@ public class StripeService {
 
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
 
-        // 1. Validar stock/plazas
+        // 1️ Validar stock/plazas
         for (ItemCarritoDto item : carritoDto.getItems()) {
             logger.info("Validando stock para item: {} - Cantidad: {}", item.getNombre(), item.getCantidad());
             if (!stockService.hayStockSuficiente(item)) {
@@ -98,43 +102,79 @@ public class StripeService {
             }
         }
 
-        // 2. Crear los lineItems para Stripe
+        // 2️ Calcular descuento si hay código de tarjeta regalo
+        BigDecimal descuento = BigDecimal.ZERO;
+        String codigoTarjeta = null;
+        Coupon coupon = null;
+
+        if (carritoClienteDto.getCodigoTarjeta() != null && !carritoClienteDto.getCodigoTarjeta().isEmpty()) {
+            codigoTarjeta = carritoClienteDto.getCodigoTarjeta().trim().toUpperCase();
+            Optional<TarjetaRegaloCompra> optionalTarjeta = tarjetaRegaloCompraDao.findByCodigo(codigoTarjeta);
+            if (optionalTarjeta.isPresent()) {
+                TarjetaRegaloCompra tarjeta = optionalTarjeta.get();
+                if (tarjeta.isEstado() && !tarjeta.isCanjeada() && tarjeta.getFechaCaducidad().isAfter(LocalDate.now())) {
+                    descuento = tarjeta.getTarjetaRegalo().getPrecio();
+                    logger.info("Aplicando tarjeta regalo {} con descuento {}€", codigoTarjeta, descuento);
+
+                    // Crear cupón en Stripe
+                    Map<String, Object> couponParams = new HashMap<>();
+                    couponParams.put("amount_off", descuento.multiply(BigDecimal.valueOf(100)).longValue()); // céntimos
+                    couponParams.put("currency", "eur");
+                    coupon = Coupon.create(couponParams);
+
+                } else {
+                    codigoTarjeta = null; // tarjeta inválida o canjeada
+                }
+            } else {
+                codigoTarjeta = null; // no encontrada
+            }
+        }
+
+        // 3️ Crear los lineItems para Stripe
         for (ItemCarritoDto item : carritoDto.getItems()) {
             logger.info("Añadiendo lineItem a Stripe: {} - Precio: {} € - Cantidad: {}", item.getNombre(), item.getPrecio(), item.getCantidad());
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setQuantity((long) item.getCantidad())
                     .setPriceData(
-                        SessionCreateParams.LineItem.PriceData.builder()
-                                .setCurrency("eur")
-                                .setUnitAmount((long) (item.getPrecio() * 100))
-                                .setProductData(
-                                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                                .setName(item.getNombre())
-                                                .setDescription(item.getSubtitulo())
-                                                .build()
-                                )
-                                .build()
+                            SessionCreateParams.LineItem.PriceData.builder()
+                                    .setCurrency("eur")
+                                    .setUnitAmount(Math.round(item.getPrecio() * 100))
+                                    .setProductData(
+                                            SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                    .setName(item.getNombre())
+                                                    .setDescription(item.getSubtitulo())
+                                                    .build()
+                                    )
+                                    .build()
                     )
                     .build();
 
             lineItems.add(lineItem);
         }
 
-        // Serializar carrito y cliente a JSON para pasarlo como metadata
+        // 4️ Serializar carrito y cliente para metadata
         String carritoJson = objectMapper.writeValueAsString(carritoDto);
         String clienteJson = objectMapper.writeValueAsString(clienteDto);
 
-        logger.info("Metadata carrito: {}", carritoJson);
-        logger.info("Metadata cliente: {}", clienteJson);
-
-        SessionCreateParams params = SessionCreateParams.builder()
+        SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .addAllLineItem(lineItems)
                 .putMetadata("cliente", clienteJson)
                 .putMetadata("carrito", carritoJson)
+                .putMetadata("codigoTarjeta", codigoTarjeta != null ? codigoTarjeta : "")
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl)
-                .setCancelUrl(cancelUrl)
-                .build();
+                .setCancelUrl(cancelUrl);
+
+        // 5️ Añadir descuento como cupón si aplica
+        if (coupon != null) {
+            paramsBuilder.addDiscount(
+                    SessionCreateParams.Discount.builder()
+                            .setCoupon(coupon.getId())
+                            .build()
+            );
+        }
+
+        SessionCreateParams params = paramsBuilder.build();
 
         logger.info("Creando sesión en Stripe...");
         Session session = Session.create(params);
@@ -142,6 +182,8 @@ public class StripeService {
 
         return session.getUrl();
     }
+
+
     
     
     public void procesarSesionStripe(ClienteDto clienteDto, CarritoDto carritoDto) {
@@ -284,7 +326,12 @@ public class StripeService {
 	            .orElseThrow(() -> new RuntimeException("Tarjeta Regalo no encontrada: " + idTarjeta));
 
 	    // Generar código único
-	    String codigoUnico = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+	    String codigoUnico = UUID.randomUUID()
+                .toString()          // ej: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                .replace("-", "")    // ej: "f47ac10b58cc4372a5670e02b2c3d479"
+                .substring(0, 8)    // solo los primeros 8 caracteres
+                .toUpperCase();      // ej: "F47AC10B"
+
 
 	    // Crear la tarjeta regalo personalizada para el cliente
 	    TarjetaRegaloCompra tarjetaCompra = new TarjetaRegaloCompra();

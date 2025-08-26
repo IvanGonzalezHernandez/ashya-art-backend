@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
+import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
@@ -27,6 +28,8 @@ public class StripeWebhookController {
 
     @Autowired
     private StripeService stripeService;
+    @Autowired
+    private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -48,22 +51,27 @@ public class StripeWebhookController {
 
         if ("checkout.session.completed".equals(event.getType())) {
             try {
-                // Obtener sessionId y session
                 String rawJson = event.getDataObjectDeserializer().getRawJson();
                 Session session = Session.retrieve(objectMapper.readTree(rawJson).get("id").asText());
 
-                // Metadata cliente y carrito
+                // Metadata
+                String codigoTarjeta = session.getMetadata().get("codigoTarjeta");
                 ClienteDto clienteDto = objectMapper.readValue(session.getMetadata().get("cliente"), ClienteDto.class);
                 CarritoDto carritoDto = objectMapper.readValue(session.getMetadata().get("carrito"), CarritoDto.class);
 
-                // Delegar todo el procesado al service
+                // Procesar compra
                 stripeService.procesarSesionStripe(clienteDto, carritoDto);
+
+                // Marcar tarjeta regalo como usada si existe
+                if (codigoTarjeta != null && !codigoTarjeta.isEmpty()) {
+                    tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta);
+                }
 
             } catch (Exception e) {
                 logger.error("Error procesando sesión Stripe", e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar sesión Stripe");
             }
-        }
+        } 
         
 
         return ResponseEntity.ok("Webhook recibido");
