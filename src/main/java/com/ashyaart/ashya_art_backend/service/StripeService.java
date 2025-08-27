@@ -325,38 +325,43 @@ public class StripeService {
 	    TarjetaRegalo plantilla = tarjetaRegaloDao.findById(idTarjeta)
 	            .orElseThrow(() -> new RuntimeException("Tarjeta Regalo no encontrada: " + idTarjeta));
 
-	    // Generar código único
-	    String codigoUnico = UUID.randomUUID()
-                .toString()          // ej: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-                .replace("-", "")    // ej: "f47ac10b58cc4372a5670e02b2c3d479"
-                .substring(0, 8)    // solo los primeros 8 caracteres
-                .toUpperCase();      // ej: "F47AC10B"
+	    for (int i = 0; i < item.getCantidad(); i++) {
+	        // Generar código único
+	        String codigoUnico = UUID.randomUUID()
+	                .toString()
+	                .replace("-", "")
+	                .substring(0, 8)
+	                .toUpperCase();
 
+	        // Crear la tarjeta regalo personalizada para el cliente
+	        TarjetaRegaloCompra tarjetaCompra = new TarjetaRegaloCompra();
+	        tarjetaCompra.setCodigo(codigoUnico);
+	        tarjetaCompra.setTarjetaRegalo(plantilla);
+	        tarjetaCompra.setCliente(cliente);
+	        tarjetaCompra.setCompra(compraTotal);
+	        tarjetaCompra.setCanjeada(false);
+	        tarjetaCompra.setEstado(true);
+	        tarjetaCompra.setFechaCompra(LocalDate.now());
+	        tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6)); // 6 meses de validez
+	        tarjetaCompra.setIdReferencia(plantilla.getIdReferencia());
 
-	    // Crear la tarjeta regalo personalizada para el cliente
-	    TarjetaRegaloCompra tarjetaCompra = new TarjetaRegaloCompra();
-	    tarjetaCompra.setCodigo(codigoUnico);
-	    tarjetaCompra.setTarjetaRegalo(plantilla);
-	    tarjetaCompra.setCliente(cliente);
-	    tarjetaCompra.setCompra(compraTotal);
-	    tarjetaCompra.setCanjeada(false);
-	    tarjetaCompra.setEstado(true);
-	    tarjetaCompra.setFechaCompra(LocalDate.now());
-	    tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6)); // 6 meses de validez
-	    tarjetaCompra.setIdReferencia(plantilla.getIdReferencia());
+	        // Guardar en la base de datos
+	        tarjetaRegaloCompraDao.save(tarjetaCompra);
 
-	    // Guardar en la base de datos
-	    tarjetaRegaloCompraDao.save(tarjetaCompra);
+	        logger.info("Tarjeta regalo generada para cliente {} con código {} y 6 meses de validez",
+	                cliente.getEmail(), codigoUnico);
 
-	    logger.info("Tarjeta regalo generada para cliente {} con código {} y 6 meses de validez", cliente.getEmail(), codigoUnico);
-
-		emailService.enviarConfirmacionTarjetaRegaloIndividual(
-				cliente.getEmail(),
-				cliente.getNombre(),
-				plantilla.getNombre(),
-				codigoUnico, plantilla.getPrecio(),
-				tarjetaCompra.getFechaCaducidad());
+	        // Enviar email por cada tarjeta
+	        emailService.enviarConfirmacionTarjetaRegaloIndividual(
+	                cliente.getEmail(),
+	                cliente.getNombre(),
+	                plantilla.getNombre(),
+	                codigoUnico,
+	                plantilla.getPrecio(),
+	                tarjetaCompra.getFechaCaducidad());
+	    }
 	}
+ 
 
 
     
