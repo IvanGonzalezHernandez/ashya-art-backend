@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.function.BiConsumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -230,35 +231,64 @@ public class EmailService {
         PdfWriter writer = PdfWriter.getInstance(document, baos);
         document.open();
 
-        // Imagen base fija desde resources/assets
+        // Imagen base
         ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
         InputStream is = resource.getInputStream();
         byte[] imgBytes = is.readAllBytes();
         Image img = Image.getInstance(imgBytes);
+
+        // Hacemos que ocupe toda la página
+        img.scaleAbsolute(document.getPageSize().getWidth(), document.getPageSize().getHeight());
         img.setAbsolutePosition(0, 0);
-        img.scaleToFit(document.getPageSize().getWidth(), document.getPageSize().getHeight());
         document.add(img);
 
         // Texto encima
         PdfContentByte canvas = writer.getDirectContent();
-        canvas.beginText();
         BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-        canvas.setFontAndSize(bf, 24);
-        canvas.setColorFill(BaseColor.BLACK);
 
-        // Ajusta posiciones según tu diseño
-        canvas.showTextAligned(Element.ALIGN_CENTER, "Gift Card", 300, 700, 0);
-        canvas.showTextAligned(Element.ALIGN_CENTER, "Code: " + codigo, 300, 650, 0);
-        canvas.showTextAligned(Element.ALIGN_CENTER, "To: " + nombreReceptor, 300, 600, 0);
-        canvas.showTextAligned(Element.ALIGN_CENTER, "From: " + nombreCliente, 300, 550, 0);
-        canvas.showTextAligned(Element.ALIGN_CENTER, "Amount: €" + cantidad, 300, 500, 0);
-        canvas.showTextAligned(Element.ALIGN_CENTER, "Valid until: " + fechaExpiracion, 300, 450, 0);
+        // Función helper para escribir texto con un rectángulo blanco detrás
+        BiConsumer<String, float[]> drawTextWithBackground = (text, pos) -> {
+            try {
+                float x = pos[0];
+                float y = pos[1];
 
-        canvas.endText();
+                float padding = 5f;
+                float fontSize = pos[2];
+                canvas.setFontAndSize(bf, fontSize);
+
+                float textWidth = bf.getWidthPoint(text, fontSize);
+                float textHeight = fontSize;
+
+                // Rectángulo blanco detrás del texto
+                canvas.setColorFill(new BaseColor(255, 255, 255, 200)); // blanco semitransparente
+                canvas.rectangle(x - textWidth / 2 - padding, y - padding, textWidth + 2 * padding, textHeight + 2 * padding);
+                canvas.fill();
+
+                // Escribir texto en negro
+                canvas.beginText();
+                canvas.setColorFill(BaseColor.BLACK);
+                canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
+                canvas.endText();
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        float pageWidth = document.getPageSize().getWidth();
+
+        // Posiciones con texto destacado
+        drawTextWithBackground.accept("Gift Card", new float[]{pageWidth / 2, 700, 24});
+        drawTextWithBackground.accept("Code: " + codigo, new float[]{pageWidth / 2, 650, 20});
+        drawTextWithBackground.accept("To: " + nombreReceptor, new float[]{pageWidth / 2, 600, 20});
+        drawTextWithBackground.accept("From: " + nombreCliente, new float[]{pageWidth / 2, 550, 20});
+        drawTextWithBackground.accept("Amount: €" + cantidad, new float[]{pageWidth / 2, 500, 20});
+        drawTextWithBackground.accept("Valid until: " + fechaExpiracion, new float[]{pageWidth / 2, 450, 20});
+
         document.close();
-
         return baos.toByteArray();
     }
+
 
 
     
