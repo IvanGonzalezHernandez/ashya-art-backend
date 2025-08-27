@@ -1,16 +1,27 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -163,12 +174,21 @@ public class EmailService {
     
     public void enviarConfirmacionTarjetaRegaloIndividual(
             String destinatario,
-            String codigo,
             String nombreCliente,
             String nombreReceptor,
+            String codigo,
             BigDecimal cantidad,
-            LocalDate fechaExpiracion) {
+            LocalDate fechaExpiracion
+    ) {
         try {
+            byte[] pdfBytes = generarTarjetaRegaloPdf(
+                    codigo,
+                    nombreReceptor,
+                    cantidad,
+                    nombreCliente,
+                    fechaExpiracion
+            );
+
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
@@ -185,12 +205,64 @@ public class EmailService {
 
             helper.setText(contenido, true);
 
+            ByteArrayResource pdfResource = new ByteArrayResource(pdfBytes);
+            helper.addAttachment("TarjetaRegalo_" + codigo + ".pdf", pdfResource);
+
             mailSender.send(mensaje);
 
         } catch (MessagingException e) {
             throw new RuntimeException("Error enviando la confirmación de la tarjeta regalo", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando la tarjeta regalo PDF", e);
         }
     }
+
+    
+    private byte[] generarTarjetaRegaloPdf(
+            String codigo,
+            String nombreReceptor,
+            BigDecimal cantidad,
+            String nombreCliente,
+            LocalDate fechaExpiracion
+    ) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+        PdfWriter writer = PdfWriter.getInstance(document, baos);
+        document.open();
+
+        // Imagen base fija desde resources/assets
+        ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
+        InputStream is = resource.getInputStream();
+        byte[] imgBytes = is.readAllBytes();
+        Image img = Image.getInstance(imgBytes);
+        img.setAbsolutePosition(0, 0);
+        img.scaleToFit(document.getPageSize().getWidth(), document.getPageSize().getHeight());
+        document.add(img);
+
+        // Texto encima
+        PdfContentByte canvas = writer.getDirectContent();
+        canvas.beginText();
+        BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+        canvas.setFontAndSize(bf, 24);
+        canvas.setColorFill(BaseColor.BLACK);
+
+        // Ajusta posiciones según tu diseño
+        canvas.showTextAligned(Element.ALIGN_CENTER, "Gift Card", 300, 700, 0);
+        canvas.showTextAligned(Element.ALIGN_CENTER, "Code: " + codigo, 300, 650, 0);
+        canvas.showTextAligned(Element.ALIGN_CENTER, "To: " + nombreReceptor, 300, 600, 0);
+        canvas.showTextAligned(Element.ALIGN_CENTER, "From: " + nombreCliente, 300, 550, 0);
+        canvas.showTextAligned(Element.ALIGN_CENTER, "Amount: €" + cantidad, 300, 500, 0);
+        canvas.showTextAligned(Element.ALIGN_CENTER, "Valid until: " + fechaExpiracion, 300, 450, 0);
+
+        canvas.endText();
+        document.close();
+
+        return baos.toByteArray();
+    }
+
+
+    
+    
 
 
 
