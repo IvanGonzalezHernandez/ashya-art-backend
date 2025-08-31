@@ -288,13 +288,60 @@ public class EmailService {
         document.close();
         return baos.toByteArray();
     }
-
-
-
     
-    
+    public void enviarSolicitudFiring(
+            String nombreCliente,
+            String emailCliente,
+            String telefonoCliente,
+            String tipoServicio,
+            int numeroPiezas,
+            String detallesMaterial,
+            String preguntasAdicionales
+    ) {
 
+        // Email de confirmación al cliente
+        String asuntoCliente = "Firing Service Request Confirmation";
+        String cuerpoCliente = "Hello " + nombreCliente + ",\n\n" +
+                "We have received your request for the firing service: " + mapTipoServicio(tipoServicio) + ".\n" +
+                "We will contact you soon to coordinate the details.\n\n" +
+                "Best regards,\nAshya Art";
 
+        SimpleMailMessage mensajeCliente = new SimpleMailMessage();
+        mensajeCliente.setTo(emailCliente);
+        mensajeCliente.setSubject(asuntoCliente);
+        mensajeCliente.setText(cuerpoCliente);
+        mensajeCliente.setFrom("ivangonzalez.code@gmail.com");
+        mailSender.send(mensajeCliente);
 
+        // Email de notificación al administrador
+        String admin = "ivangonzalez.code@gmail.com";
+        String asuntoAdmin = "New Firing Service Request - " + mapTipoServicio(tipoServicio);
 
+        String cuerpoAdmin = "You have received a new firing service request:\n\n" +
+                "Name: " + nombreCliente + "\n" +
+                "Email: " + emailCliente + "\n" +
+                "Phone: " + telefonoCliente + "\n" +
+                "Service type: " + mapTipoServicio(tipoServicio) + "\n" +
+                "Number of pieces: " + numeroPiezas + "\n" +
+                "Clay and glaze details: " + detallesMaterial + "\n" +
+                "Additional questions: " + (preguntasAdicionales != null ? preguntasAdicionales : "None") + "\n\n" +
+                "Please contact the client to coordinate the details.";
+
+        SimpleMailMessage mensajeAdmin = new SimpleMailMessage();
+        mensajeAdmin.setTo(admin);
+        mensajeAdmin.setSubject(asuntoAdmin);
+        mensajeAdmin.setText(cuerpoAdmin);
+        mensajeAdmin.setFrom("ivangonzalez.code@gmail.com");
+        mailSender.send(mensajeAdmin);
+    }
+
+    // Método auxiliar para mapear tipoServicio a texto legible
+    private String mapTipoServicio(String tipoServicio) {
+        return switch (tipoServicio) {
+            case "entireKilnBisque" -> "Rent entire kiln – Bisque firing (35€)";
+            case "entireKilnGlaze" -> "Rent entire kiln – Glaze firing (40€)";
+            case "singlePiece" -> "Single piece firing (4€)";
+            default -> tipoServicio;
+        };
+    }
 }
