@@ -44,6 +44,8 @@ import com.stripe.model.Coupon;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 
+import jakarta.mail.MessagingException;
+
 @Service
 public class StripeService {
 
@@ -241,7 +243,7 @@ public class StripeService {
         }
     }
 
-    private void procesarCurso(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+    private void procesarCurso(Cliente cliente, Compra compraTotal, ItemCarritoDto item) throws MessagingException {
         Long idCursoFecha = Long.valueOf(item.getId());
         CursoFecha cursoFecha = cursoFechaDao.findById(idCursoFecha)
                 .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
