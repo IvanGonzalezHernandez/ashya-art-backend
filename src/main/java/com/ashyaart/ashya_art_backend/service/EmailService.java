@@ -3,6 +3,8 @@ package com.ashyaart.ashya_art_backend.service;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.function.BiConsumer;
 
@@ -96,40 +98,43 @@ public class EmailService {
 
         String asunto = "Confirmation for your course - " + nombreCurso;
 
-        String cuerpoHtml = "<html>" +
-            "<body style='background-color:#ffffff; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+        // Enlace de Google Maps
+        String direccionTexto = "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg";
+        String mapsUrl = "https://www.google.com/maps/search/?api=1&query="
+                + URLEncoder.encode(direccionTexto, StandardCharsets.UTF_8);
+
+        String cuerpoHtml =
+            "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
             "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
 
             "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
 
             "<p>Thank you for purchasing the <b>" + nombreCurso + "</b> from Ashya Art.</p>" +
 
-            "<p>The course will start on <b>" + fechaCurso + "</b>. <br>" +
+            "<p>The course will start on <b>" + fechaCurso + "</b>.<br>" +
             "We kindly ask you to arrive <b>10–15 minutes before</b> the scheduled time.</p>" +
 
-            "<ul>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li><b>📘 Course:</b> " + nombreCurso + "</li>" +
             "<li><b>📅 Date:</b> " + fechaCurso + "</li>" +
             "<li><b>👥 Seats reserved:</b> " + plazasReservadas + "</li>" +
             "<li><b>💶 Price:</b> " + bigDecimal + " EUR</li>" +
             "<li><b>📍 Address:</b> " +
-            "<a href='https://maps.app.goo.gl/t3cnYATeNvqYxEYu9' " +
-            "style='color:#1a73e8; text-decoration:none;' target='_blank'>" +
-            "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg</a></li>" +
+            "<a href='" + mapsUrl + "' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>" +
+            direccionTexto + "</a></li>" +
             "</ul>" +
 
             "<p>If you have any trouble finding the studio or if you’d like to share your creative ideas in advance, you can contact me through any of the following options:</p>" +
 
-            "<ul>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
             "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
             "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
-            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;'>@ashya_art</a></li>" +
+            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
             "</ul>" +
 
-            "<p style='margin-top:20px;'>We are looking forward to welcoming you and creating something special together!</p>" +
-
-            "<p>Best regards,<br><b>Ashya Art Team</b></p>" +
+            "<p>Best regards,<br><b>Ashya</b></p>" +
             "</div>" +
             "</body></html>";
 
