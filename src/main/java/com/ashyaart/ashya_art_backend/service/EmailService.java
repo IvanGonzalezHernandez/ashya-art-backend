@@ -150,59 +150,104 @@ public class EmailService {
         mailSender.send(mensaje);
     }
     
-    public void enviarConfirmacionProductoIndividual(String emailCliente, String nombreCliente,
-            String nombreProducto, int cantidad, BigDecimal precioUnitario) {
+    public void enviarConfirmacionProductoIndividual(String emailCliente,
+            String nombreCliente,
+            String nombreProducto,
+            int cantidad,
+            BigDecimal precioUnitario) throws MessagingException { // precioUnitario no se usa
 
 			String asunto = "Confirmation for your product purchase - " + nombreProducto;
 			
-			BigDecimal total = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+			String cuerpoHtml =
+			"<html>" +
+			"<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+			"<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
 			
-			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
-			"Thank you for your purchase! Here are the details of your product:\n\n" +
-			"🛍️ Product: " + nombreProducto + "\n" +
-			"👥 Quantity: " + cantidad + "\n" +
-			"💶 Unit Price: " + precioUnitario + " EUR\n" +
-			"💰 Total: " + total + " EUR\n\n" +
-			"We hope you enjoy your product!\n\n" +
-			"Best regards,\n" +
-			"Ashya Art Team";
+			"<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
 			
-			SimpleMailMessage mensaje = new SimpleMailMessage();
-			mensaje.setTo(emailCliente);
-			mensaje.setSubject(asunto);
-			mensaje.setText(cuerpo);
-			mensaje.setFrom("ivangonzalez.code@gmail.com");
+			"<p>Thank you for purchasing ceramic art from <b>Ashya Art</b>.</p>" +
+			
+			"<ul style='line-height:1.7; padding-left:20px;'>" +
+			"<li><b>🛍️ Product:</b> " + nombreProducto + "</li>" +
+			"<li><b>👥 Quantity:</b> " + cantidad + "</li>" +
+			"</ul>" +
+			
+			"<p>Soon I will provide your delivery number so you can track your purchase.</p>" +
+			
+			"<p>If you have any questions about your purchase, you can contact me through any of the following options:</p>" +
+			"<ul style='line-height:1.7; padding-left:20px;'>" +
+			"<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+			"<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+			"<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+			"<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+			"</ul>" +
+			
+			"<p>Best regards,<br><b>Ashya</b></p>" +
+			"</div>" +
+			"</body></html>";
+			
+			MimeMessage mensaje = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+			helper.setTo(emailCliente);
+			helper.setSubject(asunto);
+			helper.setText(cuerpoHtml, true);
+			helper.setFrom("ivangonzalez.code@gmail.com");
 			
 			mailSender.send(mensaje);
 	}
     
-    public void enviarConfirmacionSecretoIndividual(String emailCliente, String nombreCliente, String nombreSecreto, byte[] pdfBytes) {
+    public void enviarConfirmacionSecretoIndividual(String emailCliente,
+            String nombreCliente,
+            String nombreSecreto,
+            byte[] pdfBytes) {
 
 			String asunto = "Your Secret Purchase - " + nombreSecreto;
-			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
-			"Thank you for your purchase! Please find your secret attached as a PDF.\n\n" +
-			"We hope you enjoy it!\n\n" +
-			"Best regards,\n" +
-			"Ashya Art Team";
+			
+			String cuerpoHtml =
+			"<html>" +
+			"<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+			"<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+			
+			"<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
+			
+			"<p>Thank you for your purchase from <b>Ashya Art</b>. Please find attached your PDF document containing the information/instruction you have purchased.</p>" +
+			
+			"<ul style='line-height:1.7; padding-left:20px;'>" +
+			"<li><b>🔐 Secret:</b> " + nombreSecreto + "</li>" +
+			"</ul>" +
+			
+			"<p>If the attachment doesn’t open on your device, just reply to this email and I’ll resend it.</p>" +
+			
+			"<p>If you have any questions, you can contact me through:</p>" +
+			"<ul style='line-height:1.7; padding-left:20px;'>" +
+			"<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+			"<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+			"<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+			"<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+			"</ul>" +
+			
+			"<p>Best regards,<br><b>Ashya</b></p>" +
+			"</div>" +
+			"</body></html>";
 			
 			try {
 			MimeMessage mensaje = mailSender.createMimeMessage();
-			MimeMessageHelper helper = new MimeMessageHelper(mensaje, true); // true = multipart
+			MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8"); // true = multipart
 			
 			helper.setTo(emailCliente);
 			helper.setSubject(asunto);
-			helper.setText(cuerpo);
 			helper.setFrom("ivangonzalez.code@gmail.com");
+			helper.setText(cuerpoHtml, true); // HTML
 			
-			// Adjuntar PDF
+			// Adjuntar PDF (con tipo de contenido)
 			ByteArrayResource pdfResource = new ByteArrayResource(pdfBytes);
-			helper.addAttachment(nombreSecreto + ".pdf", pdfResource);
+			helper.addAttachment(nombreSecreto + ".pdf", pdfResource, "application/pdf");
 			
 			mailSender.send(mensaje);
 			
 			} catch (MessagingException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Error sending email with attachment", e);
+			e.printStackTrace();
+			throw new RuntimeException("Error sending email with attachment", e);
 			}
 	}
     

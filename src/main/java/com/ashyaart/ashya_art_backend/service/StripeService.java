@@ -274,7 +274,7 @@ public class StripeService {
         );
     }
     
-    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) throws MessagingException {
     	Long idProducto = Long.valueOf(item.getId());
 		Producto producto = productoDao.findById(idProducto)
 				.orElseThrow(() -> new RuntimeException("Producto no encontrado: " + idProducto));
