@@ -92,30 +92,58 @@ public class EmailService {
     public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
             String nombreCurso, String fechaCurso,
             int plazasReservadas, BigDecimal bigDecimal,
-            String informacionExtra) {
+            String informacionExtra) throws MessagingException {
 
-			String asunto = "Confirmation for your course - " + nombreCurso;
-			
-			String cuerpo = "Hello " + nombreCliente + ",\n\n" +
-			"Thank you for your purchase! Here are the details of your course:\n\n" +
-			"📘 Course: " + nombreCurso + "\n" +
-			"📅 Date: " + fechaCurso + "\n" +
-			"👥 Seats reserved: " + plazasReservadas + "\n" +
-			"💶 Price: " + bigDecimal + " EUR\n" +
-			(informacionExtra != null && !informacionExtra.isEmpty() 
-			? "ℹ️ Additional info: " + informacionExtra + "\n" : "") +
-			"\nWe look forward to seeing you in class!\n\n" +
-			"Best regards,\n" +
-			"Ashya Art Team";
-			
-			SimpleMailMessage mensaje = new SimpleMailMessage();
-			mensaje.setTo(emailCliente);
-			mensaje.setSubject(asunto);
-			mensaje.setText(cuerpo);
-			mensaje.setFrom("ivangonzalez.code@gmail.com");
-			
-			mailSender.send(mensaje);
-	}
+        String asunto = "Confirmation for your course - " + nombreCurso;
+
+        String cuerpoHtml = "<html>" +
+            "<body style='background-color:#ffffff; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+
+            "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
+
+            "<p>Thank you for purchasing the <b>" + nombreCurso + "</b> from Ashya Art.</p>" +
+
+            "<p>The course will start on <b>" + fechaCurso + "</b>. <br>" +
+            "We kindly ask you to arrive <b>10–15 minutes before</b> the scheduled time.</p>" +
+
+            "<ul>" +
+            "<li><b>📘 Course:</b> " + nombreCurso + "</li>" +
+            "<li><b>📅 Date:</b> " + fechaCurso + "</li>" +
+            "<li><b>👥 Seats reserved:</b> " + plazasReservadas + "</li>" +
+            "<li><b>💶 Price:</b> " + bigDecimal + " EUR</li>" +
+            "<li><b>📍 Address:</b> " +
+            "<a href='https://maps.app.goo.gl/t3cnYATeNvqYxEYu9' " +
+            "style='color:#1a73e8; text-decoration:none;' target='_blank'>" +
+            "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg</a></li>" +
+            "</ul>" +
+
+            "<p>If you have any trouble finding the studio or if you’d like to share your creative ideas in advance, you can contact me through any of the following options:</p>" +
+
+            "<ul>" +
+            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;'>@ashya_art</a></li>" +
+            "</ul>" +
+
+            "<p style='margin-top:20px;'>We are looking forward to welcoming you and creating something special together!</p>" +
+
+            "<p>Best regards,<br><b>Ashya Art Team</b></p>" +
+            "</div>" +
+            "</body></html>";
+
+        // Crear el mensaje MIME
+        MimeMessage mensaje = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+
+        helper.setTo(emailCliente);
+        helper.setSubject(asunto);
+        helper.setText(cuerpoHtml, true); // true = HTML
+        helper.setFrom("ivangonzalez.code@gmail.com");
+
+        mailSender.send(mensaje);
+    }
     
     public void enviarConfirmacionProductoIndividual(String emailCliente, String nombreCliente,
             String nombreProducto, int cantidad, BigDecimal precioUnitario) {

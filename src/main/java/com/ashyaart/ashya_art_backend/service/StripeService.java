@@ -164,6 +164,11 @@ public class StripeService {
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl);
+        
+        // Prefijar email si lo tienes
+        if (clienteDto.getEmail() != null && !clienteDto.getEmail().isBlank()) {
+            paramsBuilder.setCustomerEmail(clienteDto.getEmail());
+        }
 
         // 5️ Añadir descuento como cupón si aplica
         if (coupon != null) {
