@@ -52,48 +52,91 @@ public class CursoController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CursoDto> crearCurso(
-        @RequestPart("curso") CursoDto cursoDto,
-        @RequestPart(value = "imagenes", required = false) MultipartFile[] imagenes
+            @RequestPart("curso") CursoDto cursoDto,
+            @RequestPart(value = "img1", required = false) MultipartFile img1,
+            @RequestPart(value = "img2", required = false) MultipartFile img2,
+            @RequestPart(value = "img3", required = false) MultipartFile img3,
+            @RequestPart(value = "img4", required = false) MultipartFile img4,
+            @RequestPart(value = "img5", required = false) MultipartFile img5
     ) {
-        logger.info("crearCurso - Solicitud POST para crear un nuevo curso: {}", cursoDto);
-
         try {
-            if (imagenes != null) {
-                if (imagenes.length > 5) {
-                    return ResponseEntity.badRequest().body(null);
-                }
+            if (img1 != null) cursoDto.setImg1(img1.getBytes());
+            if (img2 != null) cursoDto.setImg2(img2.getBytes());
+            if (img3 != null) cursoDto.setImg3(img3.getBytes());
+            if (img4 != null) cursoDto.setImg4(img4.getBytes());
+            if (img5 != null) cursoDto.setImg5(img5.getBytes());
 
-                for (int i = 0; i < imagenes.length; i++) {
-                    byte[] contenido = imagenes[i].getBytes();
-                    switch (i) {
-                        case 0 -> cursoDto.setImg1(contenido);
-                        case 1 -> cursoDto.setImg2(contenido);
-                        case 2 -> cursoDto.setImg3(contenido);
-                        case 3 -> cursoDto.setImg4(contenido);
-                        case 4 -> cursoDto.setImg5(contenido);
-                    }
-                }
-            }
-
-            CursoDto nuevoCurso = cursoService.crearCurso(cursoDto);
-            logger.info("crearCurso - Curso creado con ID: {}", nuevoCurso.getId());
-            return ResponseEntity.ok(nuevoCurso);
-
+            CursoDto nuevo = cursoService.crearCurso(cursoDto);
+            return ResponseEntity.ok(nuevo);
         } catch (IOException e) {
-            logger.error("Error procesando las imágenes", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CursoDto> actualizarCurso(@PathVariable Long id, @RequestBody CursoDto cursoDto) {
-        logger.info("actualizarCurso - Solicitud PUT para actualizar curso con ID {}: {}", id, cursoDto);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CursoDto> actualizarCurso(
+            @PathVariable Long id,
+            @RequestPart("curso") CursoDto cursoDto,
+            @RequestPart(value = "img1", required = false) MultipartFile img1,
+            @RequestPart(value = "img2", required = false) MultipartFile img2,
+            @RequestPart(value = "img3", required = false) MultipartFile img3,
+            @RequestPart(value = "img4", required = false) MultipartFile img4,
+            @RequestPart(value = "img5", required = false) MultipartFile img5,
+            @RequestParam(value = "deleteImg1", required = false, defaultValue = "false") boolean deleteImg1,
+            @RequestParam(value = "deleteImg2", required = false, defaultValue = "false") boolean deleteImg2,
+            @RequestParam(value = "deleteImg3", required = false, defaultValue = "false") boolean deleteImg3,
+            @RequestParam(value = "deleteImg4", required = false, defaultValue = "false") boolean deleteImg4,
+            @RequestParam(value = "deleteImg5", required = false, defaultValue = "false") boolean deleteImg5
+    ) throws IOException {
         cursoDto.setId(id);
-        CursoDto cursoActualizado = cursoService.actualizarCurso(cursoDto);
-        logger.info("actualizarCurso - Curso actualizado con ID: {}", cursoActualizado.getId());
-        return ResponseEntity.ok(cursoActualizado);
+
+        // pasar los bytes al DTO sólo si hay reemplazo
+        if (img1 != null) cursoDto.setImg1(img1.getBytes());
+        if (img2 != null) cursoDto.setImg2(img2.getBytes());
+        if (img3 != null) cursoDto.setImg3(img3.getBytes());
+        if (img4 != null) cursoDto.setImg4(img4.getBytes());
+        if (img5 != null) cursoDto.setImg5(img5.getBytes());
+
+        // flags de borrado
+        cursoDto.setDeleteImg1(deleteImg1);
+        cursoDto.setDeleteImg2(deleteImg2);
+        cursoDto.setDeleteImg3(deleteImg3);
+        cursoDto.setDeleteImg4(deleteImg4);
+        cursoDto.setDeleteImg5(deleteImg5);
+
+        CursoDto actualizado = cursoService.actualizarCurso(cursoDto);
+        return ResponseEntity.ok(actualizado);
     }
+
+    
+    @GetMapping("/{id}/imagen/{slot}")
+    public ResponseEntity<byte[]> obtenerImagen(
+            @PathVariable Long id,
+            @PathVariable int slot
+    ) {
+        CursoDto curso = cursoService.obtenerCursoPorId(id);
+        if (curso == null) return ResponseEntity.notFound().build();
+
+        byte[] data = switch (slot) {
+            case 1 -> curso.getImg1();
+            case 2 -> curso.getImg2();
+            case 3 -> curso.getImg3();
+            case 4 -> curso.getImg4();
+            case 5 -> curso.getImg5();
+            default -> null;
+        };
+
+        if (data == null || data.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.parseMediaType("image/webp"))
+                .body(data);
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCurso(@PathVariable Long id) {

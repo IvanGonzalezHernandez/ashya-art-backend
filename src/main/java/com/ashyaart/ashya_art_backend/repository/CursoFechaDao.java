@@ -18,7 +18,8 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     // Buscar por fecha exacta (o todos si fecha es null)
     @Query("SELECT cf, c.nombre FROM CursoFecha cf " +
    		   "JOIN FETCH cf.curso c " +
-           "WHERE (:fecha IS NULL OR cf.fecha = :fecha)")
+           "WHERE (:fecha IS NULL OR cf.fecha = :fecha) " +
+   		   "ORDER BY cf.fecha DESC")
     List<CursoFecha> findByFiltros(@Param("fecha") LocalDate fecha);
 
     boolean existsById(Long id);

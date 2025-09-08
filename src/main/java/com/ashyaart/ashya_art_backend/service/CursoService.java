@@ -68,22 +68,40 @@ public class CursoService {
 
     @Transactional
     public CursoDto actualizarCurso(CursoDto cursoDto) {
-        logger.info("actualizarCurso - Actualizando curso con ID: {}", cursoDto.getId());
         Curso curso = cursoDao.findById(cursoDto.getId())
             .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado con ID: " + cursoDto.getId()));
 
+        // Campos normales
         curso.setNombre(cursoDto.getNombre());
         curso.setSubtitulo(cursoDto.getSubtitulo());
         curso.setDescripcion(cursoDto.getDescripcion());
         curso.setPrecio(cursoDto.getPrecio());
-        curso.setEstado(cursoDto.getEstado());
         curso.setFechaBaja(cursoDto.getFechaBaja());
+        curso.setNivel(cursoDto.getNivel());
+        curso.setDuracion(cursoDto.getDuracion());
+        curso.setPiezas(cursoDto.getPiezas());
+        curso.setMateriales(cursoDto.getMateriales());
+        curso.setPlazasMaximas(cursoDto.getPlazasMaximas());
+        curso.setInformacionExtra(cursoDto.getInformacionExtra());
 
-        Curso cursoActualizado = cursoDao.save(curso);
-        CursoDto dtoActualizado = CursoAssembler.toDto(cursoActualizado);
-        logger.info("actualizarCurso - Curso actualizado con ID: {}", dtoActualizado.getId());
-        return dtoActualizado;
+        // Borrados explícitos
+        if (Boolean.TRUE.equals(cursoDto.getDeleteImg1())) curso.setImg1(null);
+        if (Boolean.TRUE.equals(cursoDto.getDeleteImg2())) curso.setImg2(null);
+        if (Boolean.TRUE.equals(cursoDto.getDeleteImg3())) curso.setImg3(null);
+        if (Boolean.TRUE.equals(cursoDto.getDeleteImg4())) curso.setImg4(null);
+        if (Boolean.TRUE.equals(cursoDto.getDeleteImg5())) curso.setImg5(null);
+
+        // Reemplazos (si llegaron bytes nuevos tienen prioridad sobre el flag)
+        if (cursoDto.getImg1() != null) curso.setImg1(cursoDto.getImg1());
+        if (cursoDto.getImg2() != null) curso.setImg2(cursoDto.getImg2());
+        if (cursoDto.getImg3() != null) curso.setImg3(cursoDto.getImg3());
+        if (cursoDto.getImg4() != null) curso.setImg4(cursoDto.getImg4());
+        if (cursoDto.getImg5() != null) curso.setImg5(cursoDto.getImg5());
+
+        Curso guardado = cursoDao.save(curso);
+        return CursoAssembler.toDto(guardado);
     }
+
 
     @Transactional
     public void eliminarCurso(Long id) {
