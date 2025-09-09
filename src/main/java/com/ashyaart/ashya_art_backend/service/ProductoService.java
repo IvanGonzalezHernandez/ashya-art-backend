@@ -65,21 +65,39 @@ public class ProductoService {
     @Transactional
     public ProductoDto actualizarProducto(ProductoDto productoDto) {
         logger.info("actualizarProducto - Actualizando producto con ID: {}", productoDto.getId());
-        Producto producto = productoDao.findById(productoDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + productoDto.getId()));
 
+        Producto producto = productoDao.findById(productoDto.getId())
+            .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + productoDto.getId()));
+
+        // --- Campos normales ---
         producto.setNombre(productoDto.getNombre());
         producto.setSubtitulo(productoDto.getSubtitulo());
         producto.setDescripcion(productoDto.getDescripcion());
-        producto.setStock(productoDto.getStock());
         producto.setPrecio(productoDto.getPrecio());
-        producto.setEstado(productoDto.getEstado());
+        producto.setStock(productoDto.getStock());
         producto.setFechaBaja(productoDto.getFechaBaja());
 
-        Producto productoActualizado = productoDao.save(producto);
-        ProductoDto dtoActualizado = ProductoAssembler.toDto(productoActualizado);
-        logger.info("actualizarProducto - Producto actualizado con ID: {}", dtoActualizado.getId());
-        return dtoActualizado;
+        producto.setCategoria(productoDto.getCategoria());
+        producto.setMedidas(productoDto.getMedidas());
+        producto.setMaterial(productoDto.getMaterial());
+
+        // --- Imágenes: borrar -> null; reemplazar -> bytes; conservar -> valor actual ---
+        // Borrados explícitos (como en CursoService)
+        if (Boolean.TRUE.equals(productoDto.getDeleteImg1())) producto.setImg1(null);
+        if (Boolean.TRUE.equals(productoDto.getDeleteImg2())) producto.setImg2(null);
+        if (Boolean.TRUE.equals(productoDto.getDeleteImg3())) producto.setImg3(null);
+        if (Boolean.TRUE.equals(productoDto.getDeleteImg4())) producto.setImg4(null);
+        if (Boolean.TRUE.equals(productoDto.getDeleteImg5())) producto.setImg5(null);
+
+        // Reemplazos (si llegaron bytes nuevos tienen prioridad)
+        if (productoDto.getImg1() != null) producto.setImg1(productoDto.getImg1());
+        if (productoDto.getImg2() != null) producto.setImg2(productoDto.getImg2());
+        if (productoDto.getImg3() != null) producto.setImg3(productoDto.getImg3());
+        if (productoDto.getImg4() != null) producto.setImg4(productoDto.getImg4());
+        if (productoDto.getImg5() != null) producto.setImg5(productoDto.getImg5());
+
+        Producto guardado = productoDao.save(producto);
+        return ProductoAssembler.toDto(guardado);
     }
 
     @Transactional

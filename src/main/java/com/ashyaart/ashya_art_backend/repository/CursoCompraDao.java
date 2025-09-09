@@ -16,7 +16,8 @@ public interface CursoCompraDao extends JpaRepository<CursoCompra, Long> {
 		       "JOIN FETCH cc.cliente cli " +
 		       "JOIN FETCH cc.cursoFecha cf " +
 		       "JOIN FETCH cf.curso c " +
-		       "WHERE (:cliente IS NULL OR LOWER(cli.nombre) LIKE LOWER(CONCAT('%', :cliente, '%')))")
+		       "WHERE (:cliente IS NULL OR LOWER(cli.nombre) LIKE LOWER(CONCAT('%', :cliente, '%'))) " +
+		       "ORDER BY cc.id DESC")
 		List<CursoCompra> findByFiltros(@Param("cliente") String cliente);
 
 
