@@ -19,6 +19,13 @@ public class SecretoDto {
     private byte[] img3;
     private byte[] img4;
     private byte[] img5;
+    
+    private Boolean deleteImg1;
+    private Boolean deleteImg2;
+    private Boolean deleteImg3;
+    private Boolean deleteImg4;
+    private Boolean deleteImg5;
+    private Boolean deletePdf;
 
     public SecretoDto() {}
 
@@ -135,4 +142,54 @@ public class SecretoDto {
     public void setImg5(byte[] img5) {
         this.img5 = img5;
     }
+
+	public Boolean getDeleteImg1() {
+		return deleteImg1;
+	}
+
+	public void setDeleteImg1(Boolean deleteImg1) {
+		this.deleteImg1 = deleteImg1;
+	}
+
+	public Boolean getDeleteImg2() {
+		return deleteImg2;
+	}
+
+	public void setDeleteImg2(Boolean deleteImg2) {
+		this.deleteImg2 = deleteImg2;
+	}
+
+	public Boolean getDeleteImg3() {
+		return deleteImg3;
+	}
+
+	public void setDeleteImg3(Boolean deleteImg3) {
+		this.deleteImg3 = deleteImg3;
+	}
+
+	public Boolean getDeleteImg4() {
+		return deleteImg4;
+	}
+
+	public void setDeleteImg4(Boolean deleteImg4) {
+		this.deleteImg4 = deleteImg4;
+	}
+
+	public Boolean getDeleteImg5() {
+		return deleteImg5;
+	}
+
+	public void setDeleteImg5(Boolean deleteImg5) {
+		this.deleteImg5 = deleteImg5;
+	}
+
+	public Boolean getDeletePdf() {
+		return deletePdf;
+	}
+
+	public void setDeletePdf(Boolean deletePdf) {
+		this.deletePdf = deletePdf;
+	}
+    
+    
 }

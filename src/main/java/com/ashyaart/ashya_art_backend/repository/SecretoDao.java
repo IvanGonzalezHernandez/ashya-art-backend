@@ -3,6 +3,7 @@ package com.ashyaart.ashya_art_backend.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,5 +15,12 @@ public interface SecretoDao extends JpaRepository<Secreto, Long> {
            "WHERE (:nombre IS NULL OR LOWER(s.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) " +
            "AND s.estado = true")
     List<Secreto> findByFiltros(@Param("nombre") String nombre);
+    
+    @Modifying
+    @Query("UPDATE Secreto s " +
+            "SET s.estado = false, " +
+            "s.fechaBaja = CURRENT_DATE " +
+            "WHERE s.id = :id")
+    int borradoLogico(@Param("id") Long id);
 
 }
