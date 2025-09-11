@@ -27,84 +27,70 @@ public class TarjetaRegaloService {
 
     @Autowired
     private TarjetaRegaloDao tarjetaRegaloDao;
+
     @Autowired
     private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
 
     public List<TarjetaRegaloDto> findByFilter(TarjetaRegaloFilter filter) {
-        logger.info("findByFilter - Iniciando búsqueda de tarjetas regalo");
         List<TarjetaRegalo> tarjetas = tarjetaRegaloDao.findByFiltros(filter.getNombre());
-        List<TarjetaRegaloDto> resultado = tarjetas.stream()
-                .map(TarjetaRegaloAssembler::toDto)
-                .toList();
-        logger.info("findByFilter - Se encontraron {} tarjetas regalo", resultado.size());
-        return resultado;
+        return tarjetas.stream().map(TarjetaRegaloAssembler::toDto).toList();
     }
-    
+
     public TarjetaRegaloDto obtenerTarjetaPorId(Long id) {
-        logger.info("obtenerTarjetaPorId - Buscando tarjeta regalo con ID: {}", id);
         Optional<TarjetaRegalo> tarjetaOpt = tarjetaRegaloDao.findById(id);
-
-        if (tarjetaOpt.isPresent()) {
-            TarjetaRegaloDto dto = TarjetaRegaloAssembler.toDto(tarjetaOpt.get());
-            logger.info("obtenerTarjetaPorId - Tarjeta encontrada con ID: {}", id);
-            return dto;
-        } else {
-            logger.warn("obtenerTarjetaPorId - Tarjeta con ID {} no encontrada", id);
-            return null;
-        }
+        return tarjetaOpt.map(TarjetaRegaloAssembler::toDto).orElse(null);
     }
-
 
     @Transactional
     public TarjetaRegaloDto crearTarjetaRegalo(TarjetaRegaloDto tarjetaDto) {
-        logger.info("crearTarjetaRegalo - Creando nueva tarjeta regalo: {}", tarjetaDto);
         TarjetaRegalo tarjeta = TarjetaRegaloAssembler.toEntity(tarjetaDto);
         tarjeta.setId(null);
         TarjetaRegalo guardada = tarjetaRegaloDao.save(tarjeta);
-        TarjetaRegaloDto dtoGuardado = TarjetaRegaloAssembler.toDto(guardada);
-        logger.info("crearTarjetaRegalo - Tarjeta regalo creada con ID: {}", dtoGuardado.getId());
-        return dtoGuardado;
+        return TarjetaRegaloAssembler.toDto(guardada);
     }
 
+    /**
+     * Actualiza tarjeta regalo con control de imagen:
+     * - Si mustDelete = true -> elimina imagen (setImg(null))
+     * - Si nuevaImagen != null -> reemplaza imagen
+     * - Si neither -> mantiene imagen actual
+     */
     @Transactional
-    public TarjetaRegaloDto actualizarTarjetaRegalo(TarjetaRegaloDto tarjetaDto) {
-        logger.info("actualizarTarjetaRegalo - Actualizando tarjeta regalo con ID: {}", tarjetaDto.getId());
-        TarjetaRegalo tarjeta = tarjetaRegaloDao.findById(tarjetaDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Tarjeta regalo no encontrada con ID: " + tarjetaDto.getId()));
+    public TarjetaRegaloDto actualizarTarjetaRegalo(TarjetaRegaloDto dto, byte[] nuevaImagen, boolean mustDelete) {
+        TarjetaRegalo tarjeta = tarjetaRegaloDao.findById(dto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Tarjeta regalo no encontrada con ID: " + dto.getId()));
 
-        tarjeta.setNombre(tarjetaDto.getNombre());
-        tarjeta.setIdReferencia(tarjetaDto.getIdReferencia());
-        tarjeta.setPrecio(tarjetaDto.getPrecio());
-        tarjeta.setImg(tarjetaDto.getImg());
-        tarjeta.setEstado(tarjetaDto.getEstado());
-        tarjeta.setFechaAlta(tarjetaDto.getFechaAlta());
-        tarjeta.setFechaBaja(tarjetaDto.getFechaBaja());
+        // Campos básicos (sin idReferencia)
+        tarjeta.setNombre(dto.getNombre());
+        tarjeta.setPrecio(dto.getPrecio());
+        tarjeta.setEstado(dto.getEstado());
+        tarjeta.setFechaAlta(dto.getFechaAlta());
+        tarjeta.setFechaBaja(dto.getFechaBaja());
+
+        // Imagen
+        if (mustDelete) {
+            tarjeta.setImg(null);
+        } else if (nuevaImagen != null) {
+            tarjeta.setImg(nuevaImagen);
+        } // else -> mantener la actual
 
         TarjetaRegalo actualizada = tarjetaRegaloDao.save(tarjeta);
-        TarjetaRegaloDto dtoActualizado = TarjetaRegaloAssembler.toDto(actualizada);
-        logger.info("actualizarTarjetaRegalo - Tarjeta regalo actualizada con ID: {}", dtoActualizado.getId());
-        return dtoActualizado;
+        return TarjetaRegaloAssembler.toDto(actualizada);
     }
 
     @Transactional
     public void eliminarTarjetaRegalo(Long id) {
-        logger.info("eliminarTarjetaRegalo - Intentando eliminar tarjeta regalo con ID: {}", id);
         if (!tarjetaRegaloDao.existsById(id)) {
-            logger.warn("eliminarTarjetaRegalo - Tarjeta regalo con ID {} no encontrada", id);
-            throw new RuntimeException("Tarjeta regalo con id " + id + " no encontrada");
+            throw new EntityNotFoundException("Tarjeta regalo con id " + id + " no encontrada");
         }
         int filas = tarjetaRegaloDao.borradoLogico(id);
         if (filas == 0) {
-            logger.error("eliminarTarjetaRegalo - No se pudo eliminar la tarjeta regalo con ID: {}", id);
             throw new RuntimeException("No se pudo eliminar la tarjeta regalo con id " + id);
         }
-        logger.info("eliminarTarjetaRegalo - Tarjeta regalo con ID {} eliminada correctamente (borrado lógico)", id);
     }
-    
+
     public TarjetaRegaloCompra obtenerTarjetaPorCodigo(String codigo) {
         if (codigo == null || codigo.isBlank()) return null;
-
-        Optional<TarjetaRegaloCompra> tarjetaOpt = tarjetaRegaloCompraDao.findByCodigo(codigo.trim().toUpperCase());
-        return tarjetaOpt.orElse(null);
+        return tarjetaRegaloCompraDao.findByCodigo(codigo.trim().toUpperCase()).orElse(null);
     }
 }

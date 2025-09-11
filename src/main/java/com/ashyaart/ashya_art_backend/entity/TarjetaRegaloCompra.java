@@ -28,9 +28,6 @@ public class TarjetaRegaloCompra {
 
     @Column(nullable = false)
     private Boolean estado;
-
-    @Column(name = "ID_REFERENCIA", nullable = false)
-    private String idReferencia;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_TARJETA", nullable = false)
@@ -46,7 +43,7 @@ public class TarjetaRegaloCompra {
 
     public TarjetaRegaloCompra() {}
 
-    public TarjetaRegaloCompra(String codigo, TarjetaRegalo tarjetaRegalo, Cliente cliente, boolean canjeada, LocalDate fechaCompra, LocalDate fechaCaducidad, boolean estado, LocalDate fechaBaja, String idReferencia) {
+    public TarjetaRegaloCompra(String codigo, TarjetaRegalo tarjetaRegalo, Cliente cliente, boolean canjeada, LocalDate fechaCompra, LocalDate fechaCaducidad, boolean estado, LocalDate fechaBaja) {
         this.codigo = codigo;
         this.tarjetaRegalo = tarjetaRegalo;
         this.cliente = cliente;
@@ -55,7 +52,6 @@ public class TarjetaRegaloCompra {
         this.fechaCaducidad = fechaCaducidad;
         this.estado = estado;
         this.fechaBaja = fechaBaja;
-        this.idReferencia = idReferencia;
     }
 
     public Long getId() {
@@ -128,14 +124,6 @@ public class TarjetaRegaloCompra {
 
     public void setFechaBaja(LocalDate fechaBaja) {
         this.fechaBaja = fechaBaja;
-    }
-
-    public String getIdReferencia() {
-        return idReferencia;
-    }
-
-    public void setIdReferencia(String idReferencia) {
-        this.idReferencia = idReferencia;
     }
     
     public Compra getCompra() { return compra; }

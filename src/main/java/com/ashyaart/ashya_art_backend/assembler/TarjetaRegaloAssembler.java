@@ -10,7 +10,6 @@ public class TarjetaRegaloAssembler {
         dto.setId(tarjeta.getId());
         dto.setNombre(tarjeta.getNombre());
         dto.setPrecio(tarjeta.getPrecio());
-        dto.setIdReferencia(tarjeta.getIdReferencia());
         dto.setImg(tarjeta.getImg());
         dto.setFechaAlta(tarjeta.getFechaAlta());
         dto.setFechaBaja(tarjeta.getFechaBaja());
@@ -24,7 +23,6 @@ public class TarjetaRegaloAssembler {
         tarjeta.setId(dto.getId());
         tarjeta.setNombre(dto.getNombre());
         tarjeta.setPrecio(dto.getPrecio());
-        tarjeta.setIdReferencia(dto.getIdReferencia());
         tarjeta.setImg(dto.getImg());
         tarjeta.setFechaAlta(dto.getFechaAlta());
         tarjeta.setFechaBaja(dto.getFechaBaja());

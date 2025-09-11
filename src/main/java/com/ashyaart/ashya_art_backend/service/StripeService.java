@@ -350,7 +350,6 @@ public class StripeService {
 	        tarjetaCompra.setEstado(true);
 	        tarjetaCompra.setFechaCompra(LocalDate.now());
 	        tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6)); // 6 meses de validez
-	        tarjetaCompra.setIdReferencia(plantilla.getIdReferencia());
 
 	        // Guardar en la base de datos
 	        tarjetaRegaloCompraDao.save(tarjetaCompra);

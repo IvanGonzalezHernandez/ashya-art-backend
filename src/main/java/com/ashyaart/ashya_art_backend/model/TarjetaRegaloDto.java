@@ -8,12 +8,12 @@ public class TarjetaRegaloDto {
     private Long id;
     private String nombre;
     private BigDecimal precio;
-    private String idReferencia;
-    private String img;
+    private byte[] img;
     private LocalDate fechaAlta;
     private LocalDate fechaBaja;
     private Boolean estado;
-    private Integer stock;
+    
+    private Boolean deleteImg;
 
     public TarjetaRegaloDto() {}
 
@@ -41,19 +41,11 @@ public class TarjetaRegaloDto {
         this.precio = precio;
     }
 
-    public String getIdReferencia() {
-        return idReferencia;
-    }
-
-    public void setIdReferencia(String idReferencia) {
-        this.idReferencia = idReferencia;
-    }
-
-    public String getImg() {
+    public byte[] getImg() {
         return img;
     }
 
-    public void setImg(String img) {
+    public void setImg(byte[] img) {
         this.img = img;
     }
 
@@ -81,11 +73,8 @@ public class TarjetaRegaloDto {
         this.estado = estado;
     }
 
-    public Integer getStock() {
-        return stock;
-    }
+    
+    public Boolean getDeleteImg() { return deleteImg; }
+    public void setDeleteImg(Boolean deleteImg) { this.deleteImg = deleteImg; }
 
-    public void setStock(Integer stock) {
-        this.stock = stock;
-    }
 }
