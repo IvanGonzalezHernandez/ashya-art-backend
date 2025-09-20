@@ -10,6 +10,8 @@ public class CursoCompraDto {
     private Integer plazasReservadas;
     private LocalDateTime fechaReserva;
     private String nombreCliente;
+    private String telefono;
+    private String email;
     private String nombreCurso;
     private String fechaCurso;
 
@@ -87,4 +89,21 @@ public class CursoCompraDto {
 	public void setFechaCurso(String fechaCurso) {
 		this.fechaCurso = fechaCurso;
 	}
+
+	public String getTelefono() {
+		return telefono;
+	}
+
+	public void setTelefono(String telefono) {
+		this.telefono = telefono;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
 }

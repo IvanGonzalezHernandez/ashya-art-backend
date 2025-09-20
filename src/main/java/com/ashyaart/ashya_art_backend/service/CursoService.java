@@ -81,6 +81,7 @@ public class CursoService {
         curso.setDuracion(cursoDto.getDuracion());
         curso.setPiezas(cursoDto.getPiezas());
         curso.setMateriales(cursoDto.getMateriales());
+        curso.setLocalizacion(cursoDto.getLocalizacion());
         curso.setPlazasMaximas(cursoDto.getPlazasMaximas());
         curso.setInformacionExtra(cursoDto.getInformacionExtra());
 

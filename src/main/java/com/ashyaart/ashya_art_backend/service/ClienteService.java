@@ -41,6 +41,7 @@ public class ClienteService {
         logger.info("crearCliente - Creando nuevo cliente: {}", clienteDto);
         Cliente cliente = ClienteAssembler.toEntity(clienteDto);
         cliente.setId(null);
+        cliente.setFechaAlta(LocalDate.now());
         Cliente clienteGuardado = clienteDao.save(cliente);
         ClienteDto dtoGuardado = ClienteAssembler.toDto(clienteGuardado);
         logger.info("crearCliente - Cliente creado con ID: {}", dtoGuardado.getId());
@@ -59,6 +60,7 @@ public class ClienteService {
         cliente.setNumero(clienteDto.getNumero());
         cliente.setPiso(clienteDto.getPiso());
         cliente.setCiudad(clienteDto.getCiudad());
+        cliente.setPais(clienteDto.getPais());
         cliente.setCodigoPostal(clienteDto.getCodigoPostal());
         cliente.setProvincia(clienteDto.getProvincia());
         cliente.setTelefono(clienteDto.getTelefono());

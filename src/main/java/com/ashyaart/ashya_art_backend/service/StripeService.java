@@ -210,6 +210,7 @@ public class StripeService {
         compraTotal.setCodigoCompra(UUID.randomUUID().toString());
         compraTotal.setFechaCompra(LocalDate.now());
         compraTotal.setTotal(total);
+        compraTotal.setPagado(true);
 
         compraDao.save(compraTotal);
         logger.info("Compra registrada con ID: {}", compraTotal.getId());

@@ -32,7 +32,9 @@ public class Curso {
 
     @Lob
     private String materiales;
-
+    
+    private String localizacion;
+    
     @DecimalMin(value = "0.0", inclusive = true)
     @Digits(integer = 10, fraction = 2)
     private BigDecimal precio;
@@ -70,7 +72,7 @@ public class Curso {
     }
 
     public Curso(String nombre, String subtitulo, String descripcion, BigDecimal precio, Boolean estado, LocalDate fechaBaja,
-            List<CursoFecha> fechas, String nivel, String duracion, String piezas, String materiales,
+            List<CursoFecha> fechas, String nivel, String duracion, String piezas, String materiales, String localizacion,
             Integer plazasMaximas, String informacionExtra) {
 	   this.nombre = nombre;
 	   this.subtitulo = subtitulo;
@@ -83,6 +85,7 @@ public class Curso {
 	   this.duracion = duracion;
 	   this.piezas = piezas;
 	   this.materiales = materiales;
+	   this.localizacion = localizacion;
 	   this.plazasMaximas = plazasMaximas;
 	   this.informacionExtra = informacionExtra;
 	}
@@ -246,4 +249,12 @@ public class Curso {
     public void setInformacionExtra(String informacionExtra) {
         this.informacionExtra = informacionExtra;
     }
+    
+	public String getLocalizacion() {
+		return localizacion;
+	}
+	
+	public void setLocalizacion(String localizacion) {
+		this.localizacion = localizacion;
+	}
 }

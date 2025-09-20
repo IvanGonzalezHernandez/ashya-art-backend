@@ -15,6 +15,7 @@ public class CursoDto {
     private String duracion;
     private String piezas;
     private String materiales;
+    private String localizacion;
     private BigDecimal precio;
 
     // Imágenes en bytes (persistidas)
@@ -39,7 +40,7 @@ public class CursoDto {
     public CursoDto() {}
 
     public CursoDto(Long id, String nombre, String subtitulo, String descripcion, BigDecimal precio, Boolean estado,
-            LocalDate fechaBaja, String nivel, String duracion, String piezas, String materiales,
+            LocalDate fechaBaja, String nivel, String duracion, String piezas, String materiales, String localizacion,
             Integer plazasMaximas, String informacionExtra) {
         this.id = id;
         this.nombre = nombre;
@@ -52,6 +53,7 @@ public class CursoDto {
         this.duracion = duracion;
         this.piezas = piezas;
         this.materiales = materiales;
+        this.localizacion = localizacion;
         this.plazasMaximas = plazasMaximas;
         this.informacionExtra = informacionExtra;
     }
@@ -126,6 +128,9 @@ public class CursoDto {
 
     public LocalDate getFechaBaja() { return fechaBaja; }
     public void setFechaBaja(LocalDate fechaBaja) { this.fechaBaja = fechaBaja; }
+    
+    public String getLocalizacion() { return localizacion; }
+    public void setLocalizacion(String localizacion) { this.localizacion = localizacion; }
 
     // --- (Opcional) Helpers para saber si hay que borrar ---
     public boolean mustDelete(int slot) {

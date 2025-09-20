@@ -15,6 +15,7 @@ public class CursoAssembler {
 	    dto.setDuracion(curso.getDuracion());
 	    dto.setPiezas(curso.getPiezas());
 	    dto.setMateriales(curso.getMateriales());
+	    dto.setLocalizacion(curso.getLocalizacion());
 	    dto.setPrecio(curso.getPrecio());
 	    dto.setImg1(curso.getImg1());
 	    dto.setImg2(curso.getImg2());
@@ -41,6 +42,7 @@ public class CursoAssembler {
 	    curso.setDuracion(dto.getDuracion());
 	    curso.setPiezas(dto.getPiezas());
 	    curso.setMateriales(dto.getMateriales());
+	    curso.setLocalizacion(dto.getLocalizacion());
 	    curso.setPrecio(dto.getPrecio());
 	    curso.setImg1(dto.getImg1());
 	    curso.setImg2(dto.getImg2());

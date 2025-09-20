@@ -14,6 +14,7 @@ public class ClienteAssembler {
         dto.setNumero(cliente.getNumero());
         dto.setPiso(cliente.getPiso());
         dto.setCiudad(cliente.getCiudad());
+        dto.setPais(cliente.getPais());
         dto.setCodigoPostal(cliente.getCodigoPostal());
         dto.setProvincia(cliente.getProvincia());
         dto.setTelefono(cliente.getTelefono());
@@ -32,6 +33,7 @@ public class ClienteAssembler {
         cliente.setNumero(dto.getNumero());
         cliente.setPiso(dto.getPiso());
         cliente.setCiudad(dto.getCiudad());
+        cliente.setPais(dto.getPais());
         cliente.setCodigoPostal(dto.getCodigoPostal());
         cliente.setProvincia(dto.getProvincia());
         cliente.setTelefono(dto.getTelefono());

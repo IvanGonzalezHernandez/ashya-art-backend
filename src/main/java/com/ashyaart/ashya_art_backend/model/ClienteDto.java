@@ -17,6 +17,8 @@ public class ClienteDto {
     private String piso;
 
     private String ciudad;
+    
+    private String pais;
 
     private String codigoPostal;
 
@@ -86,7 +88,15 @@ public class ClienteDto {
         return ciudad;
     }
 
-    public void setCiudad(String ciudad) {
+    public String getPais() {
+		return pais;
+	}
+
+	public void setPais(String pais) {
+		this.pais = pais;
+	}
+
+	public void setCiudad(String ciudad) {
         this.ciudad = ciudad;
     }
 

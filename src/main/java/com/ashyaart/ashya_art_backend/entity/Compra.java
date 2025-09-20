@@ -25,6 +25,9 @@ public class Compra {
 
     @Column(name = "codigo_compra", nullable = false, unique = true, length = 36)
     private String codigoCompra;
+    
+    @Column(nullable = false)
+    private Boolean pagado;
 
     @ManyToOne
     @JoinColumn(name = "id_cliente", nullable = false)
@@ -76,4 +79,7 @@ public class Compra {
 
     public List<TarjetaRegaloCompra> getTarjetasRegaloCompradas() { return tarjetasRegaloCompradas; }
     public void setTarjetasRegaloCompradas(List<TarjetaRegaloCompra> tarjetasRegaloCompradas) { this.tarjetasRegaloCompradas = tarjetasRegaloCompradas; }
+    
+    public Boolean getPagado() { return pagado; }
+    public void setPagado(Boolean pagado) { this.pagado = pagado; }
 }

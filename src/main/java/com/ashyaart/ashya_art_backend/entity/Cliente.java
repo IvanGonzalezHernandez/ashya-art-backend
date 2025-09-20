@@ -37,6 +37,9 @@ public class Cliente {
     @NotBlank
     @Column(nullable = false)
     private String ciudad;
+    
+    @Column(nullable = false)
+    private String pais;
 
     @NotBlank
     @Column(name = "CODIGO_POSTAL", nullable = false)
@@ -75,7 +78,8 @@ public class Cliente {
     public Cliente(String nombre, String apellido, String calle, String numero, String piso,
                    String ciudad, String codigoPostal, String provincia, String telefono,
                    String email, LocalDate fechaAlta, LocalDate fechaBaja, List<CursoCompra> comprasCursos,
-                   List<ProductoCompra> comprasProductos, List<TarjetaRegaloCompra> comprasTarjetas) {
+                   List<ProductoCompra> comprasProductos, List<TarjetaRegaloCompra> comprasTarjetas,
+                   String pais) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.calle = calle;
@@ -91,6 +95,7 @@ public class Cliente {
         this.comprasCursos = comprasCursos;
         this.comprasProductos = comprasProductos;
         this.comprasTarjetas = comprasTarjetas;
+        this.pais = pais;
     }
 
     public Long getId() {
@@ -148,6 +153,14 @@ public class Cliente {
     public void setCiudad(String ciudad) {
         this.ciudad = ciudad;
     }
+    
+	public String getPais() {
+		return pais;
+	}
+	
+	public void setPais(String pais) {
+		this.pais = pais;
+	}
 
     public String getCodigoPostal() {
         return codigoPostal;
