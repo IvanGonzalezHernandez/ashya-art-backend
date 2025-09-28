@@ -263,20 +263,21 @@ public class EmailService {
   }
 
   public void enviarConfirmacionTarjetaRegaloIndividual(
+	  String emailCliente,
       String destinatario,
       String nombreCliente,
-      String nombreReceptor,
+      String nombreTarjeta,
       String codigo,
       BigDecimal cantidad,
       LocalDate fechaExpiracion
   ) {
     try {
       byte[] pdfBytes = generarTarjetaRegaloPdf(
-          codigo, nombreReceptor, cantidad, nombreCliente, fechaExpiracion
+          codigo, nombreCliente, cantidad, nombreCliente, fechaExpiracion
       );
 
       String asunto = "🎁 Your Ashya Art Gift Card";
-      String contenido = "<h2>Hello " + nombreReceptor + "!</h2>" +
+      String contenido = "<h2>Hello " + nombreCliente + "!</h2>" +
           "<p>You have received a gift card from <b>" + nombreCliente + "</b>.</p>" +
           "<p><b>Gift Card Code:</b> " + codigo + "</p>" +
           "<p><b>Amount:</b> €" + cantidad + "</p>" +

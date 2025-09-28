@@ -360,6 +360,7 @@ public class StripeService {
 
 	        // Enviar email por cada tarjeta
 	        emailService.enviarConfirmacionTarjetaRegaloIndividual(
+	        		item.getDestinatario(),
 	                cliente.getEmail(),
 	                cliente.getNombre(),
 	                plantilla.getNombre(),
