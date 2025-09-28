@@ -40,8 +40,11 @@ public class EmailService {
   private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
   private final RestTemplate http = new RestTemplate();
-  private final String apiKey;
-  private final String from; // Ej: "Ashya Art <notifications@tu-dominio.com>"
+  @Value("${resend.api.key:}")
+  private String apiKey;
+
+  @Value("${resend.from:}")
+  private String from;
 
   public EmailService(
       @Value("${resend.api.key}") String apiKey,
