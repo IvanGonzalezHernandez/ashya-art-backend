@@ -5,6 +5,7 @@ public class ItemCarritoDto {
 	private Long id;
     private String tipo; // CURSO | PRODUCTO | SECRETO | TARJETA
     private String nombre;
+    private String destinatario;
     private double precio;
     private int cantidad;
     private String subtitulo;
@@ -36,5 +37,8 @@ public class ItemCarritoDto {
 
     public String getHora() { return hora; }
     public void setHora(String hora) { this.hora = hora; }
+    
+    public String getDestinatario() { return destinatario; }
+    public void setDestinatario(String destinatario) { this.destinatario = destinatario; }
 
 }
