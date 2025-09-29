@@ -5,9 +5,14 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Base64;
+import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -335,6 +340,7 @@ public class EmailService {
 
   /* ===================== PDF de tarjeta regalo  ===================== */
 
+  /* ===== Wrapper con firma original (compat) ===== */
   private byte[] generarTarjetaRegaloPdf(
       String codigo,
       String nombreReceptor,
@@ -342,63 +348,165 @@ public class EmailService {
       String nombreCliente,
       LocalDate fechaExpiracion
   ) throws Exception {
+    return generarTarjetaRegaloPdf(
+        codigo, nombreReceptor, cantidad, nombreCliente, fechaExpiracion,
+        new Locale("es", "ES"), Currency.getInstance("EUR"), true
+    );
+  }
+
+  /* ===== Versión flexible: locale/moneda + auto-fit opcional ===== */
+  private byte[] generarTarjetaRegaloPdf(
+      String codigo,
+      String nombreReceptor,
+      BigDecimal cantidad,
+      String nombreCliente,
+      LocalDate fechaExpiracion,
+      Locale locale,
+      Currency currency,
+      boolean autoFit // si true, aplica reducción proporcional si no cabe en el tercio inferior
+  ) throws Exception {
+
+    if (locale == null) locale = Locale.getDefault();
+    if (currency == null) currency = Currency.getInstance("EUR");
+
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Document document = new Document(PageSize.A4);
     PdfWriter writer = PdfWriter.getInstance(document, baos);
     document.open();
 
-    // Imagen base (resources/img/plantillaTarjetaRegalo.png)
+    // Fondo: plantilla
     ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
     try (InputStream is = resource.getInputStream()) {
-      byte[] imgBytes = is.readAllBytes();
-      Image img = Image.getInstance(imgBytes);
+      Image img = Image.getInstance(is.readAllBytes());
       img.scaleAbsolute(document.getPageSize().getWidth(), document.getPageSize().getHeight());
       img.setAbsolutePosition(0, 0);
       document.add(img);
     }
 
-    // Texto encima
     PdfContentByte canvas = writer.getDirectContent();
-    BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
 
-    BiConsumer<String, float[]> drawTextWithBackground = (text, pos) -> {
+    // Fuentes Quicksand embebidas
+    BaseFont quicksandRegular;
+    BaseFont quicksandBold;
+    try {
+      ClassPathResource qsr = new ClassPathResource("fonts/Quicksand-Regular.ttf");
+      ClassPathResource qsb = new ClassPathResource("fonts/Quicksand-Bold.ttf");
+      try (InputStream isR = qsr.getInputStream(); InputStream isB = qsb.getInputStream()) {
+        quicksandRegular = BaseFont.createFont(
+            "Quicksand-Regular.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, isR.readAllBytes(), null);
+        quicksandBold = BaseFont.createFont(
+            "Quicksand-Bold.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, isB.readAllBytes(), null);
+      }
+    } catch (Exception e) {
+      quicksandRegular = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+      quicksandBold    = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+    }
+
+    // Helper: texto con fondo blanco opaco (sin transparencia)
+    TriConsumer<String, float[], BaseFont> drawTextWithBackground = (text, pos, font) -> {
       try {
-        float x = pos[0];
-        float y = pos[1];
+        float x = pos[0], y = pos[1], fontSize = pos[2];
+        float padX = 8f, padY = 4f;
 
-        float padding = 5f;
-        float fontSize = pos[2];
-        canvas.setFontAndSize(bf, fontSize);
+        canvas.saveState();
+        canvas.setFontAndSize(font, fontSize);
 
-        float textWidth = bf.getWidthPoint(text, fontSize);
+        float textWidth  = font.getWidthPoint(text, fontSize);
         float textHeight = fontSize;
 
-        // Rectángulo blanco detrás del texto
-        canvas.setColorFill(new BaseColor(255, 255, 255, 200)); // blanco semitransparente
-        canvas.rectangle(x - textWidth / 2 - padding, y - padding, textWidth + 2 * padding, textHeight + 2 * padding);
+        // Rectángulo blanco opaco
+        canvas.setColorFill(BaseColor.WHITE);
+        canvas.rectangle(
+            x - textWidth / 2f - padX,
+            y - padY,
+            textWidth + 2f * padX,
+            textHeight + 2f * padY
+        );
         canvas.fill();
 
-        // Escribir texto en negro
+        // Texto en negro
         canvas.beginText();
         canvas.setColorFill(BaseColor.BLACK);
+        canvas.setFontAndSize(font, fontSize);
         canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
         canvas.endText();
 
-      } catch (Exception e) {
-        throw new RuntimeException(e);
+        canvas.restoreState();
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
       }
     };
 
-    float pageWidth = document.getPageSize().getWidth();
+    // Layout: tercio inferior
+    float pageW = document.getPageSize().getWidth();
+    float pageH = document.getPageSize().getHeight();
 
-    drawTextWithBackground.accept("Gift Card", new float[]{pageWidth / 2, 700, 24});
-    drawTextWithBackground.accept("Code: " + codigo, new float[]{pageWidth / 2, 650, 20});
-    drawTextWithBackground.accept("To: " + nombreReceptor, new float[]{pageWidth / 2, 600, 20});
-    drawTextWithBackground.accept("From: " + nombreCliente, new float[]{pageWidth / 2, 550, 20});
-    drawTextWithBackground.accept("Amount: €" + cantidad, new float[]{pageWidth / 2, 500, 20});
-    drawTextWithBackground.accept("Valid until: " + fechaExpiracion, new float[]{pageWidth / 2, 450, 20});
+    float thirdH = pageH / 3f;
+    float areaBottomMargin = 24f;
+    float areaTopMargin = 24f;
+    float areaHeight = thirdH - areaTopMargin - areaBottomMargin;
+    float areaTopY   = thirdH - areaTopMargin;
+    float centerX    = pageW / 2f;
+
+    // Tamaños base
+    float titleSize = 26f;
+    float lineSize  = 18f;
+    float gap       = 26f;
+
+    // Formateos dependientes de locale
+    NumberFormat nf = NumberFormat.getCurrencyInstance(locale);
+    nf.setCurrency(currency);
+    String importe = cantidad != null ? nf.format(cantidad) : nf.format(0);
+
+    DateTimeFormatter df = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale);
+    String fechaStr = (fechaExpiracion != null) ? fechaExpiracion.format(df) : "";
+
+    // Contenido
+    String[] lines = new String[] {
+        "Gift Card",
+        "Code: " + (codigo != null ? codigo : ""),
+        "To: " + (nombreReceptor != null ? nombreReceptor : ""),
+        "From: " + (nombreCliente != null ? nombreCliente : ""),
+        "Amount: " + importe,
+        "Valid until: " + fechaStr
+    };
+
+    // ===== Ajuste opcional para encajar (autoFit) =====
+    if (autoFit) {
+      // Altura necesaria: título ocupa (titleSize) y resto 5 líneas ocupan 5*lineSize + 5*gap + 1*gap para tras el título
+      int totalLines = lines.length;
+      float linesHeight = titleSize + gap              // Gift Card + gap siguiente
+                        + (totalLines - 1) * lineSize  // resto de líneas
+                        + (totalLines - 1) * gap;      // gaps entre resto de líneas
+
+      if (linesHeight > areaHeight) {
+        float scale = areaHeight / linesHeight; // factor <= 1
+        // Escala homogénea de tamaños y gap, pero con mínimos razonables
+        titleSize = Math.max(16f, titleSize * scale);
+        lineSize  = Math.max(12f, lineSize  * scale);
+        gap       = Math.max(12f, gap       * scale);
+      }
+    }
+
+    // Pintado
+    float y = areaTopY; // empezamos arriba del tercio inferior
+    // Título
+    drawTextWithBackground.accept(lines[0], new float[]{centerX, y, titleSize}, quicksandBold);
+    y -= (titleSize + gap);
+
+    // Resto
+    for (int i = 1; i < lines.length; i++) {
+      drawTextWithBackground.accept(lines[i], new float[]{centerX, y, lineSize}, quicksandRegular);
+      y -= gap;
+    }
 
     document.close();
     return baos.toByteArray();
+  }
+
+  /* Interfaz funcional auxiliar */
+  @FunctionalInterface
+  private interface TriConsumer<A, B, C> {
+    void accept(A a, B b, C c);
   }
 }
