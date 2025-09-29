@@ -357,13 +357,14 @@ public class StripeService {
 
 	        logger.info("Tarjeta regalo generada para cliente {} con código {} y 6 meses de validez",
 	                cliente.getEmail(), codigoUnico);
+	        
+			logger.info("Enviando email de confirmación de TARJETA AL DESTINATARIO: {}", item.getDestinatario());
 
 	        // Enviar email por cada tarjeta
 	        emailService.enviarConfirmacionTarjetaRegaloIndividual(
-	        		item.getDestinatario(),
 	                cliente.getEmail(),
 	                cliente.getNombre(),
-	                plantilla.getNombre(),
+	                item.getDestinatario(),
 	                codigoUnico,
 	                plantilla.getPrecio(),
 	                tarjetaCompra.getFechaCaducidad());
