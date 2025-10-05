@@ -13,6 +13,9 @@ public class TarjetaRegaloCompra {
 
     @Column(nullable = false, unique = true)
     private String codigo;
+    
+    @Column(name = "DESTINATARIO")
+    private String destinatario;
 
     @Column(nullable = false)
     private boolean canjeada = false;
@@ -128,4 +131,14 @@ public class TarjetaRegaloCompra {
     
     public Compra getCompra() { return compra; }
     public void setCompra(Compra compra) { this.compra = compra; }
+
+	public String getDestinatario() {
+		return destinatario;
+	}
+
+	public void setDestinatario(String destinatario) {
+		this.destinatario = destinatario;
+	}
+    
+    
 }

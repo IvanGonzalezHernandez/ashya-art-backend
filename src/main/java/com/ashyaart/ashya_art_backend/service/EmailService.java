@@ -281,13 +281,13 @@ public class EmailService {
       );
 
       String asunto = "🎁 Your Ashya Art Gift Card";
-      String contenido = "<h2>Hello " + nombreReceptor + "!</h2>" +
-          "<p>You have received a gift card from <b>" + nombreCliente + "</b>.</p>" +
+      String contenido = "<h2>Hello " + nombreCliente+ "!</h2>" +
+          "<p>You have bought a gift card for <b>" + nombreReceptor + "</b>.</p>" +
           "<p><b>Gift Card Code:</b> " + codigo + "</p>" +
           "<p><b>Amount:</b> €" + cantidad + "</p>" +
           "<p>This gift card is valid until <b>" + fechaExpiracion + "</b> (6 months).</p>" +
-          "<p>You can redeem it in our online shop or courses at <a href='https://ashya-art.com'>Ashya Art</a>.</p>" +
-          "<br><p>Enjoy your gift! 🎨</p>";
+          "<p>You can redeem it in our online shop or courses at <a href='https://ashya-art-frontend.onrender.com'>Ashya Art</a>.</p>" +
+          "<br><p>See you soon! 🎨</p>";
 
       sendHtmlWithAttachment(destinatario, asunto, contenido, "TarjetaRegalo_" + codigo + ".pdf", pdfBytes);
 

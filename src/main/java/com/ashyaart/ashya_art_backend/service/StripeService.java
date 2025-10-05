@@ -344,6 +344,7 @@ public class StripeService {
 	        // Crear la tarjeta regalo personalizada para el cliente
 	        TarjetaRegaloCompra tarjetaCompra = new TarjetaRegaloCompra();
 	        tarjetaCompra.setCodigo(codigoUnico);
+	        tarjetaCompra.setDestinatario(item.getDestinatario());
 	        tarjetaCompra.setTarjetaRegalo(plantilla);
 	        tarjetaCompra.setCliente(cliente);
 	        tarjetaCompra.setCompra(compraTotal);
@@ -357,8 +358,6 @@ public class StripeService {
 
 	        logger.info("Tarjeta regalo generada para cliente {} con código {} y 6 meses de validez",
 	                cliente.getEmail(), codigoUnico);
-	        
-			logger.info("Enviando email de confirmación de TARJETA AL DESTINATARIO: {}", item.getDestinatario());
 
 	        // Enviar email por cada tarjeta
 	        emailService.enviarConfirmacionTarjetaRegaloIndividual(
