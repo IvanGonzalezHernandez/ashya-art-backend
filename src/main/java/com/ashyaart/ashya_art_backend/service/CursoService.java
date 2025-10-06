@@ -121,18 +121,15 @@ public class CursoService {
     
     public void solicitarCurso(ClienteSolicitudCursoDto solicitud) {
         logger.info("Procesando solicitud de curso para el cliente: {} {}", solicitud.getNombre(), solicitud.getApellido());
-        
-        // Email de confirmación al cliente
-        String destinatario = solicitud.getEmail();
-        String asunto = "Course request confirmation";
-        String cuerpo = "Hello " + solicitud.getNombre() + ",\n\n" +
-                        "We have received your request for the course: " + solicitud.getTipoClase() + ".\n" +
-                        "We will contact you soon to coordinate the details.\n\n" +
-                        "Best regards,\nAshya Art";
 
-        emailService.enviarEmailConfirmacion(destinatario, asunto, cuerpo);
+        // Email al cliente
+        emailService.enviarConfirmacionSolicitudCursoCliente(
+            solicitud.getNombre(),
+            solicitud.getTipoClase(),
+            solicitud.getEmail()
+        );
 
-        // Email de notificación al administrador
+        // Email al administrador
         emailService.enviarSolicitudCursoAdmin(
             solicitud.getNombre(),
             solicitud.getApellido(),
@@ -144,5 +141,6 @@ public class CursoService {
             solicitud.getPreguntasAdicionales()
         );
     }
+
 
 }

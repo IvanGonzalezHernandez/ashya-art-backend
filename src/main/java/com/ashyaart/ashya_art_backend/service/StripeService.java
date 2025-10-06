@@ -269,6 +269,7 @@ public class StripeService {
                 cliente.getNombre(),
                 cursoFecha.getCurso().getNombre(),
                 cursoFecha.getFecha().toString(),
+                cursoFecha.getHoraInicio().toString(),
                 item.getCantidad(),
                 cursoFecha.getCurso().getPrecio(),
                 cursoFecha.getCurso().getInformacionExtra()

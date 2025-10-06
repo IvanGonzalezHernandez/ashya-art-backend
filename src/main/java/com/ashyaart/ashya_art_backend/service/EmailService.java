@@ -124,7 +124,7 @@ public class EmailService {
     }
   }
 
-  /* ===================== Métodos públicos (mismos que tenías) ===================== */
+  /* ===================== Métodos públicos ===================== */
 
   public void enviarEmailConfirmacion(String para, String asunto, String cuerpo) {
     // mismo contenido que antes (texto plano)
@@ -156,6 +156,39 @@ public class EmailService {
 
 	  sendHtml(destinatario, asunto, contenidoHtml);
 	}
+  
+  public void enviarConfirmacionSolicitudCursoCliente(
+		    String nombreCliente,
+		    String tipoClase,
+		    String emailCliente
+		) {
+		  String asunto = "🎨 Course Request Confirmation - " + tipoClase;
+
+		  String contenido =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='color:#333; margin-top:0;'>🎨 Course Request Confirmation</h2>" +
+		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
+		            "<p>We have received your request for the course: <b>" + tipoClase + "</b>.</p>" +
+		            "<p>We will contact you soon to coordinate the details and confirm the schedule.</p>" +
+		            "<p>We’re excited to have you in one of our workshops!</p>" +
+		            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+		            "<p>If you need any assistance or have more questions, you can contact me through:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+		            "</ul>" +
+		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(emailCliente, asunto, contenido);
+		}
+
 
   public void enviarSolicitudCursoAdmin(
 		    String nombreCliente,
@@ -177,7 +210,7 @@ public class EmailService {
 		      "<html>" +
 		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-		            "<h2 style='color:#333; margin-top:0;'>📚 New Course Request</h2>" +
+		            "<h2 style='color:#333; margin-top:0;'>🎨 New Course Request</h2>" +
 		            "<p>You have received a new course request. Details below:</p>" +
 		            "<ul style='line-height:1.7; padding-left:20px;'>" +
 		              "<li><b>Name:</b> " + nombreCompleto.trim() + "</li>" +
@@ -230,7 +263,7 @@ public class EmailService {
 
 
   public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
-                                                String nombreCurso, String fechaCurso,
+                                                String nombreCurso, String fechaCurso, String horaCurso,
                                                 int plazasReservadas, BigDecimal bigDecimal,
                                                 String informacionExtra) {
 	String asunto = "🎨 Confirmation for your course - " + nombreCurso;
@@ -245,7 +278,7 @@ public class EmailService {
             "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
             "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
             "<p>Thank you for purchasing the <b>" + nombreCurso + "</b> from Ashya Art.</p>" +
-            "<p>The course will start on <b>" + fechaCurso + "</b>.<br>" +
+            "<p>The course will start at <b>" + horaCurso + "</b>.<br>" +
             "We kindly ask you to arrive <b>10–15 minutes before</b> the scheduled time.</p>" +
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li><b>📘 Course:</b> " + nombreCurso + "</li>" +
