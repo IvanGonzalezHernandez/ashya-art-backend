@@ -44,16 +44,15 @@ public class NewsletterService {
         logger.info("crearNewsletter - Creando nuevo newsletter: {}", newsletterDto);
         Newsletter newsletter = NewsletterAssembler.toEntity(newsletterDto);
         newsletter.setId(null);
-        newsletter.setFechaRegistro(newsletterDto.getFechaRegistro() != null ? newsletterDto.getFechaRegistro() : LocalDate.now());
-        Newsletter newsletterGuardado = newsletterDao.save(newsletter);
-        
-        // Enviar email de confirmación
-        String destinatario = newsletterDto.getEmail();
-        String asunto = "Newsletter Subscription Confirmation";
-        String cuerpo = "Thank you for subscribing to our newsletter. You will be receiving updates soon!";
+        newsletter.setFechaRegistro(
+            newsletterDto.getFechaRegistro() != null ? newsletterDto.getFechaRegistro() : LocalDate.now()
+        );
 
-        emailService.enviarEmailConfirmacion(destinatario, asunto, cuerpo);
-        
+        Newsletter newsletterGuardado = newsletterDao.save(newsletter);
+
+        // Enviar email HTML desde EmailService
+        emailService.enviarConfirmacionNewsletter(newsletterDto.getEmail());
+
         NewsletterDto dtoGuardado = NewsletterAssembler.toDto(newsletterGuardado);
         logger.info("crearNewsletter - Newsletter creado con ID: {}", dtoGuardado.getId());
         return dtoGuardado;

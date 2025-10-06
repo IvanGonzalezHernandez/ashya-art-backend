@@ -130,45 +130,110 @@ public class EmailService {
     // mismo contenido que antes (texto plano)
     sendText(para, asunto, cuerpo);
   }
+  
+  public void enviarConfirmacionNewsletter(String destinatario) {
+	  String asunto = "📰 Newsletter Subscription Confirmation";
 
-  public void enviarSolicitudCursoAdmin(String nombreCliente, String apellidoCliente, String emailCliente, String telefonoCliente,
-                                        String tipoClase, int personasInteresadas, String disponibilidad, String preguntasAdicionales) {
+	  String contenidoHtml =
+	      "<html>" +
+	        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+	          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+	            "<h2 style='color:#333; margin-top:0;'>Welcome to Ashya Art!</h2>" +
+	            "<p>Thank you for subscribing to our <b>newsletter</b>.</p>" +
+	            "<p>You'll now receive updates about our upcoming workshops, new ceramic collections, and exclusive offers.</p>" +
+	            "<p>We’re excited to have you as part of our creative community 💫</p>" +
+	            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+	            "<p>If you’d like to stay more connected, feel free to follow us:</p>" +
+	            "<ul style='line-height:1.7; padding-left:20px;'>" +
+	              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+	              "<li>🌐 Website: <a href='https://ashya-art-frontend.onrender.com' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>Ashya Art</a></li>" +
+	              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+	            "</ul>" +
+	            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
+	          "</div>" +
+	        "</body>" +
+	      "</html>";
 
-    String admin = "ivangonzalez.code@gmail.com";
-    String asunto = "New Course Request - " + tipoClase;
+	  sendHtml(destinatario, asunto, contenidoHtml);
+	}
 
-    String cuerpo = "You have received a new course request:\n\n" +
-        "Name: " + nombreCliente + " " + apellidoCliente + "\n" +
-        "Email: " + emailCliente + "\n" +
-        "Phone: " + telefonoCliente + "\n" +
-        "Class type: " + tipoClase + "\n" +
-        "People interested: " + personasInteresadas + "\n" +
-        "Availability: " + disponibilidad + "\n" +
-        "Additional questions: " + (preguntasAdicionales != null ? preguntasAdicionales : "None") + "\n\n" +
-        "Please contact the client to coordinate the details.";
+  public void enviarSolicitudCursoAdmin(
+		    String nombreCliente,
+		    String apellidoCliente,
+		    String emailCliente,
+		    String telefonoCliente,
+		    String tipoClase,
+		    int personasInteresadas,
+		    String disponibilidad,
+		    String preguntasAdicionales
+		) {
+		  String admin = "ivangonzalez.code@gmail.com";
+		  String asunto = "🎨 New Course Request - " + tipoClase;
 
-    sendText(admin, asunto, cuerpo);
-  }
+		  String preguntas = (preguntasAdicionales != null && !preguntasAdicionales.isBlank()) ? preguntasAdicionales : "None";
+		  String nombreCompleto = (nombreCliente != null ? nombreCliente : "") + " " + (apellidoCliente != null ? apellidoCliente : "");
+
+		  String contenido =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='color:#333; margin-top:0;'>📚 New Course Request</h2>" +
+		            "<p>You have received a new course request. Details below:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li><b>Name:</b> " + nombreCompleto.trim() + "</li>" +
+		              "<li><b>Email:</b> <a href='mailto:" + emailCliente + "' style='color:#1a73e8; text-decoration:none;'>" + emailCliente + "</a></li>" +
+		              "<li><b>Phone:</b> <a href='tel:" + telefonoCliente + "' style='color:#1a73e8; text-decoration:none;'>" + telefonoCliente + "</a></li>" +
+		              "<li><b>Class type:</b> " + tipoClase + "</li>" +
+		              "<li><b>People interested:</b> " + personasInteresadas + "</li>" +
+		              "<li><b>Availability:</b> " + disponibilidad + "</li>" +
+		              "<li><b>Additional questions:</b> " + preguntas + "</li>" +
+		            "</ul>" +
+		            "<p>Please contact the client to coordinate the details.</p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(admin, asunto, contenido);
+		}
+
 
   public void enviarConfirmacionCompraTotal(String emailCliente, String nombreCliente, Compra compra) {
-    String asunto = "Confirmation of your purchase on Ashya Art";
+	  String asunto = "🛍️ Confirmation of your purchase on Ashya Art";
 
-    String cuerpo = "Hello " + nombreCliente + ",\n\n" +
-        "Thank you for your purchase!\n\n" +
-        "💳 Purchase code: " + compra.getCodigoCompra() + "\n" +
-        "💶 Total: " + compra.getTotal() + " EUR\n\n" +
-        "We look forward to seeing you!\n\n" +
-        "Best regards,\n" +
-        "Ashya Art Team";
+	  String contenido =
+	      "<html>" +
+	        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+	          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+	            "<h2 style='color:#333; margin-top:0;'>✅ Purchase Confirmation</h2>" +
+	            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
+	            "<p>Thank you for your purchase!</p>" +
+	            "<ul style='line-height:1.7; padding-left:20px;'>" +
+	              "<li><b>💳 Purchase code:</b> " + compra.getCodigoCompra() + "</li>" +
+	              "<li><b>💶 Total:</b> " + compra.getTotal() + " EUR</li>" +
+	            "</ul>" +
+	            "<p>We look forward to seeing you!</p>" +
+	            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+	            "<p>If you have any questions about your purchase, you can contact me through any of the following options:</p>" +
+	            "<ul style='line-height:1.7; padding-left:20px;'>" +
+	              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+	              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+	              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+	              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+	            "</ul>" +
+	            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
+	          "</div>" +
+	        "</body>" +
+	      "</html>";
 
-    sendText(emailCliente, asunto, cuerpo);
-  }
+	  sendHtml(emailCliente, asunto, contenido);
+	}
+
 
   public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
                                                 String nombreCurso, String fechaCurso,
                                                 int plazasReservadas, BigDecimal bigDecimal,
                                                 String informacionExtra) {
-    String asunto = "Confirmation for your course - " + nombreCurso;
+	String asunto = "🎨 Confirmation for your course - " + nombreCurso;
 
     String direccionTexto = "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg";
     String mapsUrl = "https://www.google.com/maps/search/?api=1&query=" +
@@ -210,7 +275,7 @@ public class EmailService {
                                                    String nombreProducto,
                                                    int cantidad,
                                                    BigDecimal precioUnitario) {
-    String asunto = "Confirmation for your product purchase - " + nombreProducto;
+    String asunto = "🏺 Confirmation for your product purchase - " + nombreProducto;
 
     String cuerpoHtml =
         "<html>" +
@@ -241,7 +306,7 @@ public class EmailService {
                                                   String nombreCliente,
                                                   String nombreSecreto,
                                                   byte[] pdfBytes) {
-    String asunto = "Your Secret Purchase - " + nombreSecreto;
+    String asunto = "🔐 Your Secret Purchase - " + nombreSecreto;
 
     String cuerpoHtml =
         "<html>" +
@@ -268,66 +333,135 @@ public class EmailService {
   }
 
   public void enviarConfirmacionTarjetaRegaloIndividual(
-      String destinatario,
-      String nombreCliente,
-      String nombreReceptor,
-      String codigo,
-      BigDecimal cantidad,
-      LocalDate fechaExpiracion
-  ) {
-    try {
-      byte[] pdfBytes = generarTarjetaRegaloPdf(
-          codigo, nombreReceptor, cantidad, nombreCliente, fechaExpiracion
-      );
+		    String destinatario,
+		    String nombreCliente,
+		    String nombreReceptor,
+		    String codigo,
+		    BigDecimal cantidad,
+		    LocalDate fechaExpiracion
+		) {
+		  try {
+		    byte[] pdfBytes = generarTarjetaRegaloPdf(
+		        codigo, nombreReceptor, cantidad, nombreCliente, fechaExpiracion
+		    );
 
-      String asunto = "🎁 Your Ashya Art Gift Card";
-      String contenido = "<h2>Hello " + nombreCliente+ "!</h2>" +
-          "<p>You have bought a gift card for <b>" + nombreReceptor + "</b>.</p>" +
-          "<p><b>Gift Card Code:</b> " + codigo + "</p>" +
-          "<p><b>Amount:</b> €" + cantidad + "</p>" +
-          "<p>This gift card is valid until <b>" + fechaExpiracion + "</b> (6 months).</p>" +
-          "<p>You can redeem it in our online shop or courses at <a href='https://ashya-art-frontend.onrender.com'>Ashya Art</a>.</p>" +
-          "<br><p>See you soon! 🎨</p>";
+		    String asunto = "🎁 Your Ashya Art Gift Card";
 
-      sendHtmlWithAttachment(destinatario, asunto, contenido, "TarjetaRegalo_" + codigo + ".pdf", pdfBytes);
+		    String contenido =
+		        "<html>" +
+		            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
 
-    } catch (Exception e) {
-      throw new RuntimeException("Error generando la tarjeta regalo PDF", e);
-    }
-  }
+		            "<h2 style='color:#333; margin-top:0;'>🎁 Your Ashya Art Gift Card</h2>" +
+		            "<p>Hello <b>" + nombreCliente + "</b>!</p>" +
+		            "<p>You have bought a gift card for <b>" + nombreReceptor + "</b>.</p>" +
+
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		            "<li><b>💳 Gift Card Code:</b> " + codigo + "</li>" +
+		            "<li><b>💶 Amount:</b> €" + cantidad + "</li>" +
+		            "<li><b>📅 Valid until:</b> " + fechaExpiracion + " (6 months)</li>" +
+		            "</ul>" +
+
+		            "<p>You can redeem it in our online shop or courses at " +
+		            "<a href='https://ashya-art-frontend.onrender.com' style='color:#1a73e8; text-decoration:none;'>Ashya Art</a>.</p>" +
+
+		            "<p>If the attachment doesn’t open on your device, just reply to this email and I’ll resend it.</p>" +
+
+		            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+
+		            "<p>If you have any questions, you can contact me through any of the following options:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+		            "</ul>" +
+
+		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
+		            "</div>" +
+		            "</body></html>";
+
+		    sendHtmlWithAttachment(destinatario, asunto, contenido, "TarjetaRegalo_" + codigo + ".pdf", pdfBytes);
+
+		  } catch (Exception e) {
+		    throw new RuntimeException("Error generando la tarjeta regalo PDF", e);
+		  }
+		}
+
 
   public void enviarSolicitudFiring(
-      String nombreCliente,
-      String emailCliente,
-      String telefonoCliente,
-      String tipoServicio,
-      int numeroPiezas,
-      String detallesMaterial,
-      String preguntasAdicionales
-  ) {
-    // Cliente (texto)
-    String asuntoCliente = "Firing Service Request Confirmation";
-    String cuerpoCliente = "Hello " + nombreCliente + ",\n\n" +
-        "We have received your request for the firing service: " + mapTipoServicio(tipoServicio) + ".\n" +
-        "We will contact you soon to coordinate the details.\n\n" +
-        "Best regards,\nAshya Art";
-    sendText(emailCliente, asuntoCliente, cuerpoCliente);
+		    String nombreCliente,
+		    String emailCliente,
+		    String telefonoCliente,
+		    String tipoServicio,
+		    int numeroPiezas,
+		    String detallesMaterial,
+		    String preguntasAdicionales
+		) {
 
-    // Admin (texto)
-    String admin = "ivangonzalez.code@gmail.com";
-    String asuntoAdmin = "New Firing Service Request - " + mapTipoServicio(tipoServicio);
+		  String preguntas = (preguntasAdicionales != null && !preguntasAdicionales.isBlank())
+		      ? preguntasAdicionales
+		      : "None";
+		  String detalles  = (detallesMaterial != null && !detallesMaterial.isBlank())
+		      ? detallesMaterial
+		      : "—";
 
-    String cuerpoAdmin = "You have received a new firing service request:\n\n" +
-        "Name: " + nombreCliente + "\n" +
-        "Email: " + emailCliente + "\n" +
-        "Phone: " + telefonoCliente + "\n" +
-        "Service type: " + mapTipoServicio(tipoServicio) + "\n" +
-        "Number of pieces: " + numeroPiezas + "\n" +
-        "Clay and glaze details: " + detallesMaterial + "\n" +
-        "Additional questions: " + (preguntasAdicionales != null ? preguntasAdicionales : "None") + "\n\n" +
-        "Please contact the client to coordinate the details.";
-    sendText(admin, asuntoAdmin, cuerpoAdmin);
-  }
+		  // ====== Cliente  ======
+		  String asuntoCliente = "🔥 Firing Service Request Confirmation";
+		  String contenidoCliente =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='color:#333; margin-top:0;'>🔥 Firing Service Request Received</h2>" +
+		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
+		            "<p>We have received your request for the firing service: <b>" + mapTipoServicio(tipoServicio) + "</b>.</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li><b>Number of pieces:</b> " + numeroPiezas + "</li>" +
+		              "<li><b>Clay / glaze details:</b> " + detalles + "</li>" +
+		              "<li><b>Additional questions:</b> " + preguntas + "</li>" +
+		            "</ul>" +
+		            "<p>We will contact you soon to coordinate the details and scheduling.</p>" +
+		            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+		            "<p>If you need anything in the meantime, you can reach me here:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+		              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+		            "</ul>" +
+		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(emailCliente, asuntoCliente, contenidoCliente);
+
+		  // ====== Admin ======
+		  String admin = "ivangonzalez.code@gmail.com";
+		  String asuntoAdmin = "🔥 New Firing Service Request - " + mapTipoServicio(tipoServicio);
+
+		  String contenidoAdmin =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='color:#333; margin-top:0;'>🧱 New Firing Service Request</h2>" +
+		            "<p>You have received a new firing service request. Details below:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li><b>Name:</b> " + nombreCliente + "</li>" +
+		              "<li><b>Email:</b> <a href='mailto:" + emailCliente + "' style='color:#1a73e8; text-decoration:none;'>" + emailCliente + "</a></li>" +
+		              "<li><b>Phone:</b> <a href='tel:" + telefonoCliente + "' style='color:#1a73e8; text-decoration:none;'>" + telefonoCliente + "</a></li>" +
+		              "<li><b>Service type:</b> " + mapTipoServicio(tipoServicio) + "</li>" +
+		              "<li><b>Number of pieces:</b> " + numeroPiezas + "</li>" +
+		              "<li><b>Clay / glaze details:</b> " + detalles + "</li>" +
+		              "<li><b>Additional questions:</b> " + preguntas + "</li>" +
+		            "</ul>" +
+		            "<p>Please contact the client to coordinate the details.</p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(admin, asuntoAdmin, contenidoAdmin);
+		}
 
   private String mapTipoServicio(String tipoServicio) {
     return switch (tipoServicio) {
