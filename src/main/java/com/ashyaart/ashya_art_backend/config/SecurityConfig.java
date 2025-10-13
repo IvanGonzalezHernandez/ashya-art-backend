@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/cursos/**").permitAll()
                 .requestMatchers("/api/productos/**").permitAll()
                 .requestMatchers("/api/tarjetas-regalo/**").permitAll()
+                .requestMatchers("/api/tarjetas-regalo-compra/**").permitAll()
                 .requestMatchers("/api/clientes/**").permitAll()
                 .requestMatchers("/api/newsletters/**").permitAll()
                 .requestMatchers("/api/newsletters/suscribirse/**").permitAll()
