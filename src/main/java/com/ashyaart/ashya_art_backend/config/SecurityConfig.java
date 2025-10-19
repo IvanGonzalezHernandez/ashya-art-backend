@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/carrito/**").permitAll()
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
+                .requestMatchers("/api/errores/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();
