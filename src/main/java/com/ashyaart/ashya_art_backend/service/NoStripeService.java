@@ -71,10 +71,6 @@ public class NoStripeService {
                 ? carritoClienteDto.getCodigoTarjeta().trim().toUpperCase()
                 : null;
 
-        if (codigoTarjeta == null || codigoTarjeta.isBlank()) {
-            throw new IllegalArgumentException("Debe especificarse un código de tarjeta regalo válido.");
-        }
-
         // 2️ Validar stock/plazas
         for (ItemCarritoDto item : carrito.getItems()) {
             if (!stockService.hayStockSuficiente(item)) {
@@ -82,42 +78,52 @@ public class NoStripeService {
             }
         }
 
-        // 3️ Calcular total del carrito
+        // 3️ Calcular total del carrito (idéntico a tu código; en prod recomiendo recalc desde BD)
         BigDecimal total = carrito.getItems().stream()
                 .map(i -> BigDecimal.valueOf(i.getPrecio())
                         .multiply(BigDecimal.valueOf(i.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 4️ Validar tarjeta regalo
-        Optional<TarjetaRegaloCompra> optionalTarjeta = tarjetaRegaloCompraDao.findByCodigo(codigoTarjeta);
-        if (optionalTarjeta.isEmpty()) {
-            throw new IllegalArgumentException("Tarjeta regalo no encontrada.");
-        }
+        // Si el total es 0 => es una compra gratuita. No exigimos tarjeta, no la validamos ni la consumimos.
+        boolean compraGratuita = total.compareTo(BigDecimal.ZERO) == 0;
 
-        TarjetaRegaloCompra tarjetaCompra = optionalTarjeta.get();
-        TarjetaRegalo plantilla = tarjetaCompra.getTarjetaRegalo();
+        // 4️ Validar tarjeta regalo SOLO si total > 0
+        TarjetaRegaloCompra tarjetaCompra = null;
+        TarjetaRegalo plantilla = null;
+        if (!compraGratuita) {
+            if (codigoTarjeta == null || codigoTarjeta.isBlank()) {
+                throw new IllegalArgumentException("Debe especificarse un código de tarjeta regalo válido.");
+            }
 
-        if (!tarjetaCompra.isEstado() || tarjetaCompra.isCanjeada()
-                || tarjetaCompra.getFechaCaducidad() == null
-                || !tarjetaCompra.getFechaCaducidad().isAfter(LocalDate.now())) {
-            throw new IllegalStateException("La tarjeta regalo no está activa o ha caducado.");
-        }
+            Optional<TarjetaRegaloCompra> optionalTarjeta = tarjetaRegaloCompraDao.findByCodigo(codigoTarjeta);
+            if (optionalTarjeta.isEmpty()) {
+                throw new IllegalArgumentException("Tarjeta regalo no encontrada.");
+            }
 
-        if (plantilla.getPrecio().compareTo(total) < 0) {
-            throw new IllegalArgumentException("La tarjeta regalo no cubre el importe total del carrito.");
+            tarjetaCompra = optionalTarjeta.get();
+            plantilla = tarjetaCompra.getTarjetaRegalo();
+
+            if (!tarjetaCompra.isEstado() || tarjetaCompra.isCanjeada()
+                    || tarjetaCompra.getFechaCaducidad() == null
+                    || !tarjetaCompra.getFechaCaducidad().isAfter(LocalDate.now())) {
+                throw new IllegalStateException("La tarjeta regalo no está activa o ha caducado.");
+            }
+
+            if (plantilla.getPrecio().compareTo(total) < 0) {
+                throw new IllegalArgumentException("La tarjeta regalo no cubre el importe total del carrito.");
+            }
         }
 
         // 5️ Crear o actualizar cliente
         Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
-        // 6️ Crear compra pagada sin Stripe
+        // 6️ Crear compra pagada sin Stripe (si es gratuita la dejamos pagado=true igualmente)
         Compra compra = new Compra();
         compra.setCliente(cliente);
         compra.setCodigoCompra(UUID.randomUUID().toString());
         compra.setFechaCompra(LocalDate.now());
         compra.setTotal(total);
         compra.setPagado(true);
-        // compra.setMetodoPago("TARJETA_REGALO"); // solo si tu entidad tiene ese campo
         compraDao.save(compra);
         logger.info("Compra sin Stripe creada para {} (total {}€)", cliente.getEmail(), total);
 
@@ -142,18 +148,24 @@ public class NoStripeService {
                 }
             } catch (Exception e) {
                 logger.error("Error procesando item {}: {}", item.getNombre(), e.getMessage());
+                throw e; // lanzar para forzar rollback si lo prefieres; si quieres continuar, elimina este throw
             }
         }
 
-        // 8️ Marcar la tarjeta como usada
-        tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta);
-        logger.info("Tarjeta regalo {} marcada como usada", codigoTarjeta);
+        // 8️ Marcar la tarjeta como usada SOLO si no es compra gratuita
+        if (!compraGratuita) {
+            tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta);
+            logger.info("Tarjeta regalo {} marcada como usada", codigoTarjeta);
+        } else {
+            logger.info("Compra gratuita procesada — no se ha usado tarjeta regalo");
+        }
 
         // 9️ Enviar email de confirmación general
         emailService.enviarConfirmacionCompraTotal(cliente.getEmail(), cliente.getNombre(), compra);
 
         return compra.getCodigoCompra();
     }
+
 
     // ============================
     // Métodos auxiliares (idénticos a StripeService)
