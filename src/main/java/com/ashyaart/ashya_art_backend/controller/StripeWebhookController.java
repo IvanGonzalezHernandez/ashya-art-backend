@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,7 +23,9 @@ import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
+import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.net.Webhook;
 
 @RestController
@@ -47,6 +50,9 @@ public class StripeWebhookController {
         String endpointSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
         Event event;
 
+        /* ---------------------------
+           VALIDACIÓN DE LA FIRMA
+           --------------------------- */
         try {
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
         } catch (SignatureVerificationException e) {
@@ -54,63 +60,98 @@ public class StripeWebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Firma no válida");
         }
 
-        if ("checkout.session.completed".equals(event.getType())) {
-            try {
-                // Obtener la Session del propio evento (evita otra llamada si es posible)
-                Session session = (Session) event.getDataObjectDeserializer()
-                        .getObject()
-                        .orElseThrow(() -> new IllegalStateException("No hay Session en el evento"));
+        logger.info("Evento Stripe recibido: {}", event.getType());
 
-                // 1) Verificar que está pagada
-                if (!"paid".equalsIgnoreCase(session.getPaymentStatus())) {
-                    logger.warn("Session {} con payment_status={} (se ignora)",
-                            session.getId(), session.getPaymentStatus());
-                    return ResponseEntity.ok("Ignorado: no pagado");
-                }
-
-                // 2) Recuperar el ref que generaste en crearSesion
-                String ref = session.getClientReferenceId();
-                if (ref == null || ref.isBlank()) {
-                    logger.error("client_reference_id ausente en la sesión {}", session.getId());
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("client_reference_id ausente");
-                }
-
-                // 3) Cargar el contexto del carrito desde la BD (y asegurar idempotencia)
-                Optional<Carrito> opt = carritoDao.findByIdAndConsumidoFalse(ref);
-                if (opt.isEmpty()) {
-                    logger.info("Carrito {} no encontrado o ya consumido (idempotencia)", ref);
-                    return ResponseEntity.ok("Ya procesado o no existe");
-                }
-
-                Carrito ctx = opt.get();
-
-                // 4) Reconstruir DTOs desde tu BD (no desde metadata)
-                ClienteDto clienteDto = objectMapper.readValue(ctx.getClienteJson(), ClienteDto.class);
-                CarritoDto carritoDto = objectMapper.readValue(ctx.getCarritoJson(), CarritoDto.class);
-
-                // 5) Procesar la compra completa
-                stripeService.procesarSesionStripe(clienteDto, carritoDto);
-
-                // 6) Marcar tarjeta regalo como usada si venía en metadata (opcional)
-                String codigoTarjeta = session.getMetadata() != null
-                        ? session.getMetadata().get("codigoTarjeta")
-                        : null;
-                if (codigoTarjeta != null && !codigoTarjeta.isBlank()) {
-                    tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta.trim().toUpperCase());
-                }
-
-                // 7) Idempotencia: marcar consumido
-                ctx.setConsumido(true);
-                carritoDao.save(ctx);
-
-            } catch (Exception e) {
-                logger.error("Error procesando sesión Stripe", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Error al procesar sesión Stripe");
-            }
+        /* ---------------------------
+           SOLO PROCESA checkout.session.completed
+           --------------------------- */
+        if (!"checkout.session.completed".equals(event.getType())) {
+            logger.info("Evento ignorado: {}", event.getType());
+            return ResponseEntity.ok("Ignorado");
         }
 
-        return ResponseEntity.ok("Webhook recibido");
+        try {
+            /* ---------------------------
+               EXTRAER SESSION DE FORMA SEGURA
+               --------------------------- */
+            EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+            Optional<StripeObject> obj = deserializer.getObject();
+
+            if (obj.isEmpty() || !(obj.get() instanceof Session session)) {
+                logger.warn("Evento checkout.session.completed sin Session válida");
+                return ResponseEntity.ok("Evento sin Session");
+            }
+
+            /* ---------------------------
+               VALIDACIÓN PAGO
+               --------------------------- */
+            if (!"paid".equalsIgnoreCase(session.getPaymentStatus())) {
+                logger.warn("Session {} con payment_status={} (no se procesa)",
+                        session.getId(), session.getPaymentStatus());
+                return ResponseEntity.ok("No pagado");
+            }
+
+            /* ---------------------------
+               OBTENER REF (ID DEL CARRITO)
+               --------------------------- */
+            String ref = session.getClientReferenceId();
+            if (ref == null || ref.isBlank()) {
+                logger.error("client_reference_id ausente en la sesión {}", session.getId());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("client_reference_id ausente");
+            }
+
+            /* ---------------------------
+               IDEMPOTENCIA - CARGAR CARRITO
+               --------------------------- */
+            Optional<Carrito> opt = carritoDao.findByIdAndConsumidoFalse(ref);
+            if (opt.isEmpty()) {
+                logger.info("Carrito {} ya consumido o no existe (idempotencia)", ref);
+                return ResponseEntity.ok("Ya procesado");
+            }
+
+            Carrito ctx = opt.get();
+
+            /* ---------------------------
+               RECONSTRUIR DATOS DEL CLIENTE Y PEDIDO
+               --------------------------- */
+            ClienteDto clienteDto = objectMapper.readValue(ctx.getClienteJson(), ClienteDto.class);
+            CarritoDto carritoDto = objectMapper.readValue(ctx.getCarritoJson(), CarritoDto.class);
+
+            /* ---------------------------
+               PROCESAR PAGO
+               --------------------------- */
+            stripeService.procesarSesionStripe(clienteDto, carritoDto);
+
+            /* ---------------------------
+               TARJETA REGALO (OPCIONAL)
+               --------------------------- */
+            String codigoTarjeta = session.getMetadata() != null
+                    ? session.getMetadata().get("codigoTarjeta")
+                    : null;
+
+            if (codigoTarjeta != null && !codigoTarjeta.isBlank()) {
+                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta.trim().toUpperCase());
+            }
+
+            /* ---------------------------
+               MARCAR CARRITO COMO CONSUMIDO
+               --------------------------- */
+            ctx.setConsumido(true);
+            carritoDao.save(ctx);
+
+            return ResponseEntity.ok("OK");
+
+        } catch (Exception e) {
+
+            /* ---------------------------
+               ROLLBACK POR SI HAY FALLO
+               --------------------------- */
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+
+            logger.error("Error procesando sesión Stripe", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error procesando webhook");
+        }
     }
 }

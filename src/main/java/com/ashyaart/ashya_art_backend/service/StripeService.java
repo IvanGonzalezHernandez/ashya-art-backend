@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ashyaart.ashya_art_backend.entity.Carrito;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
@@ -75,6 +76,7 @@ public class StripeService {
 
         // Generar referencia y guardar el contexto (evita metadata > 500 chars)
         String checkoutRef = UUID.randomUUID().toString().replace("-", "");
+        carritoDto.setId(checkoutRef);
         Carrito carrito = new Carrito();
         carrito.setId(checkoutRef);
         carrito.setClienteJson(objectMapper.writeValueAsString(clienteDto));
@@ -183,7 +185,18 @@ public class StripeService {
     // ---------------------
     // PROCESADO DE COMPRA
     // ---------------------
+    @Transactional
     public void procesarSesionStripe(ClienteDto clienteDto, CarritoDto carritoDto) {
+    	if (carritoDto.getId() == null || carritoDto.getId().isBlank()) {
+    	    throw new IllegalStateException("CarritoDto sin ID, no es posible procesar");
+    	}
+    	// Comprobar si ya hay una compra para este carrito
+    	Optional<Compra> existente = compraDao.findByCarritoId(carritoDto.getId());
+    	if (existente.isPresent()) {
+    	    logger.info("Compra ya procesada para carrito {}", carritoDto.getId());
+    	    return;
+    	}
+    	
         Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
         BigDecimal total = carritoDto.getItems().stream()
@@ -191,6 +204,7 @@ public class StripeService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Compra compraTotal = new Compra();
+        compraTotal.setCarritoId(carritoDto.getId());
         compraTotal.setCliente(cliente);
         compraTotal.setCodigoCompra(UUID.randomUUID().toString());
         compraTotal.setFechaCompra(LocalDate.now());

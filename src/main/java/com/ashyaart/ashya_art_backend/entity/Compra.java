@@ -22,6 +22,9 @@ public class Compra {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(name = "carrito_id")
+    private String carritoId;
 
     @Column(name = "codigo_compra", nullable = false, unique = true, length = 36)
     private String codigoCompra;
@@ -82,4 +85,7 @@ public class Compra {
     
     public Boolean getPagado() { return pagado; }
     public void setPagado(Boolean pagado) { this.pagado = pagado; }
+    
+    public String getCarritoId() { return carritoId; }
+    public void setCarritoId(String carritoId) { this.carritoId = carritoId; }
 }
