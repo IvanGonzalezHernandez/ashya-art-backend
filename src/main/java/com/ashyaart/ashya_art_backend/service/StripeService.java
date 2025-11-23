@@ -7,6 +7,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,13 @@ import com.stripe.param.checkout.SessionCreateParams;
 
 import jakarta.mail.MessagingException;
 
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.SecretoCompradoEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
+
+
 @Service
 public class StripeService {
 
@@ -61,6 +69,7 @@ public class StripeService {
     @Autowired private TarjetaRegaloDao tarjetaRegaloDao;
     @Autowired private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
     @Autowired private CarritoDao carritoDao;
+    @Autowired private ApplicationEventPublisher eventPublisher;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -213,7 +222,13 @@ public class StripeService {
         compraDao.save(compraTotal);
         logger.info("Compra registrada con ID: {}", compraTotal.getId());
 
-        emailService.enviarConfirmacionCompraTotal(cliente.getEmail(), cliente.getNombre(), compraTotal);
+        eventPublisher.publishEvent(
+                new CompraTotalConfirmadaEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    compraTotal
+                )
+            );
 
         for (ItemCarritoDto item : carritoDto.getItems()) {
             try {
@@ -255,16 +270,18 @@ public class StripeService {
         cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
         cursoFechaDao.save(cursoFecha);
 
-        emailService.enviarConfirmacionCursoIndividual(
-            cliente.getEmail(),
-            cliente.getNombre(),
-            cursoFecha.getCurso().getNombre(),
-            cursoFecha.getFecha().toString(),
-            cursoFecha.getHoraInicio().toString(),
-            item.getCantidad(),
-            cursoFecha.getCurso().getPrecio(),
-            cursoFecha.getCurso().getInformacionExtra()
-        );
+        eventPublisher.publishEvent(
+                new CursoCompradoEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    cursoFecha.getCurso().getNombre(),
+                    cursoFecha.getFecha(),
+                    cursoFecha.getHoraInicio().toString(),
+                    item.getCantidad(),
+                    cursoFecha.getCurso().getPrecio(),
+                    cursoFecha.getCurso().getInformacionExtra()
+                )
+         );
     }
 
     private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) throws MessagingException {
@@ -283,10 +300,15 @@ public class StripeService {
         producto.setStock(producto.getStock() - item.getCantidad());
         productoDao.save(producto);
 
-        emailService.enviarConfirmacionProductoIndividual(
-            cliente.getEmail(), cliente.getNombre(),
-            producto.getNombre(), item.getCantidad(), producto.getPrecio()
-        );
+        eventPublisher.publishEvent(
+                new ProductoCompradoEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    producto.getNombre(),
+                    item.getCantidad(),
+                    producto.getPrecio()
+                )
+         );
     }
 
     private void procesarSecreto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
@@ -301,9 +323,15 @@ public class StripeService {
         compra.setSecreto(secreto);
         secretoCompraDao.save(compra);
 
-        emailService.enviarConfirmacionSecretoIndividual(
-            cliente.getEmail(), cliente.getNombre(),
-            secreto.getNombre(), secreto.getPdf()
+        byte[] pdfBytes = secreto.getPdf();
+
+        eventPublisher.publishEvent(
+            new SecretoCompradoEvent(
+                cliente.getEmail(),
+                cliente.getNombre(),
+                secreto.getNombre(),
+                pdfBytes
+            )
         );
     }
 
@@ -327,11 +355,16 @@ public class StripeService {
             tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6));
             tarjetaRegaloCompraDao.save(tarjetaCompra);
 
-            emailService.enviarConfirmacionTarjetaRegaloIndividual(
-                cliente.getEmail(), cliente.getNombre(),
-                item.getDestinatario(), codigoUnico,
-                plantilla.getPrecio(), tarjetaCompra.getFechaCaducidad()
-            );
+            eventPublisher.publishEvent(
+                    new TarjetaRegaloCompradaEvent(
+                        cliente.getEmail(),
+                        cliente.getNombre(),
+                        item.getDestinatario(),
+                        codigoUnico,
+                        plantilla.getPrecio(),
+                        tarjetaCompra.getFechaCaducidad()
+                    )
+             );
         }
     }
 }
