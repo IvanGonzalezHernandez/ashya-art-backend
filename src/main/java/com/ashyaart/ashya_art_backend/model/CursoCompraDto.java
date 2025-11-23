@@ -14,6 +14,7 @@ public class CursoCompraDto {
     private String email;
     private String nombreCurso;
     private String fechaCurso;
+    private boolean pagado;
 
     public CursoCompraDto() {}
 
@@ -104,6 +105,14 @@ public class CursoCompraDto {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	
+	public boolean isPagado() {
+		return pagado;
+	}
+	
+	public void setPagado(boolean pagado) {
+		this.pagado = pagado;
 	}
 	
 }

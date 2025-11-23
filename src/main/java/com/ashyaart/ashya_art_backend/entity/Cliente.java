@@ -49,7 +49,7 @@ public class Cliente {
     @Column(nullable = false)
     private String provincia;
 
-    @Pattern(regexp = "\\+?\\d+")
+    @Pattern(regexp = "^\\+?[0-9()\\-\\s]{3,20}$")
     @Column(length = 20)
     private String telefono;
 

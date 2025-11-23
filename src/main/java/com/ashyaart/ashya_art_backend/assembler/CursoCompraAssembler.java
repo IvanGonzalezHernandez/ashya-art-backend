@@ -19,6 +19,7 @@ public class CursoCompraAssembler {
         dto.setEmail(entity.getCliente().getEmail());
         dto.setNombreCurso(entity.getCursoFecha().getCurso().getNombre());
         dto.setFechaCurso(entity.getCursoFecha().getFecha().toString());
+        dto.setPagado(entity.getCompra() != null ? entity.getCompra().getPagado() : false);
         return dto;
     }
 
