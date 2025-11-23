@@ -63,6 +63,17 @@ public class CarritoController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    
+    @PostMapping(value = "/atelier", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> procesarReservaAtelier(@RequestBody CarritoClienteDto dto) {
+        try {
+            String codigoReserva = noStripeService.procesarReservaAtelier(dto);
+            return ResponseEntity.ok(new ReservaAtelierResponse(codigoReserva));
+        } catch (Exception e) {
+            logger.error("Error en reserva Atelier", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
     static class UrlResponse {
         private String url;
@@ -78,5 +89,13 @@ public class CarritoController {
         public CompraResponse(String codigo) { this.codigo = codigo; }
         public String getCodigo() { return codigo; }
         public void setCodigo(String codigo) { this.codigo = codigo; }
+    }
+    
+    static class ReservaAtelierResponse {
+        private String codigoReserva;
+        public ReservaAtelierResponse() { }
+        public ReservaAtelierResponse(String codigoReserva) { this.codigoReserva = codigoReserva; }
+        public String getCodigoReserva() { return codigoReserva; }
+        public void setCodigoReserva(String codigoReserva) { this.codigoReserva = codigoReserva;}
     }
 }

@@ -165,6 +165,83 @@ public class NoStripeService {
 
         return compra.getCodigoCompra();
     }
+    
+    /**
+     * Registra una reserva para pagar en el Atelier (sin Stripe).
+     * - Solo admite cursos.
+     * - Descuenta plazas.
+     * - Marca la compra como NO pagada (pagado = false).
+     */
+    @Transactional
+    public String procesarReservaAtelier(CarritoClienteDto carritoClienteDto) throws Exception {
+
+        // 1) Extraer datos del DTO
+        CarritoDto carrito = carritoClienteDto.getCarrito();
+        ClienteDto clienteDto = carritoClienteDto.getCliente();
+
+        if (carrito == null || carrito.getItems() == null || carrito.getItems().isEmpty()) {
+            throw new IllegalArgumentException("El carrito está vacío.");
+        }
+
+        // 2) Validar que solo haya cursos y que haya plazas
+        for (ItemCarritoDto item : carrito.getItems()) {
+
+            if (!"CURSO".equalsIgnoreCase(item.getTipo())) {
+                throw new IllegalArgumentException("Solo se pueden reservar cursos para pagar en el Atelier.");
+            }
+
+            if (!stockService.hayStockSuficiente(item)) {
+                throw new IllegalArgumentException("No hay plazas suficientes para: " + item.getNombre());
+            }
+        }
+
+        // 3) Calcular total del carrito
+        BigDecimal total = carrito.getItems().stream()
+                .map(i -> BigDecimal.valueOf(i.getPrecio())
+                        .multiply(BigDecimal.valueOf(i.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 4) Crear o actualizar cliente
+        Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
+
+        // 5) Crear compra con pagado = false
+        Compra compra = new Compra();
+        compra.setCliente(cliente);
+        compra.setCodigoCompra(UUID.randomUUID().toString());
+        compra.setFechaCompra(LocalDate.now());
+        compra.setTotal(total);
+        compra.setPagado(false); // NO pagado
+        compraDao.save(compra);
+
+        logger.info("Reserva Atelier creada para {} (total {}€)", cliente.getEmail(), total);
+
+        // 6) Procesar items (cursos) -> reserva plazas y envía mails individuales
+        for (ItemCarritoDto item : carrito.getItems()) {
+            try {
+                procesarCurso(cliente, compra, item); // mismo método auxiliar que ya utilizas
+            } catch (Exception e) {
+                logger.error("Error procesando curso {}: {}", item.getNombre(), e.getMessage());
+                throw e; // rollback si falla algo
+            }
+        }
+
+        // 7) Email resumen de reserva
+        try {
+            // Si no quieres crear un método nuevo de email, puedes reutilizar este y
+            // adaptar la plantilla para que hable de "reserva" en lugar de "pago completado".
+            emailService.enviarConfirmacionCompraTotal(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    compra
+            );
+        } catch (Exception e) {
+            logger.warn("Error enviando email de reserva Atelier a {}: {}", cliente.getEmail(), e.getMessage());
+        }
+
+        // Devolvemos el código de la reserva
+        return compra.getCodigoCompra();
+    }
+
 
 
     // ============================
