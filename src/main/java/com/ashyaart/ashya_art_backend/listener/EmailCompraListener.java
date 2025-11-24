@@ -5,6 +5,9 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.ashyaart.ashya_art_backend.event.*;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraNoStripeAdminEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminErrorEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSuccessEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
@@ -78,5 +81,40 @@ public class EmailCompraListener {
             event.importe(),
             event.fechaCaducidad()
         );
+    }
+    
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onCompraStripeAdminSuccess(CompraStripeAdminSuccessEvent event) {
+        emailService.enviarNotificacionAdminCompraStripe(
+                event.emailCliente(),
+                event.nombreCliente(),
+                event.compra()
+        );
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void onCompraStripeAdminError(CompraStripeAdminErrorEvent event) {
+        emailService.enviarNotificacionAdminCompraStripeError(
+                event.emailCliente(),
+                event.nombreCliente(),
+                event.motivo()
+        );
+    }
+
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onCompraNoStripeAdminSuccess(CompraNoStripeAdminEvent event) throws MessagingException {
+        if (!event.exito()) {
+            return;
+        }
+        emailService.enviarNotificacionAdminCompraNoStripe(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void onCompraNoStripeAdminError(CompraNoStripeAdminEvent event) throws MessagingException {
+        if (event.exito()) {
+            return;
+        }
+        emailService.enviarNotificacionAdminCompraNoStripe(event);
     }
 }

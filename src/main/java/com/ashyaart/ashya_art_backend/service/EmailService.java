@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraNoStripeAdminEvent;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
@@ -43,13 +44,19 @@ import com.itextpdf.text.pdf.PdfWriter;
 public class EmailService {
 
   private static final Logger log = LoggerFactory.getLogger(EmailService.class);
-
+  //Rate limit sencillo para Resend (máx. ~1 email cada 700 ms)
+  private final Object rateLimitLock = new Object();
+  private long lastEmailTimestamp = 0L;
+  
   private final RestTemplate http = new RestTemplate();
   @Value("${resend.api.key:}")
   private String apiKey;
 
   @Value("${resend.from:}")
   private String from;
+  
+  @Value("${resend.reply-to:}")
+  private String replyTo;
 
   public EmailService(
       @Value("${resend.api.key}") String apiKey,
@@ -69,6 +76,9 @@ public class EmailService {
         "subject", subject,
         "text", text
     );
+    
+    applyRateLimit();
+    
     post(body);
   }
 
@@ -80,6 +90,9 @@ public class EmailService {
         "subject", subject,
         "html", html
     );
+    
+    applyRateLimit();
+    
     post(body);
   }
 
@@ -100,6 +113,9 @@ public class EmailService {
         "html", html,
         "attachments", List.of(attachment)
     );
+    
+    applyRateLimit();
+    
     post(body);
   }
 
@@ -123,6 +139,30 @@ public class EmailService {
       throw new RuntimeException("Error enviando email con Resend", ex);
     }
   }
+  
+  /**
+   * Aplica un pequeño retardo entre envíos para no superar
+   * el límite de 2 peticiones/segundo de Resend.
+   */
+  private void applyRateLimit() {
+    synchronized (rateLimitLock) {
+      long now = System.currentTimeMillis();
+      long minIntervalMs = 2000; // 2 segundos
+
+      long wait = lastEmailTimestamp + minIntervalMs - now;
+      if (wait > 0) {
+        try {
+          Thread.sleep(wait);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+        now = System.currentTimeMillis();
+      }
+
+      lastEmailTimestamp = now;
+    }
+  }
+
 
   /* ===================== Métodos públicos ===================== */
 
@@ -504,6 +544,148 @@ public class EmailService {
       default -> tipoServicio;
     };
   }
+  
+  // ======================
+  // Notificaciones ADMIN – STRIPE
+  // ======================
+
+  public void enviarNotificacionAdminCompraStripe(
+          String emailCliente,
+          String nombreCliente,
+          Compra compra
+  ) {
+      String admin = replyTo;
+      String asunto = "✅ Stripe checkout – SUCCESS";
+
+      String cuerpoHtml =
+          "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+                "<h2 style='color:#333; margin-top:0;'>✅ Stripe checkout – SUCCESS</h2>" +
+                "<p>Se ha completado correctamente una compra vía <b>Stripe</b>.</p>" +
+                "<ul style='line-height:1.7; padding-left:20px;'>" +
+                  "<li><b>Cliente:</b> " + nombreCliente + " (" + emailCliente + ")</li>" +
+                  "<li><b>Código de compra:</b> " + compra.getCodigoCompra() + "</li>" +
+                  "<li><b>Total:</b> " + compra.getTotal() + " EUR</li>" +
+                  "<li><b>Fecha:</b> " + compra.getFechaCompra() + "</li>" +
+                "</ul>" +
+                "<p>Origen: Stripe checkout.</p>" +
+              "</div>" +
+            "</body>" +
+          "</html>";
+
+      sendHtml(admin, asunto, cuerpoHtml);
+  }
+
+  public void enviarNotificacionAdminCompraStripeError(
+          String emailCliente,
+          String nombreCliente,
+          String motivo
+  ) {
+      String admin = replyTo;
+      String asunto = "⚠️ Stripe checkout – ERROR";
+
+      String cuerpoHtml =
+          "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+                "<h2 style='color:#333; margin-top:0;'>⚠️ Stripe checkout – ERROR</h2>" +
+                "<p>Se ha producido un error al procesar una compra vía <b>Stripe</b>.</p>" +
+                "<ul style='line-height:1.7; padding-left:20px;'>" +
+                  "<li><b>Cliente:</b> " + nombreCliente + " (" + emailCliente + ")</li>" +
+                  "<li><b>Motivo:</b> " + (motivo != null ? motivo : "Sin detalle") + "</li>" +
+                "</ul>" +
+                "<p>Revisa los logs del backend para más información.</p>" +
+              "</div>" +
+            "</body>" +
+          "</html>";
+
+      sendHtml(admin, asunto, cuerpoHtml);
+  }
+
+  
+  // ======================
+  // Notificaciones ADMIN – NO STRIPE
+  // ======================
+  
+  public void enviarNotificacionAdminCompraNoStripe(CompraNoStripeAdminEvent event) {
+	    String adminEmail = replyTo;
+
+	    String estadoEmoji = event.exito() ? "✅" : "❌";
+	    String estadoTexto = event.exito() ? "SUCCESS" : "ERROR";
+
+	    String asunto = estadoEmoji + " NoStripe checkout – " + estadoTexto;
+
+	    StringBuilder detallesCarrito = new StringBuilder();
+	    if (event.carrito() != null && event.carrito().getItems() != null) {
+	      event.carrito().getItems().forEach(item -> {
+	        detallesCarrito
+	            .append("<li>")
+	            .append("<b>Type:</b> ").append(item.getTipo()).append(" | ")
+	            .append("<b>Name:</b> ").append(item.getNombre()).append(" | ")
+	            .append("<b>Qty:</b> ").append(item.getCantidad()).append(" | ")
+	            .append("<b>Price:</b> ").append(item.getPrecio()).append(" EUR")
+	            .append("</li>");
+	      });
+	    }
+
+	    String nombreCliente = event.cliente() != null ? event.cliente().getNombre() : "-";
+	    String emailCliente  = event.cliente() != null ? event.cliente().getEmail()  : "-";
+
+	    String codigoCompra  = (event.compra() != null) ? event.compra().getCodigoCompra() : "-";
+	    String totalCompra   = (event.compra() != null && event.compra().getTotal() != null)
+	        ? event.compra().getTotal().toString()
+	        : "-";
+	    String pagado        = (event.compra() != null) ? String.valueOf(event.compra().getPagado()) : "-";
+	    String fechaCompra   = (event.compra() != null && event.compra().getFechaCompra() != null)
+	        ? event.compra().getFechaCompra().toString()
+	        : "-";
+
+	    String mensajeError  = (!event.exito() && event.mensajeError() != null)
+	        ? event.mensajeError()
+	        : "-";
+
+	    String contenidoHtml =
+	        "<html>" +
+	          "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+	            "<div style='max-width:700px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+
+	              "<h2 style='color:#333; margin-top:0;'>" + estadoEmoji + " NoStripe checkout (" + estadoTexto + ")</h2>" +
+
+	              "<p><b>Flow:</b> " + event.flujo() + "</p>" +
+
+	              "<h3 style='margin-top:24px;'>Client</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Name:</b> " + nombreCliente + "</li>" +
+	                "<li><b>Email:</b> " + emailCliente + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Order</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Code:</b> " + codigoCompra + "</li>" +
+	                "<li><b>Total:</b> " + totalCompra + " EUR</li>" +
+	                "<li><b>Paid flag:</b> " + pagado + "</li>" +
+	                "<li><b>Date:</b> " + fechaCompra + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Cart items</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                 (detallesCarrito.length() > 0 ? detallesCarrito.toString() : "<li>No items</li>") +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Error message</h3>" +
+	              "<p>" + mensajeError + "</p>" +
+
+	              "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+	              "<p style='font-size:12px; color:#777;'>This email was generated automatically from the NoStripe checkout flow (gift card / free purchase).</p>" +
+
+	            "</div>" +
+	          "</body>" +
+	        "</html>";
+
+	    sendHtml(adminEmail, asunto, contenidoHtml);
+	  }
+
 
   /* ===================== PDF de tarjeta regalo  ===================== */
 

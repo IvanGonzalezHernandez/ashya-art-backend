@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
+import com.ashyaart.ashya_art_backend.model.CarritoDto;
+import com.ashyaart.ashya_art_backend.model.ClienteDto;
 
 public class CompraEventos {
 
@@ -46,6 +48,27 @@ public class CompraEventos {
             String codigo,
             BigDecimal importe,
             LocalDate fechaCaducidad
+    ) {}
+    
+    public record CompraStripeAdminSuccessEvent(
+            String emailCliente,
+            String nombreCliente,
+            Compra compra
+    ) {}
+
+    public record CompraStripeAdminErrorEvent(
+            String emailCliente,
+            String nombreCliente,
+            String motivo
+    ) {}
+    
+    public record CompraNoStripeAdminEvent(
+            String flujo,
+            boolean exito,
+            String mensajeError,
+            ClienteDto cliente,
+            CarritoDto carrito,
+            Compra compra
     ) {}
 
 }

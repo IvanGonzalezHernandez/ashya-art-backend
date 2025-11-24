@@ -42,13 +42,14 @@ import com.stripe.model.Coupon;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 
-import jakarta.mail.MessagingException;
-
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.SecretoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSuccessEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminErrorEvent;
+
 
 
 @Service
@@ -60,7 +61,6 @@ public class StripeService {
     @Autowired private ClienteService clienteService;
     @Autowired private CursoCompraDao cursoCompraDao;
     @Autowired private CursoFechaDao cursoFechaDao;
-    @Autowired private EmailService emailService;
     @Autowired private CompraDao compraDao;
     @Autowired private ProductoDao productoDao;
     @Autowired private ProductoCompraDao productoCompraDao;
@@ -196,33 +196,35 @@ public class StripeService {
     // ---------------------
     @Transactional
     public void procesarSesionStripe(ClienteDto clienteDto, CarritoDto carritoDto) {
-    	if (carritoDto.getId() == null || carritoDto.getId().isBlank()) {
-    	    throw new IllegalStateException("CarritoDto sin ID, no es posible procesar");
-    	}
-    	// Comprobar si ya hay una compra para este carrito
-    	Optional<Compra> existente = compraDao.findByCarritoId(carritoDto.getId());
-    	if (existente.isPresent()) {
-    	    logger.info("Compra ya procesada para carrito {}", carritoDto.getId());
-    	    return;
-    	}
-    	
-        Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
+        try {
+            if (carritoDto.getId() == null || carritoDto.getId().isBlank()) {
+                throw new IllegalStateException("CarritoDto sin ID, no es posible procesar");
+            }
+            // Comprobar si ya hay una compra para este carrito
+            Optional<Compra> existente = compraDao.findByCarritoId(carritoDto.getId());
+            if (existente.isPresent()) {
+                logger.info("Compra ya procesada para carrito {}", carritoDto.getId());
+                return;
+            }
 
-        BigDecimal total = carritoDto.getItems().stream()
-            .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
-        Compra compraTotal = new Compra();
-        compraTotal.setCarritoId(carritoDto.getId());
-        compraTotal.setCliente(cliente);
-        compraTotal.setCodigoCompra(UUID.randomUUID().toString());
-        compraTotal.setFechaCompra(LocalDate.now());
-        compraTotal.setTotal(total);
-        compraTotal.setPagado(true);
-        compraDao.save(compraTotal);
-        logger.info("Compra registrada con ID: {}", compraTotal.getId());
+            BigDecimal total = carritoDto.getItems().stream()
+                .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        eventPublisher.publishEvent(
+            Compra compraTotal = new Compra();
+            compraTotal.setCarritoId(carritoDto.getId());
+            compraTotal.setCliente(cliente);
+            compraTotal.setCodigoCompra(UUID.randomUUID().toString());
+            compraTotal.setFechaCompra(LocalDate.now());
+            compraTotal.setTotal(total);
+            compraTotal.setPagado(true);
+            compraDao.save(compraTotal);
+            logger.info("Compra registrada con ID: {}", compraTotal.getId());
+
+            // Email cliente (ya lo tenías)
+            eventPublisher.publishEvent(
                 new CompraTotalConfirmadaEvent(
                     cliente.getEmail(),
                     cliente.getNombre(),
@@ -230,31 +232,58 @@ public class StripeService {
                 )
             );
 
-        for (ItemCarritoDto item : carritoDto.getItems()) {
-            try {
-                switch (item.getTipo().toUpperCase()) {
-                    case "CURSO":
-                        procesarCurso(cliente, compraTotal, item);
-                        break;
-                    case "PRODUCTO":
-                        procesarProducto(cliente, compraTotal, item);
-                        break;
-                    case "TARJETA":
-                        procesarTarjetaRegalo(cliente, compraTotal, item);
-                        break;
-                    case "SECRETO":
-                        procesarSecreto(cliente, compraTotal, item);
-                        break;
-                    default:
-                        logger.warn("Tipo de item desconocido: {}", item.getTipo());
+            // Items del carrito
+            for (ItemCarritoDto item : carritoDto.getItems()) {
+                try {
+                    switch (item.getTipo().toUpperCase()) {
+                        case "CURSO":
+                            procesarCurso(cliente, compraTotal, item);
+                            break;
+                        case "PRODUCTO":
+                            procesarProducto(cliente, compraTotal, item);
+                            break;
+                        case "TARJETA":
+                            procesarTarjetaRegalo(cliente, compraTotal, item);
+                            break;
+                        case "SECRETO":
+                            procesarSecreto(cliente, compraTotal, item);
+                            break;
+                        default:
+                            logger.warn("Tipo de item desconocido: {}", item.getTipo());
+                    }
+                } catch (Exception e) {
+                    logger.error("Error procesando item del carrito: {}", item, e);
+                    throw e; // forzamos rollback
                 }
-            } catch (Exception e) {
-                logger.error("Error procesando item del carrito: {}", item, e);
             }
+
+            // ✅ Notificación admin – Stripe SUCCESS
+            eventPublisher.publishEvent(
+                new CompraStripeAdminSuccessEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    compraTotal
+                )
+            );
+
+        } catch (Exception e) {
+            logger.error("Error procesando sesión Stripe para {}: {}", clienteDto.getEmail(), e.getMessage(), e);
+
+            // ⚠️ Notificación admin – Stripe ERROR
+            eventPublisher.publishEvent(
+                new CompraStripeAdminErrorEvent(
+                    clienteDto.getEmail(),
+                    clienteDto.getNombre(),
+                    e.getMessage()
+                )
+            );
+
+            throw e; // importante: re-lanzar para rollback
         }
     }
 
-    private void procesarCurso(Cliente cliente, Compra compraTotal, ItemCarritoDto item) throws MessagingException {
+
+    private void procesarCurso(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
         Long idCursoFecha = Long.valueOf(item.getId());
         CursoFecha cursoFecha = cursoFechaDao.findById(idCursoFecha)
             .orElseThrow(() -> new RuntimeException("CursoFecha no encontrada: " + idCursoFecha));
@@ -284,7 +313,7 @@ public class StripeService {
          );
     }
 
-    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) throws MessagingException {
+    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
         Long idProducto = Long.valueOf(item.getId());
         Producto producto = productoDao.findById(idProducto)
             .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + idProducto));
