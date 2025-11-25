@@ -31,6 +31,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraNoStripeAdminEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminErrorEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSuccessEvent;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
@@ -549,11 +551,7 @@ public class EmailService {
   // Notificaciones ADMIN – STRIPE
   // ======================
 
-  public void enviarNotificacionAdminCompraStripe(
-	        String emailCliente,
-	        String nombreCliente,
-	        Compra compra
-	) {
+  public void enviarNotificacionAdminCompraStripe(CompraStripeAdminSuccessEvent event) {
 	    String adminEmail = replyTo;
 
 	    String flujo = "STRIPE_CHECKOUT";
@@ -562,13 +560,30 @@ public class EmailService {
 
 	    String asunto = estadoEmoji + " Stripe checkout – " + estadoTexto;
 
-	    String codigoCompra  = (compra != null) ? compra.getCodigoCompra() : "-";
-	    String totalCompra   = (compra != null && compra.getTotal() != null)
-	            ? compra.getTotal().toString()
+	    // Detalles del carrito (igual estilo que NoStripe)
+	    StringBuilder detallesCarrito = new StringBuilder();
+	    if (event.carrito() != null && event.carrito().getItems() != null) {
+	        event.carrito().getItems().forEach(item -> {
+	            detallesCarrito
+	                .append("<li>")
+	                .append("<b>Type:</b> ").append(item.getTipo()).append(" | ")
+	                .append("<b>Name:</b> ").append(item.getNombre()).append(" | ")
+	                .append("<b>Qty:</b> ").append(item.getCantidad()).append(" | ")
+	                .append("<b>Price:</b> ").append(item.getPrecio()).append(" EUR")
+	                .append("</li>");
+	        });
+	    }
+
+	    String nombreCliente = event.nombreCliente() != null ? event.nombreCliente() : "-";
+	    String emailCliente  = event.emailCliente() != null ? event.emailCliente() : "-";
+
+	    String codigoCompra  = (event.compra() != null) ? event.compra().getCodigoCompra() : "-";
+	    String totalCompra   = (event.compra() != null && event.compra().getTotal() != null)
+	            ? event.compra().getTotal().toString()
 	            : "-";
-	    String pagado        = (compra != null) ? String.valueOf(compra.getPagado()) : "-";
-	    String fechaCompra   = (compra != null && compra.getFechaCompra() != null)
-	            ? compra.getFechaCompra().toString()
+	    String pagado        = (event.compra() != null) ? String.valueOf(event.compra().getPagado()) : "-";
+	    String fechaCompra   = (event.compra() != null && event.compra().getFechaCompra() != null)
+	            ? event.compra().getFechaCompra().toString()
 	            : "-";
 
 	    String contenidoHtml =
@@ -582,8 +597,8 @@ public class EmailService {
 
 	              "<h3 style='margin-top:24px;'>Client</h3>" +
 	              "<ul style='line-height:1.7; padding-left:20px;'>" +
-	                "<li><b>Name:</b> " + (nombreCliente != null ? nombreCliente : "-") + "</li>" +
-	                "<li><b>Email:</b> " + (emailCliente != null ? emailCliente : "-") + "</li>" +
+	                "<li><b>Name:</b> " + nombreCliente + "</li>" +
+	                "<li><b>Email:</b> " + emailCliente + "</li>" +
 	              "</ul>" +
 
 	              "<h3 style='margin-top:24px;'>Order</h3>" +
@@ -592,6 +607,11 @@ public class EmailService {
 	                "<li><b>Total:</b> " + totalCompra + " EUR</li>" +
 	                "<li><b>Paid flag:</b> " + pagado + "</li>" +
 	                "<li><b>Date:</b> " + fechaCompra + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Cart items</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                (detallesCarrito.length() > 0 ? detallesCarrito.toString() : "<li>No items</li>") +
 	              "</ul>" +
 
 	              "<h3 style='margin-top:24px;'>Error message</h3>" +
@@ -608,11 +628,8 @@ public class EmailService {
 	}
 
 
-  public void enviarNotificacionAdminCompraStripeError(
-	        String emailCliente,
-	        String nombreCliente,
-	        String motivo
-	) {
+
+  public void enviarNotificacionAdminCompraStripeError(CompraStripeAdminErrorEvent event) {
 	    String adminEmail = replyTo;
 
 	    String flujo = "STRIPE_CHECKOUT";
@@ -621,7 +638,25 @@ public class EmailService {
 
 	    String asunto = estadoEmoji + " Stripe checkout – " + estadoTexto;
 
-	    String mensajeError = (motivo != null && !motivo.isBlank()) ? motivo : "Sin detalle";
+	    // Cart items también aquí
+	    StringBuilder detallesCarrito = new StringBuilder();
+	    if (event.carrito() != null && event.carrito().getItems() != null) {
+	        event.carrito().getItems().forEach(item -> {
+	            detallesCarrito
+	                .append("<li>")
+	                .append("<b>Type:</b> ").append(item.getTipo()).append(" | ")
+	                .append("<b>Name:</b> ").append(item.getNombre()).append(" | ")
+	                .append("<b>Qty:</b> ").append(item.getCantidad()).append(" | ")
+	                .append("<b>Price:</b> ").append(item.getPrecio()).append(" EUR")
+	                .append("</li>");
+	        });
+	    }
+
+	    String nombreCliente = event.nombreCliente() != null ? event.nombreCliente() : "-";
+	    String emailCliente  = event.emailCliente() != null ? event.emailCliente() : "-";
+	    String mensajeError  = (event.motivo() != null && !event.motivo().isBlank())
+	            ? event.motivo()
+	            : "Sin detalle";
 
 	    String contenidoHtml =
 	        "<html>" +
@@ -634,16 +669,13 @@ public class EmailService {
 
 	              "<h3 style='margin-top:24px;'>Client</h3>" +
 	              "<ul style='line-height:1.7; padding-left:20px;'>" +
-	                "<li><b>Name:</b> " + (nombreCliente != null ? nombreCliente : "-") + "</li>" +
-	                "<li><b>Email:</b> " + (emailCliente != null ? emailCliente : "-") + "</li>" +
+	                "<li><b>Name:</b> " + nombreCliente + "</li>" +
+	                "<li><b>Email:</b> " + emailCliente + "</li>" +
 	              "</ul>" +
 
-	              "<h3 style='margin-top:24px;'>Order</h3>" +
+	              "<h3 style='margin-top:24px;'>Cart items</h3>" +
 	              "<ul style='line-height:1.7; padding-left:20px;'>" +
-	                "<li><b>Code:</b> -</li>" +
-	                "<li><b>Total:</b> -</li>" +
-	                "<li><b>Paid flag:</b> -</li>" +
-	                "<li><b>Date:</b> -</li>" +
+	                (detallesCarrito.length() > 0 ? detallesCarrito.toString() : "<li>No items</li>") +
 	              "</ul>" +
 
 	              "<h3 style='margin-top:24px;'>Error message</h3>" +
@@ -658,6 +690,7 @@ public class EmailService {
 
 	    sendHtml(adminEmail, asunto, contenidoHtml);
 	}
+
 
 
   

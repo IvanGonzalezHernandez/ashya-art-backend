@@ -259,24 +259,26 @@ public class StripeService {
 
             // ✅ Notificación admin – Stripe SUCCESS
             eventPublisher.publishEvent(
-                new CompraStripeAdminSuccessEvent(
-                    cliente.getEmail(),
-                    cliente.getNombre(),
-                    compraTotal
-                )
-            );
+                    new CompraStripeAdminSuccessEvent(
+                        cliente.getEmail(),
+                        cliente.getNombre(),
+                        compraTotal,
+                        carritoDto
+                    )
+                );
 
         } catch (Exception e) {
             logger.error("Error procesando sesión Stripe para {}: {}", clienteDto.getEmail(), e.getMessage(), e);
 
             // ⚠️ Notificación admin – Stripe ERROR
             eventPublisher.publishEvent(
-                new CompraStripeAdminErrorEvent(
-                    clienteDto.getEmail(),
-                    clienteDto.getNombre(),
-                    e.getMessage()
-                )
-            );
+                    new CompraStripeAdminErrorEvent(
+                        clienteDto.getEmail(),
+                        clienteDto.getNombre(),
+                        e.getMessage(),
+                        carritoDto
+                    )
+                );
 
             throw e; // importante: re-lanzar para rollback
         }

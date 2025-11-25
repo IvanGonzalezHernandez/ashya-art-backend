@@ -53,13 +53,15 @@ public class CompraEventos {
     public record CompraStripeAdminSuccessEvent(
             String emailCliente,
             String nombreCliente,
-            Compra compra
+            Compra compra,
+            CarritoDto carrito
     ) {}
 
     public record CompraStripeAdminErrorEvent(
             String emailCliente,
             String nombreCliente,
-            String motivo
+            String motivo,
+            CarritoDto carrito
     ) {}
     
     public record CompraNoStripeAdminEvent(

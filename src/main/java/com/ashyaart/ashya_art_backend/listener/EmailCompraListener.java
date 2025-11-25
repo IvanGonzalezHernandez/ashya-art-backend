@@ -85,22 +85,13 @@ public class EmailCompraListener {
     
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCompraStripeAdminSuccess(CompraStripeAdminSuccessEvent event) {
-        emailService.enviarNotificacionAdminCompraStripe(
-                event.emailCliente(),
-                event.nombreCliente(),
-                event.compra()
-        );
+        emailService.enviarNotificacionAdminCompraStripe(event);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     public void onCompraStripeAdminError(CompraStripeAdminErrorEvent event) {
-        emailService.enviarNotificacionAdminCompraStripeError(
-                event.emailCliente(),
-                event.nombreCliente(),
-                event.motivo()
-        );
+        emailService.enviarNotificacionAdminCompraStripeError(event);
     }
-
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCompraNoStripeAdminSuccess(CompraNoStripeAdminEvent event) throws MessagingException {
