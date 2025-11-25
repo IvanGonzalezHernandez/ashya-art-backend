@@ -224,67 +224,93 @@ public class NoStripeService {
     @Transactional
     public String procesarReservaAtelier(CarritoClienteDto carritoClienteDto) throws Exception {
 
-        // 1) Extraer datos del DTO
-        CarritoDto carrito = carritoClienteDto.getCarrito();
-        ClienteDto clienteDto = carritoClienteDto.getCliente();
+        final CarritoDto carrito = carritoClienteDto.getCarrito();
+        final ClienteDto clienteDto = carritoClienteDto.getCliente();
 
-        if (carrito == null || carrito.getItems() == null || carrito.getItems().isEmpty()) {
-            throw new IllegalArgumentException("El carrito está vacío.");
-        }
-
-        // 2) Validar que solo haya cursos y que haya plazas
-        for (ItemCarritoDto item : carrito.getItems()) {
-
-            if (!"CURSO".equalsIgnoreCase(item.getTipo())) {
-                throw new IllegalArgumentException("Solo se pueden reservar cursos para pagar en el Atelier.");
+        try {
+            // 1) Validaciones
+            if (carrito == null || carrito.getItems() == null || carrito.getItems().isEmpty()) {
+                throw new IllegalArgumentException("El carrito está vacío.");
             }
 
-            if (!stockService.hayStockSuficiente(item)) {
-                throw new IllegalArgumentException("No hay plazas suficientes para: " + item.getNombre());
+            // Solo CURSOS + validar plazas
+            for (ItemCarritoDto item : carrito.getItems()) {
+                if (!"CURSO".equalsIgnoreCase(item.getTipo())) {
+                    throw new IllegalArgumentException("Solo se pueden reservar cursos para pagar en el Atelier.");
+                }
+
+                if (!stockService.hayStockSuficiente(item)) {
+                    throw new IllegalArgumentException("No hay plazas suficientes para: " + item.getNombre());
+                }
             }
-        }
 
-        // 3) Calcular total del carrito
-        BigDecimal total = carrito.getItems().stream()
-                .map(i -> BigDecimal.valueOf(i.getPrecio())
-                        .multiply(BigDecimal.valueOf(i.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 2) Total
+            BigDecimal total = carrito.getItems().stream()
+                    .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 4) Crear o actualizar cliente
-        Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
+            // 3) Crear/actualizar cliente
+            Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
-        // 5) Crear compra con pagado = false
-        Compra compra = new Compra();
-        compra.setCliente(cliente);
-        compra.setCodigoCompra(UUID.randomUUID().toString());
-        compra.setFechaCompra(LocalDate.now());
-        compra.setTotal(total);
-        compra.setPagado(false); // NO pagado (reserva)
-        compraDao.save(compra);
+            // 4) Crear compra pagado = false
+            Compra compra = new Compra();
+            compra.setCliente(cliente);
+            compra.setCodigoCompra(UUID.randomUUID().toString());
+            compra.setFechaCompra(LocalDate.now());
+            compra.setTotal(total);
+            compra.setPagado(false); // ES UNA RESERVA
+            compraDao.save(compra);
 
-        logger.info("Reserva Atelier creada para {} (total {}€)", cliente.getEmail(), total);
+            logger.info("Reserva Atelier creada para {} (total {}€)", cliente.getEmail(), total);
 
-        // Publicamos evento de compra/reserva total (email adaptará texto según pagado=true/false)
-        eventPublisher.publishEvent(
-            new CompraTotalConfirmadaEvent(
-                cliente.getEmail(),
-                cliente.getNombre(),
-                compra
-            )
-        );
+            // Email cliente (usa tu mismo listener)
+            eventPublisher.publishEvent(
+                new CompraTotalConfirmadaEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    compra
+                )
+            );
 
-        // 6) Procesar items (cursos)
-        for (ItemCarritoDto item : carrito.getItems()) {
-            try {
+            // 5) Procesar items (cursos)
+            for (ItemCarritoDto item : carrito.getItems()) {
                 procesarCurso(cliente, compra, item);
-            } catch (Exception e) {
-                logger.error("Error procesando curso {}: {}", item.getNombre(), e.getMessage(), e);
-                throw e; // rollback
             }
-        }
 
-        return compra.getCodigoCompra();
+            // 6) Notificar admin – RESERVA ATELIER OK
+            eventPublisher.publishEvent(
+                new CompraNoStripeAdminEvent(
+                    "RESERVA_ATELIER",
+                    true,       // éxito
+                    null,       // sin error
+                    clienteDto,
+                    carrito,
+                    compra
+                )
+            );
+
+            return compra.getCodigoCompra();
+
+        } catch (Exception e) {
+
+            logger.error("Error en procesarReservaAtelier: {}", e.getMessage(), e);
+
+            // Notificación admin – RESERVA ATELIER ERROR
+            eventPublisher.publishEvent(
+                new CompraNoStripeAdminEvent(
+                    "RESERVA_ATELIER",
+                    false,      // fallo
+                    e.getMessage(),
+                    clienteDto,
+                    carrito,
+                    null
+                )
+            );
+
+            throw e; // rollback
+        }
     }
+
 
     // ============================
     // Métodos auxiliares

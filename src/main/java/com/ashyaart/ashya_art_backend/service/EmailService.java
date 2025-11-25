@@ -550,58 +550,115 @@ public class EmailService {
   // ======================
 
   public void enviarNotificacionAdminCompraStripe(
-          String emailCliente,
-          String nombreCliente,
-          Compra compra
-  ) {
-      String admin = replyTo;
-      String asunto = "✅ Stripe checkout – SUCCESS";
+	        String emailCliente,
+	        String nombreCliente,
+	        Compra compra
+	) {
+	    String adminEmail = replyTo;
 
-      String cuerpoHtml =
-          "<html>" +
-            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
-              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-                "<h2 style='color:#333; margin-top:0;'>✅ Stripe checkout – SUCCESS</h2>" +
-                "<p>Se ha completado correctamente una compra vía <b>Stripe</b>.</p>" +
-                "<ul style='line-height:1.7; padding-left:20px;'>" +
-                  "<li><b>Cliente:</b> " + nombreCliente + " (" + emailCliente + ")</li>" +
-                  "<li><b>Código de compra:</b> " + compra.getCodigoCompra() + "</li>" +
-                  "<li><b>Total:</b> " + compra.getTotal() + " EUR</li>" +
-                  "<li><b>Fecha:</b> " + compra.getFechaCompra() + "</li>" +
-                "</ul>" +
-                "<p>Origen: Stripe checkout.</p>" +
-              "</div>" +
-            "</body>" +
-          "</html>";
+	    String flujo = "STRIPE_CHECKOUT";
+	    String estadoEmoji = "✅";
+	    String estadoTexto = "SUCCESS";
 
-      sendHtml(admin, asunto, cuerpoHtml);
-  }
+	    String asunto = estadoEmoji + " Stripe checkout – " + estadoTexto;
+
+	    String codigoCompra  = (compra != null) ? compra.getCodigoCompra() : "-";
+	    String totalCompra   = (compra != null && compra.getTotal() != null)
+	            ? compra.getTotal().toString()
+	            : "-";
+	    String pagado        = (compra != null) ? String.valueOf(compra.getPagado()) : "-";
+	    String fechaCompra   = (compra != null && compra.getFechaCompra() != null)
+	            ? compra.getFechaCompra().toString()
+	            : "-";
+
+	    String contenidoHtml =
+	        "<html>" +
+	          "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+	            "<div style='max-width:700px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+
+	              "<h2 style='color:#333; margin-top:0;'>" + estadoEmoji + " Stripe checkout (" + estadoTexto + ")</h2>" +
+
+	              "<p><b>Flow:</b> " + flujo + "</p>" +
+
+	              "<h3 style='margin-top:24px;'>Client</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Name:</b> " + (nombreCliente != null ? nombreCliente : "-") + "</li>" +
+	                "<li><b>Email:</b> " + (emailCliente != null ? emailCliente : "-") + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Order</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Code:</b> " + codigoCompra + "</li>" +
+	                "<li><b>Total:</b> " + totalCompra + " EUR</li>" +
+	                "<li><b>Paid flag:</b> " + pagado + "</li>" +
+	                "<li><b>Date:</b> " + fechaCompra + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Error message</h3>" +
+	              "<p>-</p>" +
+
+	              "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+	              "<p style='font-size:12px; color:#777;'>This email was generated automatically from the Stripe checkout flow.</p>" +
+
+	            "</div>" +
+	          "</body>" +
+	        "</html>";
+
+	    sendHtml(adminEmail, asunto, contenidoHtml);
+	}
+
 
   public void enviarNotificacionAdminCompraStripeError(
-          String emailCliente,
-          String nombreCliente,
-          String motivo
-  ) {
-      String admin = replyTo;
-      String asunto = "⚠️ Stripe checkout – ERROR";
+	        String emailCliente,
+	        String nombreCliente,
+	        String motivo
+	) {
+	    String adminEmail = replyTo;
 
-      String cuerpoHtml =
-          "<html>" +
-            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
-              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-                "<h2 style='color:#333; margin-top:0;'>⚠️ Stripe checkout – ERROR</h2>" +
-                "<p>Se ha producido un error al procesar una compra vía <b>Stripe</b>.</p>" +
-                "<ul style='line-height:1.7; padding-left:20px;'>" +
-                  "<li><b>Cliente:</b> " + nombreCliente + " (" + emailCliente + ")</li>" +
-                  "<li><b>Motivo:</b> " + (motivo != null ? motivo : "Sin detalle") + "</li>" +
-                "</ul>" +
-                "<p>Revisa los logs del backend para más información.</p>" +
-              "</div>" +
-            "</body>" +
-          "</html>";
+	    String flujo = "STRIPE_CHECKOUT";
+	    String estadoEmoji = "❌";
+	    String estadoTexto = "ERROR";
 
-      sendHtml(admin, asunto, cuerpoHtml);
-  }
+	    String asunto = estadoEmoji + " Stripe checkout – " + estadoTexto;
+
+	    String mensajeError = (motivo != null && !motivo.isBlank()) ? motivo : "Sin detalle";
+
+	    String contenidoHtml =
+	        "<html>" +
+	          "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+	            "<div style='max-width:700px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+
+	              "<h2 style='color:#333; margin-top:0;'>" + estadoEmoji + " Stripe checkout (" + estadoTexto + ")</h2>" +
+
+	              "<p><b>Flow:</b> " + flujo + "</p>" +
+
+	              "<h3 style='margin-top:24px;'>Client</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Name:</b> " + (nombreCliente != null ? nombreCliente : "-") + "</li>" +
+	                "<li><b>Email:</b> " + (emailCliente != null ? emailCliente : "-") + "</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Order</h3>" +
+	              "<ul style='line-height:1.7; padding-left:20px;'>" +
+	                "<li><b>Code:</b> -</li>" +
+	                "<li><b>Total:</b> -</li>" +
+	                "<li><b>Paid flag:</b> -</li>" +
+	                "<li><b>Date:</b> -</li>" +
+	              "</ul>" +
+
+	              "<h3 style='margin-top:24px;'>Error message</h3>" +
+	              "<p>" + mensajeError + "</p>" +
+
+	              "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+	              "<p style='font-size:12px; color:#777;'>This email was generated automatically from the Stripe checkout flow.</p>" +
+
+	            "</div>" +
+	          "</body>" +
+	        "</html>";
+
+	    sendHtml(adminEmail, asunto, contenidoHtml);
+	}
+
 
   
   // ======================
