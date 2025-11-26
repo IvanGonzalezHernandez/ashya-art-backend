@@ -38,6 +38,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -809,18 +810,26 @@ public class EmailService {
     if (currency == null) currency = Currency.getInstance("EUR");
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Document document = new Document(PageSize.A4);
+
+    // 1) Cargar imagen de fondo (plantilla 1x1)
+    ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
+    byte[] bgBytes;
+    try (InputStream is = resource.getInputStream()) {
+      bgBytes = is.readAllBytes();
+    }
+
+    Image img = Image.getInstance(bgBytes);
+
+    // Usamos exactamente el tamaño de la imagen -> PDF 1:1 sin márgenes
+    Rectangle pageSize = new Rectangle(img.getWidth(), img.getHeight());
+    Document document = new Document(pageSize);
     PdfWriter writer = PdfWriter.getInstance(document, baos);
     document.open();
 
-    // Fondo: plantilla
-    ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
-    try (InputStream is = resource.getInputStream()) {
-      Image img = Image.getInstance(is.readAllBytes());
-      img.scaleAbsolute(document.getPageSize().getWidth(), document.getPageSize().getHeight());
-      img.setAbsolutePosition(0, 0);
-      document.add(img);
-    }
+    // Añadir la imagen ocupando todo el lienzo
+    img.scaleAbsolute(pageSize.getWidth(), pageSize.getHeight());
+    img.setAbsolutePosition(0, 0);
+    document.add(img);
 
     PdfContentByte canvas = writer.getDirectContent();
 
@@ -841,7 +850,7 @@ public class EmailService {
       quicksandBold    = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
     }
 
-    // Helper: texto con fondo blanco opaco (sin transparencia)
+    // Helper: texto con fondo blanco opaco (para el bloque inferior)
     TriConsumer<String, float[], BaseFont> drawTextWithBackground = (text, pos, font) -> {
       try {
         float x = pos[0], y = pos[1], fontSize = pos[2];
@@ -876,21 +885,38 @@ public class EmailService {
       }
     };
 
-    // Layout: tercio inferior
-    float pageW = document.getPageSize().getWidth();
-    float pageH = document.getPageSize().getHeight();
+    float pageW = pageSize.getWidth();
+    float pageH = pageSize.getHeight();
+    float centerX = pageW / 2f;
+    float centerY = pageH / 2f;
 
+    // 2) Texto central de marca: "Ashya Art" y debajo "ATELIER"
+    canvas.beginText();
+    canvas.setColorFill(BaseColor.BLACK);
+
+    // Título marca
+    float brandTitleSize = pageW * 0.06f;  // proporcional al ancho
+    float brandSubSize   = pageW * 0.045f;
+
+    canvas.setFontAndSize(quicksandBold, brandTitleSize);
+    canvas.showTextAligned(Element.ALIGN_CENTER, "Ashya Art", centerX, centerY + brandSubSize, 0);
+
+    canvas.setFontAndSize(quicksandRegular, brandSubSize);
+    canvas.showTextAligned(Element.ALIGN_CENTER, "ATELIER", centerX, centerY - brandSubSize * 0.4f, 0);
+
+    canvas.endText();
+
+    // 3) Bloque de datos en el tercio inferior (como antes, pero adaptado al tamaño)
     float thirdH = pageH / 3f;
     float areaBottomMargin = 24f;
     float areaTopMargin = 24f;
     float areaHeight = thirdH - areaTopMargin - areaBottomMargin;
     float areaTopY   = thirdH - areaTopMargin;
-    float centerX    = pageW / 2f;
 
     // Tamaños base
-    float titleSize = 26f;
-    float lineSize  = 18f;
-    float gap       = 26f;
+    float titleSize = pageH * 0.035f;
+    float lineSize  = pageH * 0.025f;
+    float gap       = pageH * 0.03f;
 
     // Formateos dependientes de locale
     NumberFormat nf = NumberFormat.getCurrencyInstance(locale);
@@ -900,7 +926,6 @@ public class EmailService {
     DateTimeFormatter df = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale);
     String fechaStr = (fechaExpiracion != null) ? fechaExpiracion.format(df) : "";
 
-    // Contenido
     String[] lines = new String[] {
         "Gift Card",
         "Code: " + (codigo != null ? codigo : ""),
@@ -910,30 +935,27 @@ public class EmailService {
         "Valid until: " + fechaStr
     };
 
-    // ===== Ajuste opcional para encajar (autoFit) =====
+    // Auto-fit para que todo quepa en el tercio inferior
     if (autoFit) {
-      // Altura necesaria: título ocupa (titleSize) y resto 5 líneas ocupan 5*lineSize + 5*gap + 1*gap para tras el título
       int totalLines = lines.length;
-      float linesHeight = titleSize + gap              // Gift Card + gap siguiente
-                        + (totalLines - 1) * lineSize  // resto de líneas
-                        + (totalLines - 1) * gap;      // gaps entre resto de líneas
+      float linesHeight = titleSize + gap
+                        + (totalLines - 1) * lineSize
+                        + (totalLines - 1) * gap;
 
       if (linesHeight > areaHeight) {
-        float scale = areaHeight / linesHeight; // factor <= 1
-        // Escala homogénea de tamaños y gap, pero con mínimos razonables
+        float scale = areaHeight / linesHeight;
         titleSize = Math.max(16f, titleSize * scale);
         lineSize  = Math.max(12f, lineSize  * scale);
         gap       = Math.max(12f, gap       * scale);
       }
     }
 
-    // Pintado
-    float y = areaTopY; // empezamos arriba del tercio inferior
-    // Título
+    float y = areaTopY;
+    // Título "Gift Card"
     drawTextWithBackground.accept(lines[0], new float[]{centerX, y, titleSize}, quicksandBold);
     y -= (titleSize + gap);
 
-    // Resto
+    // Resto de líneas
     for (int i = 1; i < lines.length; i++) {
       drawTextWithBackground.accept(lines[i], new float[]{centerX, y, lineSize}, quicksandRegular);
       y -= gap;
@@ -942,6 +964,7 @@ public class EmailService {
     document.close();
     return baos.toByteArray();
   }
+
 
   /* Interfaz funcional auxiliar */
   @FunctionalInterface
