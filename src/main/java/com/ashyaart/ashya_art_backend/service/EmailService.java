@@ -794,7 +794,7 @@ public class EmailService {
     );
   }
 
-  /* ===== Versión flexible: locale/moneda + auto-fit opcional ===== */
+  /* ===== Tarjeta regalo formato CUADRADO 1×1 (148x148 mm) + Roboto + imagen completa ===== */
   private byte[] generarTarjetaRegaloPdf(
       String codigo,
       String nombreReceptor,
@@ -803,7 +803,7 @@ public class EmailService {
       LocalDate fechaExpiracion,
       Locale locale,
       Currency currency,
-      boolean autoFit // si true, aplica reducción proporcional si no cabe en el tercio inferior
+      boolean autoFit
   ) throws Exception {
 
     if (locale == null) locale = Locale.getDefault();
@@ -811,159 +811,158 @@ public class EmailService {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    // 1) Cargar imagen de fondo (plantilla 1x1)
-    ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
-    byte[] bgBytes;
-    try (InputStream is = resource.getInputStream()) {
-      bgBytes = is.readAllBytes();
-    }
+    float mm = 72f / 25.4f;
 
-    Image img = Image.getInstance(bgBytes);
-
-    // Usamos exactamente el tamaño de la imagen -> PDF 1:1 sin márgenes
-    Rectangle pageSize = new Rectangle(img.getWidth(), img.getHeight());
-    Document document = new Document(pageSize);
+    // === CUADRADO 148 x 148 mm ===
+    Rectangle SQUARE = new Rectangle(148f * mm, 148f * mm);
+    Document document = new Document(SQUARE);
     PdfWriter writer = PdfWriter.getInstance(document, baos);
+
     document.open();
 
-    // Añadir la imagen ocupando todo el lienzo
-    img.scaleAbsolute(pageSize.getWidth(), pageSize.getHeight());
-    img.setAbsolutePosition(0, 0);
-    document.add(img);
+    float pageW = document.getPageSize().getWidth();
+    float pageH = document.getPageSize().getHeight();
+    float centerX = pageW / 2f;
+
+    // === IMAGEN FULL CUADRADO ===
+    ClassPathResource resource = new ClassPathResource("img/plantillaTarjetaRegalo.png");
+    try (InputStream is = resource.getInputStream()) {
+      Image img = Image.getInstance(is.readAllBytes());
+
+      float imgW = img.getWidth();
+      float imgH = img.getHeight();
+      float ratioImg = imgW / imgH;
+      float ratioCard = pageW / pageH;
+
+      float finalW, finalH;
+
+      if (ratioImg > ratioCard) {
+        finalH = pageH;
+        finalW = finalH * ratioImg;
+      } else {
+        finalW = pageW;
+        finalH = finalW / ratioImg;
+      }
+
+      img.scaleAbsolute(finalW, finalH);
+      img.setAbsolutePosition((pageW - finalW) / 2f, (pageH - finalH) / 2f);
+      document.add(img);
+    }
 
     PdfContentByte canvas = writer.getDirectContent();
 
-    // Fuentes Quicksand embebidas
-    BaseFont quicksandRegular;
-    BaseFont quicksandBold;
+    // ========== FUENTE ROBOTO BOLD ==========
+    BaseFont robotoBold;
     try {
-      ClassPathResource qsr = new ClassPathResource("fonts/Quicksand-Regular.ttf");
-      ClassPathResource qsb = new ClassPathResource("fonts/Quicksand-Bold.ttf");
-      try (InputStream isR = qsr.getInputStream(); InputStream isB = qsb.getInputStream()) {
-        quicksandRegular = BaseFont.createFont(
-            "Quicksand-Regular.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, isR.readAllBytes(), null);
-        quicksandBold = BaseFont.createFont(
-            "Quicksand-Bold.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, isB.readAllBytes(), null);
+      ClassPathResource rb = new ClassPathResource("fonts/Roboto-Bold.ttf");
+      try (InputStream isB = rb.getInputStream()) {
+        robotoBold = BaseFont.createFont(
+            "Roboto-Bold.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED,
+            true, isB.readAllBytes(), null
+        );
       }
     } catch (Exception e) {
-      quicksandRegular = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-      quicksandBold    = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+      robotoBold = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
     }
 
-    // Helper: texto con fondo blanco opaco (para el bloque inferior)
-    TriConsumer<String, float[], BaseFont> drawTextWithBackground = (text, pos, font) -> {
+    // ========= HELPER para dibujar texto =========
+    TriConsumer<String, float[], BaseFont> drawText = (text, pos, font) -> {
       try {
         float x = pos[0], y = pos[1], fontSize = pos[2];
-        float padX = 8f, padY = 4f;
-
         canvas.saveState();
-        canvas.setFontAndSize(font, fontSize);
-
-        float textWidth  = font.getWidthPoint(text, fontSize);
-        float textHeight = fontSize;
-
-        // Rectángulo blanco opaco
-        canvas.setColorFill(BaseColor.WHITE);
-        canvas.rectangle(
-            x - textWidth / 2f - padX,
-            y - padY,
-            textWidth + 2f * padX,
-            textHeight + 2f * padY
-        );
-        canvas.fill();
-
-        // Texto en negro
         canvas.beginText();
-        canvas.setColorFill(BaseColor.BLACK);
         canvas.setFontAndSize(font, fontSize);
+        canvas.setColorFill(BaseColor.BLACK);
         canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
         canvas.endText();
-
         canvas.restoreState();
       } catch (Exception ex) {
         throw new RuntimeException(ex);
       }
     };
 
-    float pageW = pageSize.getWidth();
-    float pageH = pageSize.getHeight();
-    float centerX = pageW / 2f;
-    float centerY = pageH / 2f;
+    // ===== FADE dentro del cuadrado =====
+    float fadeTop    = pageH * 0.27f;
+    float fadeBottom = pageH * 0.65f;
 
-    // 2) Texto central de marca: "Ashya Art" y debajo "ATELIER"
-    canvas.beginText();
-    canvas.setColorFill(BaseColor.BLACK);
+    float areaTopY    = fadeBottom - 16f;
+    float areaBottomY = fadeTop + 16f;
+    float areaHeight  = areaTopY - areaBottomY;
+    float areaCenterY = (areaTopY + areaBottomY) / 2f;
 
-    // Título marca
-    float brandTitleSize = pageW * 0.06f;  // proporcional al ancho
-    float brandSubSize   = pageW * 0.045f;
+    // ===== TEXTO =====
+    float titleSize = 50f;
+    float lineSize  = 24f;
+    float gap       = 20f;
 
-    canvas.setFontAndSize(quicksandBold, brandTitleSize);
-    canvas.showTextAligned(Element.ALIGN_CENTER, "Ashya Art", centerX, centerY + brandSubSize, 0);
-
-    canvas.setFontAndSize(quicksandRegular, brandSubSize);
-    canvas.showTextAligned(Element.ALIGN_CENTER, "ATELIER", centerX, centerY - brandSubSize * 0.4f, 0);
-
-    canvas.endText();
-
-    // 3) Bloque de datos en el tercio inferior (como antes, pero adaptado al tamaño)
-    float thirdH = pageH / 3f;
-    float areaBottomMargin = 24f;
-    float areaTopMargin = 24f;
-    float areaHeight = thirdH - areaTopMargin - areaBottomMargin;
-    float areaTopY   = thirdH - areaTopMargin;
-
-    // Tamaños base
-    float titleSize = pageH * 0.035f;
-    float lineSize  = pageH * 0.025f;
-    float gap       = pageH * 0.03f;
-
-    // Formateos dependientes de locale
     NumberFormat nf = NumberFormat.getCurrencyInstance(locale);
     nf.setCurrency(currency);
-    String importe = cantidad != null ? nf.format(cantidad) : nf.format(0);
+    String importe = nf.format(cantidad != null ? cantidad : BigDecimal.ZERO);
 
-    DateTimeFormatter df = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale);
-    String fechaStr = (fechaExpiracion != null) ? fechaExpiracion.format(df) : "";
+    DateTimeFormatter df = DateTimeFormatter
+        .ofLocalizedDate(FormatStyle.MEDIUM)
+        .withLocale(locale);
+    String fechaStr = fechaExpiracion != null ? fechaExpiracion.format(df) : "";
 
-    String[] lines = new String[] {
-        "Gift Card",
-        "Code: " + (codigo != null ? codigo : ""),
-        "To: " + (nombreReceptor != null ? nombreReceptor : ""),
-        "From: " + (nombreCliente != null ? nombreCliente : ""),
-        "Amount: " + importe,
+    String codeStr = codigo != null ? codigo : "";
+    String fromStr = nombreCliente != null ? nombreCliente : "";
+    String toStr   = nombreReceptor != null ? nombreReceptor : "";
+
+    // 👇 Orden final + From/To en la MISMA línea
+    String[] lines = new String[]{
+        "Ashya Art",
+        codeStr,
+        "A gift from " + fromStr + " to " + toStr,
+        importe,
         "Valid until: " + fechaStr
     };
 
-    // Auto-fit para que todo quepa en el tercio inferior
+    // ===== AUTOFIT =====
     if (autoFit) {
       int totalLines = lines.length;
-      float linesHeight = titleSize + gap
-                        + (totalLines - 1) * lineSize
-                        + (totalLines - 1) * gap;
 
-      if (linesHeight > areaHeight) {
-        float scale = areaHeight / linesHeight;
-        titleSize = Math.max(16f, titleSize * scale);
-        lineSize  = Math.max(12f, lineSize  * scale);
-        gap       = Math.max(12f, gap       * scale);
+      float totalHeight =
+          titleSize + gap +
+          (totalLines - 1) * lineSize +
+          (totalLines - 1) * gap;
+
+      if (totalHeight > areaHeight) {
+        float scale = areaHeight / totalHeight;
+        titleSize = Math.max(28f, titleSize * scale);
+        lineSize  = Math.max(16f, lineSize * scale);
+        gap       = Math.max(8f, gap * scale);
       }
     }
 
-    float y = areaTopY;
-    // Título "Gift Card"
-    drawTextWithBackground.accept(lines[0], new float[]{centerX, y, titleSize}, quicksandBold);
+    int totalLines = lines.length;
+    float totalHeight =
+        titleSize + gap +
+        (totalLines - 1) * lineSize +
+        (totalLines - 1) * gap;
+
+    float y = areaCenterY + totalHeight / 2f;
+
+    // === TÍTULO ===
+    drawText.accept(lines[0], new float[]{centerX, y, titleSize}, robotoBold);
     y -= (titleSize + gap);
 
-    // Resto de líneas
+    // === RESTO ===
     for (int i = 1; i < lines.length; i++) {
-      drawTextWithBackground.accept(lines[i], new float[]{centerX, y, lineSize}, quicksandRegular);
-      y -= gap;
+      drawText.accept(lines[i], new float[]{centerX, y, lineSize}, robotoBold);
+      y -= (lineSize + gap);
     }
 
     document.close();
     return baos.toByteArray();
   }
+
+
+
+
+
+
+
+
 
 
   /* Interfaz funcional auxiliar */
