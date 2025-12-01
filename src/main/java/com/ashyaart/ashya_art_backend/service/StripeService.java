@@ -7,6 +7,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,8 @@ import com.stripe.model.Coupon;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 
+import jakarta.annotation.PostConstruct;
+
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
@@ -73,9 +76,12 @@ public class StripeService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public StripeService() {
-        Stripe.apiKey = System.getenv("STRIPE_TEST_KEY");
-        logger.info("Stripe API Key configurada");
+    @Value("${stripe.secret-key}")
+    private String stripeSecretKey;
+
+    @PostConstruct
+    public void initStripe() {
+        Stripe.apiKey = stripeSecretKey;
     }
 
     public String crearSesion(CarritoClienteDto carritoClienteDto, String successUrl, String cancelUrl) throws Exception {
