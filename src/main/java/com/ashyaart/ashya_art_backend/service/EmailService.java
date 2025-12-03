@@ -274,22 +274,45 @@ public class EmailService {
 
 
   public void enviarConfirmacionCompraTotal(String emailCliente, String nombreCliente, Compra compra) {
-	  String asunto = "🛍️ Confirmation of your purchase on Ashya Art";
+	  boolean pagado = Boolean.TRUE.equals(compra.getPagado());
+
+	  String asunto;
+	  String titulo;
+	  String parrafoIntro;
+	  String parrafoExtra;
+
+	  if (pagado) {
+	    // COMPRA NORMAL (Stripe o NoStripe 100%)
+	    asunto = "🛍️ Confirmation of your purchase on Ashya Art";
+	    titulo = "✅ Purchase Confirmation";
+	    parrafoIntro = "<p>Thank you for your purchase!</p>";
+	    parrafoExtra = "<p>We look forward to seeing you!</p>";
+	  } else {
+	    // RESERVA ATELIER (pago en el estudio)
+	    asunto = "🧾 Reservation confirmed – payment at the Atelier";
+	    titulo = "🧾 Atelier Reservation Confirmation";
+	    parrafoIntro =
+	        "<p>Thank you for your reservation!</p>" +
+	        "<p><b>You will pay the total amount at the Atelier on the day of the course / pickup.</b></p>";
+	    parrafoExtra =
+	        "<p>If you need to change or cancel your reservation, please contact me in advance.</p>";
+	  }
 
 	  String contenido =
 	      "<html>" +
 	        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 	          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-	            "<h2 style='color:#333; margin-top:0;'>✅ Purchase Confirmation</h2>" +
+	            "<h2 style='color:#333; margin-top:0;'>" + titulo + "</h2>" +
 	            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
-	            "<p>Thank you for your purchase!</p>" +
+	             parrafoIntro +
 	            "<ul style='line-height:1.7; padding-left:20px;'>" +
 	              "<li><b>💳 Purchase code:</b> " + compra.getCodigoCompra() + "</li>" +
 	              "<li><b>💶 Total:</b> " + compra.getTotal() + " EUR</li>" +
+	              "<li><b>💼 Paid flag:</b> " + compra.getPagado() + "</li>" +
 	            "</ul>" +
-	            "<p>We look forward to seeing you!</p>" +
+	             parrafoExtra +
 	            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
-	            "<p>If you have any questions about your purchase, you can contact me through any of the following options:</p>" +
+	            "<p>If you have any questions about your purchase or reservation, you can contact me through any of the following options:</p>" +
 	            "<ul style='line-height:1.7; padding-left:20px;'>" +
 	              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
 	              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
