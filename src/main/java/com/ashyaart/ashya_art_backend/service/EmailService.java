@@ -60,6 +60,9 @@ public class EmailService {
   
   @Value("${resend.reply-to:}")
   private String replyTo;
+  
+  @Value("${entorno.nombre:LOCAL}")
+  private String entornoNombre;
 
   public EmailService(
       @Value("${resend.api.key}") String apiKey,
@@ -174,31 +177,61 @@ public class EmailService {
     sendText(para, asunto, cuerpo);
   }
   
+
+
+  private String resolveBaseUrl() {
+      String entorno = entornoNombre != null ? entornoNombre.trim().toUpperCase() : "LOCAL";
+
+      if ("PRO".equals(entorno)) {
+          return "https://ashya-art-backend.onrender.com";
+      }
+
+      return "http://localhost:8080";
+  }
+  
   public void enviarConfirmacionNewsletter(String destinatario) {
-	  String asunto = "📰 Newsletter Subscription Confirmation";
+      String asunto = "📰 Newsletter Subscription Confirmation";
 
-	  String contenidoHtml =
-	      "<html>" +
-	        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
-	          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-	            "<h2 style='color:#333; margin-top:0;'>Welcome to Ashya Art!</h2>" +
-	            "<p>Thank you for subscribing to our <b>newsletter</b>.</p>" +
-	            "<p>You'll now receive updates about our upcoming workshops, new ceramic collections, and exclusive offers.</p>" +
-	            "<p>We’re excited to have you as part of our creative community 💫</p>" +
-	            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
-	            "<p>If you’d like to stay more connected, feel free to follow us:</p>" +
-	            "<ul style='line-height:1.7; padding-left:20px;'>" +
-	              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
-	              "<li>🌐 Website: <a href='https://ashya-art-frontend.onrender.com' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>Ashya Art</a></li>" +
-	              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
-	            "</ul>" +
-	            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
-	          "</div>" +
-	        "</body>" +
-	      "</html>";
+      // 1) Selección automática según entorno
+      String baseUrl = resolveBaseUrl();
 
-	  sendHtml(destinatario, asunto, contenidoHtml);
-	}
+      // 2) Codificar email
+      String encodedEmail = URLEncoder.encode(destinatario, StandardCharsets.UTF_8);
+      String unsubscribeUrl = baseUrl + "/api/newsletters/unsubscribe?email=" + encodedEmail;
+
+      // 3) Email HTML
+      String contenidoHtml =
+          "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+                "<h2 style='color:#333; margin-top:0;'>Welcome to Ashya Art!</h2>" +
+                "<p>Thank you for subscribing to our <b>newsletter</b>.</p>" +
+                "<p>You'll now receive updates about our upcoming workshops, new ceramic collections, and exclusive offers.</p>" +
+                "<p>We’re excited to have you as part of our creative community 💫</p>" +
+
+                "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+
+                "<p>If you’d like to stay more connected, feel free to follow us:</p>" +
+                "<ul style='line-height:1.7; padding-left:20px;'>" +
+                  "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8;' target='_blank'>@ashya_art</a></li>" +
+                  "<li>🌐 Website: <a href='https://ashya-art.com' style='color:#1a73e8;' target='_blank'>Ashya Art</a></li>" +
+                  "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8;'>ivangonzalez.code@gmail.com</a></li>" +
+                "</ul>" +
+
+                "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+
+                "<p style='font-size:12px; color:#777;'>If you no longer want to receive our newsletters, you can " +
+                  "<a href='" + unsubscribeUrl + "' style='color:#1a73e8;'>unsubscribe here</a>." +
+                "</p>" +
+
+                "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
+              "</div>" +
+            "</body>" +
+          "</html>";
+
+      sendHtml(destinatario, asunto, contenidoHtml);
+  }
+
   
   public void enviarConfirmacionSolicitudCursoCliente(
 		    String nombreCliente,
@@ -308,7 +341,6 @@ public class EmailService {
 	            "<ul style='line-height:1.7; padding-left:20px;'>" +
 	              "<li><b>💳 Purchase code:</b> " + compra.getCodigoCompra() + "</li>" +
 	              "<li><b>💶 Total:</b> " + compra.getTotal() + " EUR</li>" +
-	              "<li><b>💼 Paid flag:</b> " + compra.getPagado() + "</li>" +
 	            "</ul>" +
 	             parrafoExtra +
 	            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +

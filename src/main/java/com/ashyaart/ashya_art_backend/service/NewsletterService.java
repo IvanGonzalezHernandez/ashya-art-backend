@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,9 +26,16 @@ public class NewsletterService {
 
     @Autowired
     private NewsletterDao newsletterDao;
-    
+
     @Autowired
     private EmailService emailService;
+
+    /* ===== Helper para normalizar email ===== */
+    private String normalizarEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
+    /* ================= BÚSQUEDA ================= */
 
     public List<NewsletterDto> findByFilter(NewsletterFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de newsletters");
@@ -39,24 +47,90 @@ public class NewsletterService {
         return resultado;
     }
 
+    /* ================= SUSCRIPCIÓN ================= */
+
     @Transactional
     public NewsletterDto crearNewsletter(NewsletterDto newsletterDto) {
-        logger.info("crearNewsletter - Creando nuevo newsletter: {}", newsletterDto);
-        Newsletter newsletter = NewsletterAssembler.toEntity(newsletterDto);
-        newsletter.setId(null);
+        String emailNormalizado = normalizarEmail(newsletterDto.getEmail());
+        logger.info("crearNewsletter - Suscripción para email normalizado: {}", emailNormalizado);
+
+        if (emailNormalizado == null || emailNormalizado.isBlank()) {
+            throw new IllegalArgumentException("El email de newsletter es obligatorio");
+        }
+
+        // Buscar si ya existe un registro con ese email
+        Newsletter existente = newsletterDao.findByEmail(emailNormalizado);
+
+        if (existente != null) {
+            // Ya existe
+            if (Boolean.TRUE.equals(existente.getEstado())) {
+                // Ya está suscrito: opcionalmente podrías NO reenviar email
+                logger.info("crearNewsletter - Email {} ya estaba suscrito. No se crea un nuevo registro.", emailNormalizado);
+                // Opcional: reenviar confirmación:
+                // emailService.enviarConfirmacionNewsletter(emailNormalizado);
+                return NewsletterAssembler.toDto(existente);
+            } else {
+                // Estaba de baja -> reactivamos
+                logger.info("crearNewsletter - Reactivando suscripción para email {}", emailNormalizado);
+                existente.setEstado(true);
+                existente.setFechaBaja(null);
+                // opcional: actualizar fechaRegistro
+                // existente.setFechaRegistro(LocalDate.now());
+                Newsletter reactivado = newsletterDao.save(existente);
+
+                emailService.enviarConfirmacionNewsletter(emailNormalizado);
+
+                return NewsletterAssembler.toDto(reactivado);
+            }
+        }
+
+        // No existe -> creamos nuevo
+        Newsletter newsletter = new Newsletter();
+        newsletter.setEmail(emailNormalizado);
         newsletter.setFechaRegistro(
             newsletterDto.getFechaRegistro() != null ? newsletterDto.getFechaRegistro() : LocalDate.now()
         );
+        newsletter.setEstado(true);
+        newsletter.setFechaBaja(null);
 
         Newsletter newsletterGuardado = newsletterDao.save(newsletter);
 
         // Enviar email HTML desde EmailService
-        emailService.enviarConfirmacionNewsletter(newsletterDto.getEmail());
+        emailService.enviarConfirmacionNewsletter(emailNormalizado);
 
         NewsletterDto dtoGuardado = NewsletterAssembler.toDto(newsletterGuardado);
         logger.info("crearNewsletter - Newsletter creado con ID: {}", dtoGuardado.getId());
         return dtoGuardado;
     }
+
+    /* ================= DESUSCRIPCIÓN ================= */
+
+    @Transactional
+    public boolean desuscribirPorEmail(String email) {
+        String emailNormalizado = normalizarEmail(email);
+
+        if (emailNormalizado == null || emailNormalizado.isBlank()) {
+            logger.warn("desuscribirPorEmail - Email vacío o nulo");
+            return false;
+        }
+
+        // 👇 OJO: aquí es estado, no activo
+        Newsletter entidad = newsletterDao.findByEmailAndEstadoTrue(emailNormalizado);
+
+        if (entidad == null) {
+            logger.warn("desuscribirPorEmail - No se encontró suscripción activa para email {}", emailNormalizado);
+            return false;
+        }
+
+        entidad.setEstado(false);
+        entidad.setFechaBaja(LocalDate.now());
+        newsletterDao.save(entidad);
+
+        logger.info("desuscribirPorEmail - Email {} desuscrito correctamente", emailNormalizado);
+        return true;
+    }
+
+    /* ================= ACTUALIZAR ================= */
 
     @Transactional
     public NewsletterDto actualizarNewsletter(NewsletterDto newsletterDto) {
@@ -64,7 +138,8 @@ public class NewsletterService {
         Newsletter newsletter = newsletterDao.findById(newsletterDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Newsletter no encontrado con ID: " + newsletterDto.getId()));
 
-        newsletter.setEmail(newsletterDto.getEmail());
+        // Aquí decide si quieres permitir cambiar el email o no
+        newsletter.setEmail(normalizarEmail(newsletterDto.getEmail()));
         newsletter.setFechaRegistro(newsletterDto.getFechaRegistro());
         newsletter.setFechaBaja(newsletterDto.getFechaBaja());
         newsletter.setEstado(newsletterDto.getEstado());
@@ -74,6 +149,8 @@ public class NewsletterService {
         logger.info("actualizarNewsletter - Newsletter actualizado con ID: {}", dtoActualizado.getId());
         return dtoActualizado;
     }
+
+    /* ================= BORRADO LÓGICO ================= */
 
     @Transactional
     public void eliminarNewsletter(Long id) {

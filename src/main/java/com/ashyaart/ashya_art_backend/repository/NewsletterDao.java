@@ -12,19 +12,17 @@ import com.ashyaart.ashya_art_backend.entity.Newsletter;
 
 
 public interface NewsletterDao extends JpaRepository<Newsletter, Long> {
-	
-    @Query("SELECT n FROM Newsletter n " +
-            "WHERE (:email IS NULL OR LOWER(n.email) LIKE LOWER(CONCAT(:email, '%'))) " +
-            "AND (n.estado = true)")
-     List<Newsletter> findByFiltros(
-         @Param("email") String email
-     );
-    
-	boolean existsById(Long id);
-	
-    @Modifying
-    @Transactional
-    @Query("UPDATE Newsletter n SET n.estado = false WHERE n.id = :id")
-    int borradoLogico(@Param("id") Long id);
 
+    Newsletter findByEmail(String email);
+
+    Newsletter findByEmailAndEstadoTrue(String email);
+
+    @Query("SELECT n FROM Newsletter n " +
+           "WHERE (:email IS NULL OR LOWER(n.email) LIKE LOWER(CONCAT('%', :email, '%')))")
+    List<Newsletter> findByFiltros(@Param("email") String email);
+
+    @Modifying
+    @Query("UPDATE Newsletter n SET n.estado = false, n.fechaBaja = CURRENT_DATE WHERE n.id = :id")
+    Integer borradoLogico(@Param("id") Long id);
 }
+

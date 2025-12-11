@@ -61,6 +61,20 @@ public class NewsletterController {
         logger.info("suscribirse - Newsletter creado con ID: {}", nuevoNewsletter.getId());
         return ResponseEntity.ok(nuevoNewsletter);
     }
+    
+    @GetMapping("/unsubscribe")
+    public ResponseEntity<String> unsubscribe(@RequestParam("email") String email) {
+        logger.info("unsubscribe - Solicitud GET para desuscribir email: {}", email);
+        boolean desuscrito = newsletterService.desuscribirPorEmail(email);
+
+        if (desuscrito) {
+            logger.info("unsubscribe - Email {} desuscrito correctamente", email);
+            return ResponseEntity.ok("You have been unsubscribed from the newsletter.");
+        } else {
+            logger.warn("unsubscribe - No se encontró suscripción activa para email: {}", email);
+            return ResponseEntity.ok("This email was not subscribed or is already unsubscribed.");
+        }
+    }
 
     
     

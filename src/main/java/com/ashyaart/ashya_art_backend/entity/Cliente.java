@@ -46,7 +46,6 @@ public class Cliente {
     private String codigoPostal;
 
     @NotBlank
-    @Column(nullable = false)
     private String provincia;
 
     @Column(length = 20)
