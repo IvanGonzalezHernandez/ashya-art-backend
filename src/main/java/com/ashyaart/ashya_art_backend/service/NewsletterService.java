@@ -10,8 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ashyaart.ashya_art_backend.assembler.NewsletterAssembler;
 import com.ashyaart.ashya_art_backend.entity.Newsletter;
@@ -62,27 +64,24 @@ public class NewsletterService {
         Newsletter existente = newsletterDao.findByEmail(emailNormalizado);
 
         if (existente != null) {
-            // Ya existe
+
+            // Ya está suscrito -> ERROR
             if (Boolean.TRUE.equals(existente.getEstado())) {
-                // Ya está suscrito: opcionalmente podrías NO reenviar email
-                logger.info("crearNewsletter - Email {} ya estaba suscrito. No se crea un nuevo registro.", emailNormalizado);
-                // Opcional: reenviar confirmación:
-                // emailService.enviarConfirmacionNewsletter(emailNormalizado);
-                return NewsletterAssembler.toDto(existente);
-            } else {
-                // Estaba de baja -> reactivamos
-                logger.info("crearNewsletter - Reactivando suscripción para email {}", emailNormalizado);
-                existente.setEstado(true);
-                existente.setFechaBaja(null);
-                // opcional: actualizar fechaRegistro
-                // existente.setFechaRegistro(LocalDate.now());
-                Newsletter reactivado = newsletterDao.save(existente);
-
-                emailService.enviarConfirmacionNewsletter(emailNormalizado);
-
-                return NewsletterAssembler.toDto(reactivado);
+                logger.warn("crearNewsletter - Email {} ya estaba suscrito. Lanzando 409.", emailNormalizado);
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "This email is already subscribed.");
             }
+
+            // Estaba de baja -> reactivar
+            logger.info("crearNewsletter - Reactivando suscripción para email {}", emailNormalizado);
+            existente.setEstado(true);
+            existente.setFechaBaja(null);
+            Newsletter reactivado = newsletterDao.save(existente);
+
+            emailService.enviarConfirmacionNewsletter(emailNormalizado);
+
+            return NewsletterAssembler.toDto(reactivado);
         }
+
 
         // No existe -> creamos nuevo
         Newsletter newsletter = new Newsletter();

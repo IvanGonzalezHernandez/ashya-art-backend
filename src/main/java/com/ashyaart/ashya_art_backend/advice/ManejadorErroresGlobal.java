@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Captura todas las excepciones no controladas de la aplicación
@@ -25,15 +26,15 @@ public class ManejadorErroresGlobal {
     }
 
     /**
-     * Captura cualquier excepción no controlada en los controladores.
+     * Maneja ResponseStatusException (como tu 409 de newsletter) respetando el status.
      */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> manejarExcepcion(HttpServletRequest request, Exception ex) {
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> manejarResponseStatus(HttpServletRequest request, ResponseStatusException ex) {
 
-        // 1️ Registrar el error completo en consola
-        logger.error("Error no controlado en la petición: {}", request.getRequestURI(), ex);
+        logger.warn("ResponseStatusException en la petición {}: {}",
+                request.getRequestURI(), ex.getMessage(), ex);
 
-        // 2️ Guardar el error en la base de datos (asíncrono)
+        // Opcional: también lo guardas en LOG_ERRORES si quieres
         logErrorService.guardar(
                 ex,
                 ManejadorErroresGlobal.class.getName(),
@@ -41,7 +42,26 @@ public class ManejadorErroresGlobal {
                 request.getRequestURI()
         );
 
-        // 3️ Responder al cliente sin exponer detalles internos
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(ex.getReason()); // "This email is already subscribed."
+    }
+
+    /**
+     * Captura cualquier otra excepción no controlada en los controladores.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> manejarExcepcion(HttpServletRequest request, Exception ex) {
+
+        logger.error("Error no controlado en la petición: {}", request.getRequestURI(), ex);
+
+        logErrorService.guardar(
+                ex,
+                ManejadorErroresGlobal.class.getName(),
+                request.getMethod(),
+                request.getRequestURI()
+        );
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Se ha producido un error interno en el servidor.");
