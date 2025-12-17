@@ -215,7 +215,7 @@ public class EmailService {
                 "<ul style='line-height:1.7; padding-left:20px;'>" +
                   "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8;' target='_blank'>@ashya_art</a></li>" +
                   "<li>🌐 Website: <a href='https://ashya-art.com' style='color:#1a73e8;' target='_blank'>Ashya Art</a></li>" +
-                  "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8;'>ivangonzalez.code@gmail.com</a></li>" +
+                  "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8;'>ashyaxart@gmail.com</a></li>" +
                 "</ul>" +
 
                 "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
@@ -254,7 +254,7 @@ public class EmailService {
 		            "<ul style='line-height:1.7; padding-left:20px;'>" +
 		              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
 		              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-		              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		              "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
 		              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
 		            "</ul>" +
 		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
@@ -276,7 +276,7 @@ public class EmailService {
 		    String disponibilidad,
 		    String preguntasAdicionales
 		) {
-		  String admin = "ivangonzalez.code@gmail.com";
+		  String admin = "ashyaxart@gmail.com";
 		  String asunto = "🎨 New Course Request - " + tipoClase;
 
 		  String preguntas = (preguntasAdicionales != null && !preguntasAdicionales.isBlank()) ? preguntasAdicionales : "None";
@@ -348,7 +348,7 @@ public class EmailService {
 	            "<ul style='line-height:1.7; padding-left:20px;'>" +
 	              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
 	              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-	              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+	              "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
 	              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
 	            "</ul>" +
 	            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
@@ -391,7 +391,7 @@ public class EmailService {
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
             "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
             "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
             "</ul>" +
             "<p>Best regards,<br><b>Ashya</b></p>" +
@@ -423,7 +423,7 @@ public class EmailService {
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
             "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
             "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
             "</ul>" +
             "<p>Best regards,<br><b>Ashya</b></p>" +
@@ -453,7 +453,7 @@ public class EmailService {
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
             "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
             "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
             "</ul>" +
             "<p>Best regards,<br><b>Ashya</b></p>" +
@@ -504,7 +504,7 @@ public class EmailService {
 		            "<ul style='line-height:1.7; padding-left:20px;'>" +
 		            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
 		            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-		            "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
 		            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
 		            "</ul>" +
 
@@ -557,7 +557,7 @@ public class EmailService {
 		            "<ul style='line-height:1.7; padding-left:20px;'>" +
 		              "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
 		              "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-		              "<li>📧 Email: <a href='mailto:ivangonzalez.code@gmail.com' style='color:#1a73e8; text-decoration:none;'>ivangonzalez.code@gmail.com</a></li>" +
+		              "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
 		              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
 		            "</ul>" +
 		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
@@ -568,7 +568,7 @@ public class EmailService {
 		  sendHtml(emailCliente, asuntoCliente, contenidoCliente);
 
 		  // ====== Admin ======
-		  String admin = "ivangonzalez.code@gmail.com";
+		  String admin = "ashyaxart@gmail.com";
 		  String asuntoAdmin = "🔥 New Firing Service Request - " + mapTipoServicio(tipoServicio);
 
 		  String contenidoAdmin =
