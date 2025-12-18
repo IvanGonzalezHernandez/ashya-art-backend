@@ -45,7 +45,6 @@ public class Cliente {
     @Column(name = "CODIGO_POSTAL", nullable = false)
     private String codigoPostal;
 
-    @NotBlank
     private String provincia;
 
     @Column(length = 20)
