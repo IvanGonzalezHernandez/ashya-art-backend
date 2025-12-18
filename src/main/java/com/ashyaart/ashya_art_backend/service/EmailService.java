@@ -61,6 +61,9 @@ public class EmailService {
   @Value("${resend.reply-to:}")
   private String replyTo;
   
+  @Value("${mail.admin.to}")
+  private String adminTo;
+  
   @Value("${entorno.nombre:LOCAL}")
   private String entornoNombre;
 
@@ -276,7 +279,7 @@ public class EmailService {
 		    String disponibilidad,
 		    String preguntasAdicionales
 		) {
-		  String admin = "ashyaxart@gmail.com";
+		  String admin = adminTo;
 		  String asunto = "🎨 New Course Request - " + tipoClase;
 
 		  String preguntas = (preguntasAdicionales != null && !preguntasAdicionales.isBlank()) ? preguntasAdicionales : "None";
@@ -568,7 +571,7 @@ public class EmailService {
 		  sendHtml(emailCliente, asuntoCliente, contenidoCliente);
 
 		  // ====== Admin ======
-		  String admin = "ashyaxart@gmail.com";
+		  String admin = adminTo;
 		  String asuntoAdmin = "🔥 New Firing Service Request - " + mapTipoServicio(tipoServicio);
 
 		  String contenidoAdmin =
@@ -608,7 +611,7 @@ public class EmailService {
   // ======================
 
   public void enviarNotificacionAdminCompraStripe(CompraStripeAdminSuccessEvent event) {
-	    String adminEmail = replyTo;
+	    String adminEmail = adminTo;
 
 	    String flujo = "STRIPE_CHECKOUT";
 	    String estadoEmoji = "✅";
@@ -686,7 +689,7 @@ public class EmailService {
 
 
   public void enviarNotificacionAdminCompraStripeError(CompraStripeAdminErrorEvent event) {
-	    String adminEmail = replyTo;
+	    String adminEmail = adminTo;
 
 	    String flujo = "STRIPE_CHECKOUT";
 	    String estadoEmoji = "❌";
@@ -755,7 +758,7 @@ public class EmailService {
   // ======================
   
   public void enviarNotificacionAdminCompraNoStripe(CompraNoStripeAdminEvent event) {
-	    String adminEmail = replyTo;
+	    String adminEmail = adminTo;
 
 	    String estadoEmoji = event.exito() ? "✅" : "❌";
 	    String estadoTexto = event.exito() ? "SUCCESS" : "ERROR";
