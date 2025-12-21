@@ -41,6 +41,7 @@ import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfWriter;
 
 @Service
@@ -515,7 +516,7 @@ public class EmailService {
 		            "</div>" +
 		            "</body></html>";
 
-		    sendHtmlWithAttachment(destinatario, asunto, contenido, "TarjetaRegalo_" + codigo + ".pdf", pdfBytes);
+		    sendHtmlWithAttachment(destinatario, asunto, contenido, "GiftCard_" + codigo + ".pdf", pdfBytes);
 
 		  } catch (Exception e) {
 		    throw new RuntimeException("Error generando la tarjeta regalo PDF", e);
@@ -929,7 +930,7 @@ public class EmailService {
     );
   }
 
-  /* ===== Tarjeta regalo formato CUADRADO 1×1 (148x148 mm) + Roboto + imagen completa ===== */
+  /* ===== Tarjeta regalo formato CUADRADO 1×1 (148x148 mm) + imagen completa + layout como la plantilla ===== */
   private byte[] generarTarjetaRegaloPdf(
       String codigo,
       String nombreReceptor,
@@ -945,7 +946,6 @@ public class EmailService {
     if (currency == null) currency = Currency.getInstance("EUR");
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
     float mm = 72f / 25.4f;
 
     // === CUADRADO 148 x 148 mm ===
@@ -970,7 +970,6 @@ public class EmailService {
       float ratioCard = pageW / pageH;
 
       float finalW, finalH;
-
       if (ratioImg > ratioCard) {
         finalH = pageH;
         finalW = finalH * ratioImg;
@@ -986,110 +985,235 @@ public class EmailService {
 
     PdfContentByte canvas = writer.getDirectContent();
 
-    // ========== FUENTE ROBOTO BOLD ==========
-    BaseFont robotoBold;
-    try {
-      ClassPathResource rb = new ClassPathResource("fonts/Roboto-Bold.ttf");
-      try (InputStream isB = rb.getInputStream()) {
-        robotoBold = BaseFont.createFont(
-            "Roboto-Bold.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED,
-            true, isB.readAllBytes(), null
-        );
-      }
-    } catch (Exception e) {
-      robotoBold = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
-    }
+    // ========== FUENTES QUICKSAND REGULAR / BOLD ==========
+    BaseFont quicksandBold = loadFontOrFallback("fonts/Quicksand-Bold.ttf", BaseFont.HELVETICA_BOLD);
+    BaseFont quicksandRegular = loadFontOrFallback("fonts/Quicksand-Regular.ttf", BaseFont.HELVETICA);
 
-    // ========= HELPER para dibujar texto =========
-    TriConsumer<String, float[], BaseFont> drawText = (text, pos, font) -> {
-      try {
-        float x = pos[0], y = pos[1], fontSize = pos[2];
-        canvas.saveState();
-        canvas.beginText();
-        canvas.setFontAndSize(font, fontSize);
-        canvas.setColorFill(BaseColor.BLACK);
-        canvas.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
-        canvas.endText();
-        canvas.restoreState();
-      } catch (Exception ex) {
-        throw new RuntimeException(ex);
-      }
-    };
-
-    // ===== FADE dentro del cuadrado =====
-    float fadeTop    = pageH * 0.27f;
-    float fadeBottom = pageH * 0.65f;
-
-    float areaTopY    = fadeBottom - 16f;
-    float areaBottomY = fadeTop + 16f;
-    float areaHeight  = areaTopY - areaBottomY;
-    float areaCenterY = (areaTopY + areaBottomY) / 2f;
-
-    // ===== TEXTO =====
-    float titleSize = 50f;
-    float lineSize  = 24f;
-    float gap       = 20f;
-
+    // ========= FORMATEOS =========
     NumberFormat nf = NumberFormat.getCurrencyInstance(locale);
     nf.setCurrency(currency);
+    nf.setMaximumFractionDigits(0);
+    nf.setMinimumFractionDigits(0);
+
     String importe = nf.format(cantidad != null ? cantidad : BigDecimal.ZERO);
 
     DateTimeFormatter df = DateTimeFormatter
         .ofLocalizedDate(FormatStyle.MEDIUM)
         .withLocale(locale);
-    String fechaStr = fechaExpiracion != null ? fechaExpiracion.format(df) : "";
+    String fechaStr = (fechaExpiracion != null) ? fechaExpiracion.format(df) : "";
 
-    String codeStr = codigo != null ? codigo : "";
-    String fromStr = nombreCliente != null ? nombreCliente : "";
-    String toStr   = nombreReceptor != null ? nombreReceptor : "";
+    String codeStr = (codigo != null) ? codigo : "";
+    String fromStr = (nombreCliente != null) ? nombreCliente : "";
+    String toStr   = (nombreReceptor != null) ? nombreReceptor : "";
 
-    // 👇 Orden final + From/To en la MISMA línea
-    String[] lines = new String[]{
-        "Ashya Art",
-        codeStr,
-        "A gift from " + fromStr + " to " + toStr,
-        importe,
-        "Valid until: " + fechaStr
-    };
+    // ========= ESTILO / COLORES =========
+    BaseColor pillWhite = new BaseColor(255, 255, 255);
+    BaseColor textBlack = BaseColor.BLACK;
+    BaseColor teal = new BaseColor(62, 140, 145); // parecido al ejemplo
+    BaseColor textWhite = BaseColor.WHITE;
 
-    // ===== AUTOFIT =====
+    // ========= 1) PILL SUPERIOR: "Voucher for <to>" =========
+    String topLeft = "Voucher for ";
+    String topName = toStr;
+
+    float topPillW = pageW * 0.60f;
+    float topPillH = pageH * 0.085f;
+    float topPillX = (pageW - topPillW) / 2f;
+    float topPillY = pageH * 0.76f;
+
+    drawRoundedRect(canvas, topPillX, topPillY, topPillW, topPillH, topPillH / 2f, pillWhite, 1f);
+
+    float topFontSize = 18f;
+    if (autoFit) topFontSize = fitFontSizeForPill(
+        canvas, quicksandRegular, quicksandBold,
+        topLeft, topName,
+        topPillW * 0.90f, topFontSize, 12f
+    );
+
+    drawTwoPartCenteredText(
+        canvas,
+        topLeft, quicksandRegular,
+        topName, quicksandBold,
+        centerX,
+        topPillY + (topPillH * 0.30f),
+        topFontSize,
+        textBlack
+    );
+
+    // ========= 2) TITULO: "Ashya" + "Art & Ceramics Atelier" =========
+    float title1Size = 46f;
+    float title2Size = 40f;
+
     if (autoFit) {
-      int totalLines = lines.length;
-
-      float totalHeight =
-          titleSize + gap +
-          (totalLines - 1) * lineSize +
-          (totalLines - 1) * gap;
-
-      if (totalHeight > areaHeight) {
-        float scale = areaHeight / totalHeight;
-        titleSize = Math.max(28f, titleSize * scale);
-        lineSize  = Math.max(16f, lineSize * scale);
-        gap       = Math.max(8f, gap * scale);
-      }
+      title2Size = Math.max(26f,
+          fitFontSizeSingleLine(canvas, quicksandRegular, "Art & Ceramics Atelier", pageW * 0.92f, title2Size, 22f)
+      );
+      title1Size = Math.max(36f, Math.min(title1Size, title2Size + 18f));
     }
 
-    int totalLines = lines.length;
-    float totalHeight =
-        titleSize + gap +
-        (totalLines - 1) * lineSize +
-        (totalLines - 1) * gap;
+    float title1Y = pageH * 0.60f;
+    float title2Y = pageH * 0.50f;
 
-    float y = areaCenterY + totalHeight / 2f;
+    drawTextCentered(canvas, "Ashya", centerX, title1Y, title1Size, quicksandRegular, textBlack);
+    drawTextCentered(canvas, "Art & Ceramics Atelier", centerX, title2Y, title2Size, quicksandRegular, textBlack);
 
-    // === TÍTULO ===
-    drawText.accept(lines[0], new float[]{centerX, y, titleSize}, robotoBold);
-    y -= (titleSize + gap);
+    // ========= 3) BADGE CÓDIGO (turquesa): "Code: XXXX" =========
+    String codeLabel = "Code: " + codeStr;
 
-    // === RESTO ===
-    for (int i = 1; i < lines.length; i++) {
-      drawText.accept(lines[i], new float[]{centerX, y, lineSize}, robotoBold);
-      y -= (lineSize + gap);
+    float codePillW = pageW * 0.50f;
+    float codePillH = pageH * 0.075f;
+    float codePillX = (pageW - codePillW) / 2f;
+    float codePillY = pageH * 0.38f;
+
+    drawRoundedRect(canvas, codePillX, codePillY, codePillW, codePillH, codePillH / 2f, teal, 1f);
+
+    float codeFontSize = 20f;
+    if (autoFit) codeFontSize = fitFontSizeSingleLine(
+        canvas, quicksandRegular, codeLabel, codePillW * 0.90f, codeFontSize, 12f
+    );
+
+    drawTextCentered(canvas, codeLabel, centerX, codePillY + (codePillH * 0.28f), codeFontSize, quicksandRegular, textWhite);
+
+    // ========= 4) IMPORTE =========
+    float amountSize = 30f;
+    if (autoFit) {
+      amountSize = Math.max(20f,
+          fitFontSizeSingleLine(canvas, quicksandBold, importe, pageW * 0.70f, amountSize, 16f)
+      );
     }
+    drawTextCentered(canvas, importe, centerX, pageH * 0.30f, amountSize, quicksandBold, textBlack);
+
+    // ========= 5) PILL INFERIOR: "Valid until xx" =========
+    String validLabel = "Valid until " + (fechaStr.isBlank() ? "—" : fechaStr);
+
+    float botPillW = pageW * 0.60f;
+    float botPillH = pageH * 0.085f;
+    float botPillX = (pageW - botPillW) / 2f;
+    float botPillY = pageH * 0.16f;
+
+    drawRoundedRect(canvas, botPillX, botPillY, botPillW, botPillH, botPillH / 2f, pillWhite, 1f);
+
+    float botFontSize = 18f;
+    if (autoFit) {
+      botFontSize = Math.max(12f,
+          fitFontSizeSingleLine(canvas, quicksandRegular, validLabel, botPillW * 0.90f, botFontSize, 12f)
+      );
+    }
+
+    drawTextCentered(canvas, validLabel, centerX, botPillY + (botPillH * 0.30f), botFontSize, quicksandRegular, textBlack);
 
     document.close();
     return baos.toByteArray();
   }
+
+  /* ===================== HELPERS ===================== */
+
+  private BaseFont loadFontOrFallback(String classpath, String fallbackBaseFont) {
+    try {
+      ClassPathResource rb = new ClassPathResource(classpath);
+      try (InputStream isB = rb.getInputStream()) {
+        return BaseFont.createFont(
+            classpath.substring(classpath.lastIndexOf('/') + 1),
+            BaseFont.IDENTITY_H,
+            BaseFont.EMBEDDED,
+            true,
+            isB.readAllBytes(),
+            null
+        );
+      }
+    } catch (Exception e) {
+      try {
+        return BaseFont.createFont(fallbackBaseFont, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+  }
+
+  private void drawTextCentered(PdfContentByte canvas, String text, float x, float y, float fontSize, BaseFont font, BaseColor color) {
+    canvas.saveState();
+    canvas.beginText();
+    canvas.setFontAndSize(font, fontSize);
+    canvas.setColorFill(color);
+    canvas.showTextAligned(Element.ALIGN_CENTER, text != null ? text : "", x, y, 0);
+    canvas.endText();
+    canvas.restoreState();
+  }
+
+  private void drawRoundedRect(PdfContentByte canvas, float x, float y, float w, float h, float r, BaseColor fill, float fillOpacity) {
+    canvas.saveState();
+    PdfGState gs = new PdfGState();
+    gs.setFillOpacity(fillOpacity);
+    canvas.setGState(gs);
+
+    canvas.setColorFill(fill);
+    canvas.roundRectangle(x, y, w, h, r);
+    canvas.fill();
+    canvas.restoreState();
+  }
+
+  /**
+   * Centra dos trozos de texto en la misma línea: "Voucher for " (regular) + "Jane Doe" (bold).
+   * Calcula el ancho total y pinta ambos para que queden centrados en xCenter.
+   */
+  private void drawTwoPartCenteredText(
+      PdfContentByte canvas,
+      String leftText, BaseFont leftFont,
+      String rightText, BaseFont rightFont,
+      float xCenter,
+      float y,
+      float fontSize,
+      BaseColor color
+  ) {
+    String lt = leftText != null ? leftText : "";
+    String rt = rightText != null ? rightText : "";
+
+    float leftW = leftFont.getWidthPoint(lt, fontSize);
+    float rightW = rightFont.getWidthPoint(rt, fontSize);
+    float totalW = leftW + rightW;
+
+    float startX = xCenter - (totalW / 2f);
+
+    canvas.saveState();
+    canvas.beginText();
+    canvas.setColorFill(color);
+
+    canvas.setFontAndSize(leftFont, fontSize);
+    canvas.showTextAligned(Element.ALIGN_LEFT, lt, startX, y, 0);
+
+    canvas.setFontAndSize(rightFont, fontSize);
+    canvas.showTextAligned(Element.ALIGN_LEFT, rt, startX + leftW, y, 0);
+
+    canvas.endText();
+    canvas.restoreState();
+  }
+
+  /** Ajusta fontSize para que una línea quepa en un ancho máximo. */
+  private float fitFontSizeSingleLine(PdfContentByte canvas, BaseFont font, String text, float maxWidth, float startSize, float minSize) {
+    String t = text != null ? text : "";
+    float size = startSize;
+    while (size > minSize) {
+      float w = font.getWidthPoint(t, size);
+      if (w <= maxWidth) return size;
+      size -= 0.75f;
+    }
+    return minSize;
+  }
+
+  /** Ajusta fontSize para dos-part text dentro de una pill. */
+  private float fitFontSizeForPill(PdfContentByte canvas, BaseFont leftFont, BaseFont rightFont,
+                                   String left, String right, float maxWidth, float startSize, float minSize) {
+    String l = left != null ? left : "";
+    String r = right != null ? right : "";
+    float size = startSize;
+    while (size > minSize) {
+      float w = leftFont.getWidthPoint(l, size) + rightFont.getWidthPoint(r, size);
+      if (w <= maxWidth) return size;
+      size -= 0.75f;
+    }
+    return minSize;
+  }
+
 
 
 
