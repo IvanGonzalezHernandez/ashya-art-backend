@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/carrito/**").permitAll()
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
+                .requestMatchers("/api/studio/**").permitAll()
                 .requestMatchers("/api/errores/**").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()

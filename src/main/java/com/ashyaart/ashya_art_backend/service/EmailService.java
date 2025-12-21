@@ -606,6 +606,83 @@ public class EmailService {
     };
   }
   
+  public void enviarSolicitudStudio(
+		    String nombreCliente,
+		    String emailCliente,
+		    String telefonoCliente,
+		    String option,
+		    String preguntasAdicionales
+		) {
+
+		  String preguntas = (preguntasAdicionales != null && !preguntasAdicionales.isBlank())
+		      ? preguntasAdicionales
+		      : "None";
+
+		  String opcionTexto = mapStudioOption(option);
+
+		  // ====== CLIENTE ======
+		  String asuntoCliente = "🎨 Open Studio Request Received";
+
+		  String contenidoCliente =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='margin-top:0;'>🎨 Open Studio Request Received</h2>" +
+		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
+		            "<p>Thank you for your interest in joining the <b>Open Studio</b>.</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li><b>Selected option:</b> " + opcionTexto + "</li>" +
+		              "<li><b>Additional message:</b> " + preguntas + "</li>" +
+		            "</ul>" +
+		            "<p>I will get back to you shortly to confirm availability and details.</p>" +
+		            "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+		            "<p>If you need anything in the meantime, feel free to contact me:</p>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li>📞 Phone: <a href='tel:+491638681397'>+49 163 8681397</a></li>" +
+		              "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com'>ashyaxart@gmail.com</a></li>" +
+		              "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' target='_blank'>@ashya_art</a></li>" +
+		            "</ul>" +
+		            "<p style='margin-top:24px;'>Best regards,<br><b>Ashya</b></p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(emailCliente, asuntoCliente, contenidoCliente);
+
+		  // ====== ADMIN ======
+		  String asuntoAdmin = "🎨 New Open Studio Request";
+
+		  String contenidoAdmin =
+		      "<html>" +
+		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            "<h2 style='margin-top:0;'>🎨 New Open Studio Request</h2>" +
+		            "<ul style='line-height:1.7; padding-left:20px;'>" +
+		              "<li><b>Name:</b> " + nombreCliente + "</li>" +
+		              "<li><b>Email:</b> <a href='mailto:" + emailCliente + "'>" + emailCliente + "</a></li>" +
+		              "<li><b>Phone:</b> <a href='tel:" + telefonoCliente + "'>" + telefonoCliente + "</a></li>" +
+		              "<li><b>Selected option:</b> " + opcionTexto + "</li>" +
+		              "<li><b>Message:</b> " + preguntas + "</li>" +
+		            "</ul>" +
+		            "<p>Please contact the client to continue the process.</p>" +
+		          "</div>" +
+		        "</body>" +
+		      "</html>";
+
+		  sendHtml(adminTo, asuntoAdmin, contenidoAdmin);
+		}
+  
+	  private String mapStudioOption(String option) {
+		  return switch (option) {
+		    case "1_time_entry" -> "1 time entry — 30€ / person";
+		    case "10_times_entry" -> "10 times entry — 200€ / person";
+		    case "unlimited_entry" -> "Unlimited entry — 50€ / month";
+		    default -> option;
+		  };
+		}
+
+
+  
   // ======================
   // Notificaciones ADMIN – STRIPE
   // ======================
