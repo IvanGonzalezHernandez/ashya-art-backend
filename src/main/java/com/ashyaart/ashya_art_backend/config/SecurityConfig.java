@@ -66,6 +66,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
             "http://localhost:4200",
             "https://ashya-art-frontend.onrender.com",
+            "https://ashya-art-frontend-pro.onrender.com",
             "https://ashya-art.com",
             "https://www.ashya-art.com"
         ));
