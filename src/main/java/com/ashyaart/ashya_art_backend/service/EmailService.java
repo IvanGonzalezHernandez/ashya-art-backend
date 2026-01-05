@@ -187,7 +187,7 @@ public class EmailService {
       String entorno = entornoNombre != null ? entornoNombre.trim().toUpperCase() : "LOCAL";
 
       if ("PRO".equals(entorno)) {
-          return "https://ashya-art-backend.onrender.com";
+          return "https://ashya-art-backend-pro.onrender.com";
       }
 
       return "http://localhost:8080";
