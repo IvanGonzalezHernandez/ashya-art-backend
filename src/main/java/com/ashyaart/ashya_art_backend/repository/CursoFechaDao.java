@@ -31,7 +31,7 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     int borradoLogico(@Param("id") Long id);
     
     // Método para buscar fechas por id del curso
-    @Query("SELECT cf FROM CursoFecha cf WHERE cf.curso.id = :idCurso")
+    @Query("SELECT cf FROM CursoFecha cf WHERE cf.curso.id = :idCurso ORDER BY cf.fecha ASC")
     List<CursoFecha> findByIdCurso(@Param("idCurso") Long idCurso);
     
     @Query("SELECT cf.plazasDisponibles FROM CursoFecha cf WHERE cf.id = :idCursoFecha")
