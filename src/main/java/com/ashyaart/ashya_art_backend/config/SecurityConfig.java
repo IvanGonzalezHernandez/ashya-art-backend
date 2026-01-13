@@ -3,6 +3,7 @@ package com.ashyaart.ashya_art_backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,12 +35,45 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/cursos/**").permitAll()
                 .requestMatchers("/api/productos/**").permitAll()
-                .requestMatchers("/api/tarjetas-regalo/**").permitAll()
-                .requestMatchers("/api/tarjetas-regalo-compra/**").permitAll()
-                .requestMatchers("/api/clientes/**").permitAll()
-                .requestMatchers("/api/newsletters/**").permitAll()
-                .requestMatchers("/api/newsletters/suscribirse/**").permitAll()
-                .requestMatchers("/api/cursos-compra/**").permitAll()
+                
+                // 🔓 PUBLICO (tarjetas regalo)
+                .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo/*/imagen").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/tarjetas-regalo/validar").permitAll()
+
+                // 🔒 PRIVADO (tarjetas regalo)
+                .requestMatchers(HttpMethod.POST, "/api/tarjetas-regalo").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/tarjetas-regalo/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/tarjetas-regalo/**").authenticated()
+                
+                // 🔒 PRIVADOS (Tarjeta regalo compra)
+                .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo-compra").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/tarjetas-regalo-compra/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/tarjetas-regalo-compra/**").authenticated()
+
+                //🔒 PRIVADOS (Cliente)
+                .requestMatchers(HttpMethod.GET, "/api/clientes").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/clientes").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/clientes/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").authenticated()
+                
+                // ✅ PUBLICOS (Newsletter)
+                .requestMatchers(HttpMethod.POST, "/api/newsletters/suscribirse").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/newsletters/unsubscribe").permitAll()
+
+                // 🔒 PRIVADOS (Newsletter)
+                .requestMatchers(HttpMethod.GET, "/api/newsletters").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/newsletters").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/newsletters/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/newsletters/**").authenticated()
+                
+                // 🔒 PRIVADOS: (Curso compra)
+                .requestMatchers(HttpMethod.POST, "/api/cursos-compra").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/cursos-compra").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/cursos-compra/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/cursos-compra/**").authenticated()
+
                 .requestMatchers("/api/cursos-fecha/**").permitAll()
                 .requestMatchers("/api/productos-compra/**").permitAll()
                 .requestMatchers("/api/secretos/**").permitAll()
@@ -48,8 +82,8 @@ public class SecurityConfig {
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
                 .requestMatchers("/api/studio/**").permitAll()
-                .requestMatchers("/api/errores/**").permitAll()
-                .requestMatchers("/api/admin/**").permitAll()
+                .requestMatchers("/api/errores/**").authenticated()
+                .requestMatchers("/api/admin/**").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().permitAll()
             );
