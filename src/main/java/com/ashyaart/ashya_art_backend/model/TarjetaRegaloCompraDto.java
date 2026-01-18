@@ -1,6 +1,10 @@
 package com.ashyaart.ashya_art_backend.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.ashyaart.ashya_art_backend.entity.Cliente;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
 
 public class TarjetaRegaloCompraDto {
 
@@ -19,6 +23,9 @@ public class TarjetaRegaloCompraDto {
     private Long idTarjeta;
     private Long idCliente;
     private Long idCompra;
+    
+    private String email;
+    private BigDecimal precio;
 
     public TarjetaRegaloCompraDto() {}
 
@@ -55,4 +62,12 @@ public class TarjetaRegaloCompraDto {
 
     public Long getIdCompra() { return idCompra; }
     public void setIdCompra(Long idCompra) { this.idCompra = idCompra; }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public BigDecimal getPrecio() { return precio; }
+    public void setPrecio(BigDecimal precio) { this.precio = precio; }
+    
+    
 }

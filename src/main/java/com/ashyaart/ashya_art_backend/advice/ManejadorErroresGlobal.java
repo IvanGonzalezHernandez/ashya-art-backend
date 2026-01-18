@@ -34,13 +34,13 @@ public class ManejadorErroresGlobal {
         logger.warn("ResponseStatusException en la petición {}: {}",
                 request.getRequestURI(), ex.getMessage(), ex);
 
-        // Opcional: también lo guardas en LOG_ERRORES si quieres
-        logErrorService.guardar(
-                ex,
-                ManejadorErroresGlobal.class.getName(),
-                request.getMethod(),
-                request.getRequestURI()
-        );
+          //DESCOMENTAR CUANDO SE QUIERA GUARDAR EL ERROR EN LA BBDD
+//        logErrorService.guardar(
+//                ex,
+//                ManejadorErroresGlobal.class.getName(),
+//                request.getMethod(),
+//                request.getRequestURI()
+//        );
 
         return ResponseEntity
                 .status(ex.getStatusCode())
@@ -54,13 +54,13 @@ public class ManejadorErroresGlobal {
     public ResponseEntity<String> manejarExcepcion(HttpServletRequest request, Exception ex) {
 
         logger.error("Error no controlado en la petición: {}", request.getRequestURI(), ex);
-
-        logErrorService.guardar(
-                ex,
-                ManejadorErroresGlobal.class.getName(),
-                request.getMethod(),
-                request.getRequestURI()
-        );
+          //DESCOMENTAR CUANDO SE QUIERA GUARDAR EL ERROR EN LA BBDD
+//        logErrorService.guardar(
+//                ex,
+//                ManejadorErroresGlobal.class.getName(),
+//                request.getMethod(),
+//                request.getRequestURI()
+//        );
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

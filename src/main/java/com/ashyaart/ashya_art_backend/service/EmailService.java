@@ -452,7 +452,7 @@ public class EmailService {
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li><b>🔐 Secret:</b> " + nombreSecreto + "</li>" +
             "</ul>" +
-            "<p>If the attachment doesn’t open on your device, just reply to this email and I’ll resend it.</p>" +
+            "<p>If the attachment doesn’t open on your device, feel free to contact me using the details below and I’ll resend it.</p>" +
             "<p>If you have any questions, you can contact me through any of the following options:</p>" +
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +

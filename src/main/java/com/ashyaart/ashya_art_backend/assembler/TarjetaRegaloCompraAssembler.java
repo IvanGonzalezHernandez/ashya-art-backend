@@ -19,6 +19,9 @@ public class TarjetaRegaloCompraAssembler {
         dto.setIdTarjeta(entity.getTarjetaRegalo() != null ? entity.getTarjetaRegalo().getId() : null);
         dto.setIdCliente(entity.getCliente() != null ? entity.getCliente().getId() : null);
         dto.setIdCompra(entity.getCompra() != null ? entity.getCompra().getId() : null);
+        
+        dto.setEmail(entity.getCliente() != null ? entity.getCliente().getEmail() : null);
+        dto.setPrecio(entity.getTarjetaRegalo() != null ? entity.getTarjetaRegalo().getPrecio() : null);
 
         return dto;
     }

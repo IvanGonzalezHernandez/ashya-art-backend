@@ -19,7 +19,7 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     @Query("SELECT cf, c.nombre FROM CursoFecha cf " +
    		   "JOIN FETCH cf.curso c " +
            "WHERE (:fecha IS NULL OR cf.fecha = :fecha) " +
-   		   "ORDER BY cf.fecha DESC")
+   		   "ORDER BY cf.fecha ASC")
     List<CursoFecha> findByFiltros(@Param("fecha") LocalDate fecha);
 
     boolean existsById(Long id);
