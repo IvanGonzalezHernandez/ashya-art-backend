@@ -498,7 +498,7 @@ public class EmailService {
 		            "</ul>" +
 
 		            "<p>You can redeem it in our online shop or courses at " +
-		            "<a href='https://ashya-art-frontend.onrender.com' style='color:#1a73e8; text-decoration:none;'>Ashya Art</a>.</p>" +
+		            "<a href='https://ashya-art.com' style='color:#1a73e8; text-decoration:none;'>Ashya Art</a>.</p>" +
 
 		            "<p>If the attachment doesn’t open on your device, just reply to this email and I’ll resend it.</p>" +
 
