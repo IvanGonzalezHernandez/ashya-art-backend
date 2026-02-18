@@ -1101,6 +1101,20 @@ public class EmailService {
     }
 
     drawTextCentered(canvas, validLabel, centerX, botPillY + (botPillH * 0.30f), botFontSize, quicksandRegular, textBlack);
+    
+    // ========= 6) WEB: "ashya-art.com" =========
+    String webStr = "www.ashya-art.com";
+
+    float webY = botPillY - (pageH * 0.045f);
+    float webSize = 16f;
+
+    if (autoFit) {
+      webSize = Math.max(14f,
+          fitFontSizeSingleLine(canvas, quicksandBold, webStr, pageW * 0.90f, webSize, 12f)
+      );
+    }
+
+    drawTextCentered(canvas, webStr, centerX, webY, webSize, quicksandBold, textWhite);
 
     document.close();
     return baos.toByteArray();
