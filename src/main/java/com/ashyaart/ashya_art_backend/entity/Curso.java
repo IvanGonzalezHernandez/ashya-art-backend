@@ -73,7 +73,7 @@ public class Curso {
 
     public Curso(String nombre, String subtitulo, String descripcion, BigDecimal precio, Boolean estado, LocalDate fechaBaja,
             List<CursoFecha> fechas, String nivel, String duracion, String piezas, String materiales, String localizacion,
-            Integer plazasMaximas, String informacionExtra) {
+            Integer plazasMaximas) {
 	   this.nombre = nombre;
 	   this.subtitulo = subtitulo;
 	   this.descripcion = descripcion;
@@ -87,7 +87,6 @@ public class Curso {
 	   this.materiales = materiales;
 	   this.localizacion = localizacion;
 	   this.plazasMaximas = plazasMaximas;
-	   this.informacionExtra = informacionExtra;
 	}
 
 
@@ -165,10 +164,6 @@ public class Curso {
     
     @Column(name = "plazas_maximas")
     private Integer plazasMaximas;
-
-    @Lob
-    @Column(name = "informacion_extra")
-    private String informacionExtra;
     
     public byte[] getImg1() {
     	return img1;
@@ -240,14 +235,6 @@ public class Curso {
 
     public void setPlazasMaximas(Integer plazasMaximas) {
         this.plazasMaximas = plazasMaximas;
-    }
-
-    public String getInformacionExtra() {
-        return informacionExtra;
-    }
-
-    public void setInformacionExtra(String informacionExtra) {
-        this.informacionExtra = informacionExtra;
     }
     
 	public String getLocalizacion() {

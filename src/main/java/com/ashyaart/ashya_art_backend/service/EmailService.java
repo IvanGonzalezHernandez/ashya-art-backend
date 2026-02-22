@@ -366,8 +366,7 @@ public class EmailService {
 
   public void enviarConfirmacionCursoIndividual(String emailCliente, String nombreCliente,
                                                 String nombreCurso, String fechaCurso, String horaCurso,
-                                                int plazasReservadas, BigDecimal bigDecimal,
-                                                String informacionExtra) {
+                                                int plazasReservadas, BigDecimal bigDecimal) {
 	String asunto = "🎨 Confirmation for your course - " + nombreCurso;
 
     String direccionTexto = "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg";

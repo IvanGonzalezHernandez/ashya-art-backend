@@ -83,7 +83,6 @@ public class CursoService {
         curso.setMateriales(cursoDto.getMateriales());
         curso.setLocalizacion(cursoDto.getLocalizacion());
         curso.setPlazasMaximas(cursoDto.getPlazasMaximas());
-        curso.setInformacionExtra(cursoDto.getInformacionExtra());
 
         // Borrados explícitos
         if (Boolean.TRUE.equals(cursoDto.getDeleteImg1())) curso.setImg1(null);

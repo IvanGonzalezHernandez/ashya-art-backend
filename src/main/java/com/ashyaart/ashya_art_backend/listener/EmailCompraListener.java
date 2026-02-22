@@ -44,8 +44,7 @@ public class EmailCompraListener {
             event.fecha().toString(),
             event.horaInicio(),
             event.plazas(),
-            event.precio(),
-            event.informacionExtra()
+            event.precio()
         );
     }
 

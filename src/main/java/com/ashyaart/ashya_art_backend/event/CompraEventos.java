@@ -22,8 +22,7 @@ public class CompraEventos {
             LocalDate fecha,
             String horaInicio,
             int plazas,
-            BigDecimal precio,
-            String informacionExtra
+            BigDecimal precio
     ) {}
 
     public record ProductoCompradoEvent(

@@ -25,7 +25,6 @@ public class CursoAssembler {
 	    dto.setEstado(curso.getEstado());
 	    dto.setFechaBaja(curso.getFechaBaja());
 	    dto.setPlazasMaximas(curso.getPlazasMaximas());
-	    dto.setInformacionExtra(curso.getInformacionExtra());
 
 	    return dto;
 	}
@@ -52,7 +51,6 @@ public class CursoAssembler {
 	    curso.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
 	    curso.setFechaBaja(dto.getFechaBaja());
 	    curso.setPlazasMaximas(dto.getPlazasMaximas());
-	    curso.setInformacionExtra(dto.getInformacionExtra());
 
 	    return curso;
 	}

@@ -343,8 +343,7 @@ public class NoStripeService {
                 cursoFecha.getFecha(),
                 cursoFecha.getHoraInicio().toString(),
                 item.getCantidad(),
-                cursoFecha.getCurso().getPrecio(),
-                cursoFecha.getCurso().getInformacionExtra()
+                cursoFecha.getCurso().getPrecio()
             )
         );
     }
