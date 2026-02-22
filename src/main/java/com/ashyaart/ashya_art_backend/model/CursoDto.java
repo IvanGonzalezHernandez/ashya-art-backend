@@ -35,6 +35,7 @@ public class CursoDto {
     private Boolean estado;
     private LocalDate fechaBaja;
     private Integer plazasMaximas;
+    private Integer orden;
     private String informacionExtra;
 
     public CursoDto() {}
@@ -131,6 +132,9 @@ public class CursoDto {
     
     public String getLocalizacion() { return localizacion; }
     public void setLocalizacion(String localizacion) { this.localizacion = localizacion; }
+    
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
 
     // --- (Opcional) Helpers para saber si hay que borrar ---
     public boolean mustDelete(int slot) {

@@ -67,6 +67,9 @@ public class Curso {
     
     @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<CursoFecha> fechas;
+    
+    @Column(name = "ORDEN")
+    private Integer orden;
 
     public Curso() {
     }
@@ -244,4 +247,13 @@ public class Curso {
 	public void setLocalizacion(String localizacion) {
 		this.localizacion = localizacion;
 	}
+	
+	public Integer getOrden() {
+		return orden;
+	}
+	
+	public void setOrden(Integer orden) {
+		this.orden = orden;
+	}
+	
 }
