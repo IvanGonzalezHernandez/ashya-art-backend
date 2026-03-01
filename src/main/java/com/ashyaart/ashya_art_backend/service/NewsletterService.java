@@ -101,6 +101,51 @@ public class NewsletterService {
         logger.info("crearNewsletter - Newsletter creado con ID: {}", dtoGuardado.getId());
         return dtoGuardado;
     }
+    
+    /** ================= SUSCRIPCIÓN DESDE CHECKOUT ================= */
+    @Transactional
+    public void suscribirNewsletterCheckout(String email) {
+
+        String emailNormalizado = normalizarEmail(email);
+
+        if (emailNormalizado == null || emailNormalizado.isBlank()) {
+            return; // en checkout, si viene vacío no cortamos nada
+        }
+
+        try {
+            Newsletter existente = newsletterDao.findByEmail(emailNormalizado);
+
+            // 1) Si ya existe y está activo -> no hacemos nada
+            if (existente != null && Boolean.TRUE.equals(existente.getEstado())) {
+                return;
+            }
+
+            // 2) Existe pero estaba de baja -> reactivar
+            if (existente != null) {
+                existente.setEstado(true);
+                existente.setFechaBaja(null);
+
+                if (existente.getFechaRegistro() == null) {
+                    existente.setFechaRegistro(LocalDate.now());
+                }
+
+                newsletterDao.save(existente);
+                return;
+            }
+
+            // 3) No existe -> crear
+            Newsletter newsletter = new Newsletter();
+            newsletter.setEmail(emailNormalizado);
+            newsletter.setFechaRegistro(LocalDate.now());
+            newsletter.setEstado(true);
+            newsletter.setFechaBaja(null);
+
+            newsletterDao.save(newsletter);
+
+        } catch (Exception e) {
+            logger.warn("suscribirNewsletterCheckout - No se pudo suscribir email=" + emailNormalizado + " (no se corta el pago)", e);
+        }
+    }
 
     /* ================= DESUSCRIPCIÓN ================= */
 

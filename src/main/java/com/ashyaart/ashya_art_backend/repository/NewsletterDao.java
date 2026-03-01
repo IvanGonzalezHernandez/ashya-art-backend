@@ -18,7 +18,7 @@ public interface NewsletterDao extends JpaRepository<Newsletter, Long> {
     Newsletter findByEmailAndEstadoTrue(String email);
 
     @Query("SELECT n FROM Newsletter n " +
-           "WHERE (:email IS NULL OR LOWER(n.email) LIKE LOWER(CONCAT('%', :email, '%')))")
+           "WHERE (:email IS NULL OR LOWER(n.email) LIKE LOWER(CONCAT('%', :email, '%'))) ORDER BY n.fechaRegistro DESC")
     List<Newsletter> findByFiltros(@Param("email") String email);
 
     @Modifying

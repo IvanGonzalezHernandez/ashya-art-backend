@@ -62,6 +62,22 @@ public class NewsletterController {
         return ResponseEntity.ok(nuevoNewsletter);
     }
     
+    @PostMapping("/suscribirse-checkout")
+    public ResponseEntity<Void> suscribirseCheckout(@RequestBody NewsletterDto newsletterDto) {
+        logger.info("suscribirseCheckout - Intento de suscripción silenciosa para email: {}", newsletterDto != null ? newsletterDto.getEmail() : null);
+
+        try {
+            if (newsletterDto != null && newsletterDto.getEmail() != null) {
+                newsletterService.suscribirNewsletterCheckout(newsletterDto.getEmail());
+            }
+        } catch (Exception e) {
+            logger.warn("suscribirseCheckout - Error silencioso en suscripción newsletter", e);
+        }
+
+        // Siempre OK para no interferir con el pago
+        return ResponseEntity.ok().build();
+    }
+    
     @GetMapping("/unsubscribe")
     public ResponseEntity<String> unsubscribe(@RequestParam("email") String email) {
         logger.info("unsubscribe - Solicitud GET para desuscribir email: {}", email);
