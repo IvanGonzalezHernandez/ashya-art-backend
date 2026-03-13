@@ -40,7 +40,10 @@ import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.model.Coupon;
+import com.stripe.model.PaymentIntent;
+import com.stripe.model.PaymentIntentCollection;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.PaymentIntentListParams;
 import com.stripe.param.checkout.SessionCreateParams;
 
 import jakarta.annotation.PostConstruct;
@@ -402,5 +405,37 @@ public class StripeService {
                     )
              );
         }
+    }
+    
+    public BigDecimal calcularIngresosTotalesStripe() throws Exception {
+
+        long totalCentimos = 0L;
+        String ultimoIdPago = null;
+        boolean hayMasPagos = true;
+
+        while (hayMasPagos) {
+            PaymentIntentListParams.Builder parametrosConsulta =
+                    		PaymentIntentListParams.builder()
+                            .setLimit(100L);
+
+            if (ultimoIdPago != null) {
+                parametrosConsulta.setStartingAfter(ultimoIdPago);
+            }
+
+            PaymentIntentCollection coleccionPagos = PaymentIntent.list(parametrosConsulta.build());
+
+            for (PaymentIntent pago : coleccionPagos.getData()) {
+
+                if ("succeeded".equals(pago.getStatus())) {
+                    totalCentimos += pago.getAmount();
+                }
+
+                ultimoIdPago = pago.getId();
+            }
+
+            hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
+        }
+
+        return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
     }
 }

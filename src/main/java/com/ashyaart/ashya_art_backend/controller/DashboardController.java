@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoDao;
+import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
+import com.ashyaart.ashya_art_backend.repository.NewsletterDao;
 import com.ashyaart.ashya_art_backend.repository.CompraDao;
 
 @RestController
@@ -29,19 +31,28 @@ public class DashboardController {
 
     @Autowired
     private CompraDao compraDao;
+    
+    @Autowired
+    private NewsletterDao newsletterDao;
+    
+    @Autowired
+    private StripeService stripeService;
 
     @GetMapping("/totals")
-    public Map<String, Object> getTotals() {
+    public Map<String, Object> getTotals() throws Exception {
         Map<String, Object> result = new HashMap<>();
 
         long totalClientes = clienteDao.count();
         long totalProductos = productoDao.count();
         long totalReservas = cursoCompraDao.count();
-        BigDecimal totalIngresos = compraDao.sumTotalPagado();
+        long totalNewsletter = newsletterDao.count();
+        //BigDecimal totalIngresos = compraDao.sumTotalPagado();
+        BigDecimal totalIngresos = stripeService.calcularIngresosTotalesStripe();
 
         result.put("totalClientes", totalClientes);
         result.put("totalProductos", totalProductos);
         result.put("totalReservas", totalReservas);
+        result.put("totalNewsletter", totalNewsletter);
         result.put("totalIngresos", totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
 
         return result;
