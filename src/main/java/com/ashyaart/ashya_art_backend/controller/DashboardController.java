@@ -51,7 +51,8 @@ public class DashboardController {
         
         //BigDecimal totalIngresos = compraDao.sumTotalPagado();
         BigDecimal totalIngresos = stripeService.calcularIngresosTotalesStripe();
-        BigDecimal totalIngresosNetos = stripeService.calcularIngresosNetosStripe();
+        BigDecimal totalComisiones = stripeService.calcularComisionesStripe();
+        BigDecimal totalIngresosNetos = totalIngresos.subtract(totalComisiones);
 
         Map<String, Long> pagos = stripeService.calcularPagosPorMetodo();
         Map<String, Object> ingresosPorMes = stripeService.calcularIngresosPorMesStripe();
@@ -62,6 +63,7 @@ public class DashboardController {
         result.put("totalNewsletter", totalNewsletter);
         result.put("totalIngresos", totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
         result.put("totalIngresosNetos", totalIngresosNetos != null ? totalIngresosNetos : BigDecimal.ZERO);
+        result.put("totalComisiones", totalComisiones != null ? totalComisiones : BigDecimal.ZERO);
 
         result.put("totalPagos", pagos.get("totalPagos"));
         result.put("pagosTarjeta", pagos.get("pagosTarjeta"));

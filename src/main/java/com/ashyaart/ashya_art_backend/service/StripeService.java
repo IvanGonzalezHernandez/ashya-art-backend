@@ -445,10 +445,10 @@ public class StripeService {
         return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
     }
     
-    public BigDecimal calcularIngresosNetosStripe() throws Exception {
+    public BigDecimal calcularComisionesStripe() throws Exception {
 
         long totalCentimos = 0L;
-        String ultimoIdTransaccion = null;
+        String ultimaTransaccionId = null;
         boolean hayMasTransacciones = true;
 
         while (hayMasTransacciones) {
@@ -458,16 +458,18 @@ public class StripeService {
                             .setLimit(100L)
                             .setType("charge");
 
-            if (ultimoIdTransaccion != null) {
-                parametrosConsulta.setStartingAfter(ultimoIdTransaccion);
+            if (ultimaTransaccionId != null) {
+                parametrosConsulta.setStartingAfter(ultimaTransaccionId);
             }
 
             BalanceTransactionCollection coleccionTransacciones =
                     BalanceTransaction.list(parametrosConsulta.build());
 
             for (BalanceTransaction transaccion : coleccionTransacciones.getData()) {
-                totalCentimos += transaccion.getNet();
-                ultimoIdTransaccion = transaccion.getId();
+
+                totalCentimos += transaccion.getFee();
+
+                ultimaTransaccionId = transaccion.getId();
             }
 
             hayMasTransacciones = Boolean.TRUE.equals(coleccionTransacciones.getHasMore());
