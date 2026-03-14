@@ -447,21 +447,34 @@ public class StripeService {
     
     public BigDecimal calcularIngresosNetosStripe() throws Exception {
 
-        long totalCentimos = 0;
+        long totalCentimos = 0L;
+        String ultimoIdTransaccion = null;
+        boolean hayMasTransacciones = true;
 
-        BalanceTransactionListParams params =
-                BalanceTransactionListParams.builder()
-                        .setLimit(100L)
-                        .setType("charge")
-                        .build();
+        while (hayMasTransacciones) {
 
-        BalanceTransactionCollection transacciones = BalanceTransaction.list(params);
+            BalanceTransactionListParams.Builder parametrosConsulta =
+                    BalanceTransactionListParams.builder()
+                            .setLimit(100L)
+                            .setType("charge");
 
-        for (BalanceTransaction tx : transacciones.getData()) {
-            totalCentimos += tx.getNet();
+            if (ultimoIdTransaccion != null) {
+                parametrosConsulta.setStartingAfter(ultimoIdTransaccion);
+            }
+
+            BalanceTransactionCollection coleccionTransacciones =
+                    BalanceTransaction.list(parametrosConsulta.build());
+
+            for (BalanceTransaction transaccion : coleccionTransacciones.getData()) {
+                totalCentimos += transaccion.getNet();
+                ultimoIdTransaccion = transaccion.getId();
+            }
+
+            hayMasTransacciones = Boolean.TRUE.equals(coleccionTransacciones.getHasMore());
         }
 
-        return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
+        return BigDecimal.valueOf(totalCentimos)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
     
     public Map<String, Long> calcularPagosPorMetodo() throws Exception {
