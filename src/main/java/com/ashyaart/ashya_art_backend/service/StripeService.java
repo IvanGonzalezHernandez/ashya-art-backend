@@ -1,8 +1,11 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +42,13 @@ import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
+import com.stripe.model.BalanceTransaction;
+import com.stripe.model.BalanceTransactionCollection;
 import com.stripe.model.Coupon;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentIntentCollection;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.BalanceTransactionListParams;
 import com.stripe.param.PaymentIntentListParams;
 import com.stripe.param.checkout.SessionCreateParams;
 
@@ -438,4 +444,140 @@ public class StripeService {
 
         return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
     }
+    
+    public BigDecimal calcularIngresosNetosStripe() throws Exception {
+
+        long totalCentimos = 0;
+
+        BalanceTransactionListParams params =
+                BalanceTransactionListParams.builder()
+                        .setLimit(100L)
+                        .setType("charge")
+                        .build();
+
+        BalanceTransactionCollection transacciones = BalanceTransaction.list(params);
+
+        for (BalanceTransaction tx : transacciones.getData()) {
+            totalCentimos += tx.getNet();
+        }
+
+        return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
+    }
+    
+    public Map<String, Long> calcularPagosPorMetodo() throws Exception {
+
+        long totalPagos = 0;
+        long pagosTarjeta = 0;
+        long pagosPaypal = 0;
+        long pagosOtros = 0;
+
+        String ultimoIdPago = null;
+        boolean hayMasPagos = true;
+
+        while (hayMasPagos) {
+
+            PaymentIntentListParams.Builder parametrosConsulta =
+                    PaymentIntentListParams.builder()
+                            .setLimit(100L);
+
+            if (ultimoIdPago != null) {
+                parametrosConsulta.setStartingAfter(ultimoIdPago);
+            }
+
+            PaymentIntentCollection coleccionPagos =
+                    PaymentIntent.list(parametrosConsulta.build());
+
+            for (PaymentIntent pago : coleccionPagos.getData()) {
+
+                if ("succeeded".equals(pago.getStatus())) {
+
+                    totalPagos++;
+
+                    String metodo = pago.getPaymentMethodTypes().get(0);
+
+                    if ("card".equals(metodo)) {
+                        pagosTarjeta++;
+                    } else if ("paypal".equals(metodo)) {
+                        pagosPaypal++;
+                    } else {
+                        pagosOtros++;
+                    }
+                }
+
+                ultimoIdPago = pago.getId();
+            }
+
+            hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
+        }
+
+        Map<String, Long> resultado = new HashMap<>();
+        resultado.put("totalPagos", totalPagos);
+        resultado.put("pagosTarjeta", pagosTarjeta);
+        resultado.put("pagosPaypal", pagosPaypal);
+        resultado.put("pagosOtros", pagosOtros);
+
+        return resultado;
+    }
+    
+    public Map<String, Object> calcularIngresosPorMesStripe() throws Exception {
+
+        Map<String, Long> ingresosPorMesCentimos = new LinkedHashMap<>();
+
+        String ultimoIdPago = null;
+        boolean hayMasPagos = true;
+
+        while (hayMasPagos) {
+
+            PaymentIntentListParams.Builder parametrosConsulta =
+                    PaymentIntentListParams.builder().setLimit(100L);
+
+            if (ultimoIdPago != null) {
+                parametrosConsulta.setStartingAfter(ultimoIdPago);
+            }
+
+            PaymentIntentCollection coleccionPagos =
+                    PaymentIntent.list(parametrosConsulta.build());
+
+            for (PaymentIntent pago : coleccionPagos.getData()) {
+
+                if ("succeeded".equals(pago.getStatus())) {
+
+                    LocalDate fechaPago = Instant.ofEpochSecond(pago.getCreated())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    String mes = fechaPago.getYear() + "-" +
+                            String.format("%02d", fechaPago.getMonthValue());
+
+                    long totalMes = ingresosPorMesCentimos.getOrDefault(mes, 0L);
+                    ingresosPorMesCentimos.put(mes, totalMes + pago.getAmount());
+                }
+
+                ultimoIdPago = pago.getId();
+            }
+
+            hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
+        }
+
+        List<String> labels = new ArrayList<>();
+        List<BigDecimal> datos = new ArrayList<>();
+
+        ingresosPorMesCentimos.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    labels.add(entry.getKey());
+                    datos.add(
+                            BigDecimal.valueOf(entry.getValue())
+                                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+                    );
+                });
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("resumenLabels", labels);
+        resultado.put("resumenDatos", datos);
+
+        return resultado;
+    }
+    
+    
 }

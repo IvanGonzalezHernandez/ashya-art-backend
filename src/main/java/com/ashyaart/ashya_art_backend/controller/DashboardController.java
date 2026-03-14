@@ -2,6 +2,7 @@ package com.ashyaart.ashya_art_backend.controller;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,20 +41,34 @@ public class DashboardController {
 
     @GetMapping("/totals")
     public Map<String, Object> getTotals() throws Exception {
+
         Map<String, Object> result = new HashMap<>();
 
         long totalClientes = clienteDao.count();
         long totalProductos = productoDao.count();
         long totalReservas = cursoCompraDao.count();
         long totalNewsletter = newsletterDao.count();
+        
         //BigDecimal totalIngresos = compraDao.sumTotalPagado();
         BigDecimal totalIngresos = stripeService.calcularIngresosTotalesStripe();
+        BigDecimal totalIngresosNetos = stripeService.calcularIngresosNetosStripe();
+
+        Map<String, Long> pagos = stripeService.calcularPagosPorMetodo();
+        Map<String, Object> ingresosPorMes = stripeService.calcularIngresosPorMesStripe();
 
         result.put("totalClientes", totalClientes);
         result.put("totalProductos", totalProductos);
         result.put("totalReservas", totalReservas);
         result.put("totalNewsletter", totalNewsletter);
         result.put("totalIngresos", totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
+        result.put("totalIngresosNetos", totalIngresosNetos != null ? totalIngresosNetos : BigDecimal.ZERO);
+
+        result.put("totalPagos", pagos.get("totalPagos"));
+        result.put("pagosTarjeta", pagos.get("pagosTarjeta"));
+        result.put("pagosPaypal", pagos.get("pagosPaypal"));
+        result.put("pagosOtros", pagos.get("pagosOtros"));
+
+        result.putAll(ingresosPorMes);
 
         return result;
     }
