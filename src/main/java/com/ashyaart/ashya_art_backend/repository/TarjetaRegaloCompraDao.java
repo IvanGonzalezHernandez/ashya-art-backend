@@ -30,7 +30,7 @@ public interface TarjetaRegaloCompraDao extends JpaRepository<TarjetaRegaloCompr
     int canjearPorId(@Param("id") Long id);
 
     // Filtro simple por cliente
-    @Query("SELECT t FROM TarjetaRegaloCompra t WHERE (:idCliente IS NULL OR t.cliente.id = :idCliente) AND t.fechaBaja IS NULL AND t.estado = true")
+    @Query("SELECT t FROM TarjetaRegaloCompra t WHERE (:idCliente IS NULL OR t.cliente.id = :idCliente) order by t.fechaCompra desc")
     List<TarjetaRegaloCompra> findByFilter(@Param("idCliente") Long idCliente);
 
     // Borrado lógico por ID
