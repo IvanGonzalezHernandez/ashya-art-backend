@@ -2,7 +2,6 @@ package com.ashyaart.ashya_art_backend.controller;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
-import com.ashyaart.ashya_art_backend.repository.ProductoDao;
+import com.ashyaart.ashya_art_backend.repository.SecretoCompraDao;
+import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.NewsletterDao;
+import com.ashyaart.ashya_art_backend.repository.ProductoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CompraDao;
 
 @RestController
@@ -25,7 +26,7 @@ public class DashboardController {
     private ClienteDao clienteDao;
 
     @Autowired
-    private ProductoDao productoDao;
+    private ProductoCompraDao productoCompraDao;
 
     @Autowired
     private CursoCompraDao cursoCompraDao;
@@ -34,7 +35,13 @@ public class DashboardController {
     private CompraDao compraDao;
     
     @Autowired
+    private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
+    
+    @Autowired
     private NewsletterDao newsletterDao;
+    
+    @Autowired
+    private SecretoCompraDao secretoCompraDao;
     
     @Autowired
     private StripeService stripeService;
@@ -45,7 +52,9 @@ public class DashboardController {
         Map<String, Object> result = new HashMap<>();
 
         long totalClientes = clienteDao.count();
-        long totalProductos = productoDao.count();
+        long totalProductos = productoCompraDao.count();
+        long totalTarjetasRegalo = tarjetaRegaloCompraDao.count();
+        long totalSecretos = secretoCompraDao.count();
         long totalReservas = cursoCompraDao.count();
         long totalNewsletter = newsletterDao.count();
         
@@ -59,6 +68,8 @@ public class DashboardController {
 
         result.put("totalClientes", totalClientes);
         result.put("totalProductos", totalProductos);
+        result.put("totalSecretos", totalSecretos);
+        result.put("totalTarjetasRegalo", totalTarjetasRegalo);
         result.put("totalReservas", totalReservas);
         result.put("totalNewsletter", totalNewsletter);
         result.put("totalIngresos", totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
