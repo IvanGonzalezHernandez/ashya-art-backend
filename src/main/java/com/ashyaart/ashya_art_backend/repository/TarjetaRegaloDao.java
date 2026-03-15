@@ -13,11 +13,13 @@ import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
 public interface TarjetaRegaloDao extends JpaRepository<TarjetaRegalo, Long> {
 	
     @Query("SELECT t FROM TarjetaRegalo t " +
-            "WHERE (:nombre IS NULL OR LOWER(t.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) " +
-            "AND (t.estado = true)")
+            "WHERE (:nombre IS NULL OR LOWER(t.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) order by t.precio desc")
      List<TarjetaRegalo> findByFiltros(
          @Param("nombre") String nombre
      );
+    
+    @Query("SELECT t FROM TarjetaRegalo t where t.estado = true order by t.precio desc")
+    List<TarjetaRegalo> findTarjetasHabilitadas();
     
 	boolean existsById(Long id);
 	

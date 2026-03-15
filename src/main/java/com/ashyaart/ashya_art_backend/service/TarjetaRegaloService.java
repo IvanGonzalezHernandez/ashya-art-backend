@@ -35,6 +35,11 @@ public class TarjetaRegaloService {
         List<TarjetaRegalo> tarjetas = tarjetaRegaloDao.findByFiltros(filter.getNombre());
         return tarjetas.stream().map(TarjetaRegaloAssembler::toDto).toList();
     }
+    
+    public List<TarjetaRegaloDto> findTarjetasHabilitadas() {
+        List<TarjetaRegalo> tarjetas = tarjetaRegaloDao.findTarjetasHabilitadas();
+        return tarjetas.stream().map(TarjetaRegaloAssembler::toDto).toList();
+    }
 
     public TarjetaRegaloDto obtenerTarjetaPorId(Long id) {
         Optional<TarjetaRegalo> tarjetaOpt = tarjetaRegaloDao.findById(id);

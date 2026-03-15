@@ -37,6 +37,15 @@ public class TarjetaRegaloController {
         logger.info("findByFilter - Se encontraron {} tarjetas regalo", tarjetasDto.size());
         return ResponseEntity.ok(tarjetasDto);
     }
+    
+    @RequestMapping("/habilitadas")
+    @GetMapping
+    public ResponseEntity<List<TarjetaRegaloDto>> findTarjetasHabilitadas() {
+        logger.info("findTarjetasHabilitadas - Solicitud GET para obtener tarjetas regalo");
+        List<TarjetaRegaloDto> tarjetasDto = tarjetaRegaloService.findTarjetasHabilitadas();
+        logger.info("findTarjetasHabilitadas - Se encontraron {} tarjetas regalo", tarjetasDto.size());
+        return ResponseEntity.ok(tarjetasDto);
+    }
 
     // OBTENER POR ID
     @GetMapping("/{id}")
