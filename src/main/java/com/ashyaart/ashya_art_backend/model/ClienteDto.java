@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class ClienteDto {
 
@@ -31,6 +32,10 @@ public class ClienteDto {
     private LocalDate fechaAlta;
 
     private LocalDate fechaBaja;
+    
+    private List<CursoClienteDto> cursos;
+    
+    private List<TarjetaClienteDto> tarjetas;
 
     public ClienteDto() {}
 
@@ -147,4 +152,22 @@ public class ClienteDto {
     public void setFechaBaja(LocalDate fechaBaja) {
         this.fechaBaja = fechaBaja;
     }
+
+	public List<CursoClienteDto> getCursos() {
+		return cursos;
+	}
+
+	public void setCursos(List<CursoClienteDto> cursos) {
+		this.cursos = cursos;
+	}
+
+	public List<TarjetaClienteDto> getTarjetas() {
+		return tarjetas;
+	}
+
+	public void setTarjetas(List<TarjetaClienteDto> tarjetas) {
+		this.tarjetas = tarjetas;
+	}
+	
+	
 }

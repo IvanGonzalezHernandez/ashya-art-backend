@@ -14,7 +14,7 @@ public interface ClienteDao extends JpaRepository<Cliente, Long> {
 	
 	@Query("SELECT cli FROM Cliente cli " +
 		       "WHERE (:nombre IS NULL OR LOWER(cli.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) " +
-		       "AND cli.fechaBaja IS NULL")
+		       "AND cli.fechaBaja IS NULL order by fechaAlta desc")
 		List<Cliente> findByFiltros(@Param("nombre") String nombre);
 
     
