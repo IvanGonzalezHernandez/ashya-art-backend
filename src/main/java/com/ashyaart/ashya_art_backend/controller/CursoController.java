@@ -36,6 +36,18 @@ public class CursoController {
         return ResponseEntity.ok(cursosDto);
     }
     
+    @RequestMapping("/habilitados")
+    @GetMapping
+    public ResponseEntity<List<CursoDto>> findCursosHabilitados() {
+        logger.info("findCursosHabilitados - Solicitud GET para obtener cursos habilitados");
+
+        List<CursoDto> cursosDto = cursoService.findCursosHabilitados();
+
+        logger.info("findCursosHabilitados - Se encontraron {} cursos", cursosDto.size());
+
+        return ResponseEntity.ok(cursosDto);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<CursoDto> getCursoById(@PathVariable Long id) {
         logger.info("getCursoById - Solicitud GET para obtener curso con ID: {}", id);

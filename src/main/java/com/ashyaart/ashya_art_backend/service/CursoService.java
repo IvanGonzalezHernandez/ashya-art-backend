@@ -38,6 +38,10 @@ public class CursoService {
         return resultado;
     }
     
+    public List<CursoDto> findCursosHabilitados() {
+        List<Curso> cursos = cursoDao.findCursosHabilitados();
+        return cursos.stream().map(CursoAssembler::toDto).toList();
+    }
 
     public CursoDto obtenerCursoPorId(Long id) {
         logger.info("obtenerCursoPorId - Buscando curso con ID: {}", id);
@@ -84,7 +88,8 @@ public class CursoService {
         curso.setLocalizacion(cursoDto.getLocalizacion());
         curso.setPlazasMaximas(cursoDto.getPlazasMaximas());
         curso.setOrden(cursoDto.getOrden());
-
+        curso.setEstado(cursoDto.getEstado());
+        
         // Borrados explícitos
         if (Boolean.TRUE.equals(cursoDto.getDeleteImg1())) curso.setImg1(null);
         if (Boolean.TRUE.equals(cursoDto.getDeleteImg2())) curso.setImg2(null);

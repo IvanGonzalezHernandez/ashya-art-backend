@@ -16,11 +16,13 @@ public interface CursoDao extends JpaRepository<Curso, Long> {
 
 	@Query("SELECT c FROM Curso c " +
 	        "WHERE (:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) " +
-	        "AND (c.estado = true) " +
 	        "ORDER BY c.orden ASC")
 	List<Curso> findByFiltros(
 	    @Param("nombre") String nombre
 	);
+	
+	@Query("SELECT c FROM Curso c WHERE c.estado = true ORDER BY c.orden ASC")
+	List<Curso> findCursosHabilitados();
 
 	boolean existsById(Long id);
 	
