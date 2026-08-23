@@ -24,7 +24,7 @@ public class CursoFechaController {
     private CursoFechaService cursoFechaService;
 
 
-	@GetMapping("/all")
+	@GetMapping
 	public ResponseEntity<List<CursoFechaDto>> findAllByFilter(CursoFechaFilter filter) {
 	    logger.info("findAllByFilter - Solicitud GET para traer todas las fechas con filtro: {}", filter);
 	    List<CursoFechaDto> fechasDto = cursoFechaService.findAllByFilter(filter);
