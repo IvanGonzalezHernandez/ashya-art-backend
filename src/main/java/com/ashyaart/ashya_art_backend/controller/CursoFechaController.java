@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.ashyaart.ashya_art_backend.filter.CursoFechaFilter;
@@ -23,7 +24,7 @@ public class CursoFechaController {
     @Autowired
     private CursoFechaService cursoFechaService;
 
-
+    @Transactional(readOnly = true)
 	@GetMapping
 	public ResponseEntity<List<CursoFechaDto>> findAllByFilter(CursoFechaFilter filter) {
 	    logger.info("findAllByFilter - Solicitud GET para traer todas las fechas con filtro: {}", filter);
