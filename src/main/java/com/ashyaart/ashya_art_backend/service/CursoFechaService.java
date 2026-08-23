@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -30,13 +31,14 @@ public class CursoFechaService {
     @Autowired
     private CursoDao cursoDao;
 
-    public List<CursoFechaDto> findByFilter(CursoFechaFilter filter) {
-        logger.info("findByFilter - Iniciando búsqueda de fechas con filtro: {}", filter);
-        List<CursoFecha> fechas = cursoFechaDao.findByFiltros(filter.getFecha());
-        List<CursoFechaDto> resultado = fechas.stream().map(CursoFechaAssembler::toDto).toList();
-        logger.info("findByFilter - Se encontraron {} fechas con el filtro", resultado.size());
-        return resultado;
-    }
+
+	public List<CursoFechaDto> findAllByFilter(CursoFechaFilter filter) {
+	    logger.info("findAllByFilter - Iniciando búsqueda de todas las fechas con filtro: {}", filter);
+	    try (Stream<CursoFecha> fechasStream = cursoFechaDao.streamByFiltros(filter.getFecha())) {
+	        return fechasStream.map(CursoFechaAssembler::toDto).toList();
+	    }
+	}
+
     
     public List<CursoFechaDto> findByIdCurso(Long id) {
     	logger.info("findByIdCurso - Iniciando búsqueda de fechas para curso con ID: {}", id);

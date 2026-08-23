@@ -2,6 +2,7 @@ package com.ashyaart.ashya_art_backend.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Stream;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -26,15 +27,18 @@ public class ClienteService {
     @Autowired
     private ClienteDao clienteDao;
 
-    public List<ClienteDto> findByFilter(ClienteFilter filter) {
-        logger.info("findByFilter - Iniciando búsqueda de clientes");
-        List<Cliente> clientes = clienteDao.findByFiltros(filter.getNombre());
-        List<ClienteDto> resultado = clientes.stream()
-                .map(ClienteAssembler::toDto)
-                .toList();
-        logger.info("findByFilter - Se encontraron {} clientes", resultado.size());
-        return resultado;
-    }
+
+	public List<ClienteDto> findByFilter(ClienteFilter filter) {
+	    logger.info("findByFilter - Iniciando búsqueda de clientes");
+	    try (Stream<Cliente> clientesStream = clienteDao.findByFiltros(filter.getNombre())) {
+	        List<ClienteDto> resultado = clientesStream
+	                .map(ClienteAssembler::toDto)
+	                .toList();
+	        logger.info("findByFilter - Se encontraron {} clientes", resultado.size());
+	        return resultado;
+	    }
+	}
+
 
     @Transactional
     public ClienteDto crearCliente(ClienteDto clienteDto) {

@@ -23,13 +23,15 @@ public class CursoFechaController {
     @Autowired
     private CursoFechaService cursoFechaService;
 
-    @GetMapping
-    public ResponseEntity<List<CursoFechaDto>> findByFilter(CursoFechaFilter filter) {
-        logger.info("findByFilter - Solicitud GET para filtrar fechas con filtro: {}", filter);
-        List<CursoFechaDto> fechasDto = cursoFechaService.findByFilter(filter);
-        logger.info("findByFilter - Se encontraron {} fechas con el filtro proporcionado", fechasDto.size());
-        return ResponseEntity.ok(fechasDto);
-    }
+
+	@GetMapping("/all")
+	public ResponseEntity<List<CursoFechaDto>> findAllByFilter(CursoFechaFilter filter) {
+	    logger.info("findAllByFilter - Solicitud GET para traer todas las fechas con filtro: {}", filter);
+	    List<CursoFechaDto> fechasDto = cursoFechaService.findAllByFilter(filter);
+	    logger.info("findAllByFilter - Se encontraron {} fechas con el filtro proporcionado", fechasDto.size());
+	    return ResponseEntity.ok(fechasDto);
+	}
+
     
     @GetMapping("/{id}")
     public ResponseEntity<List<CursoFechaDto>> findByIdCurso(@PathVariable Long id) {

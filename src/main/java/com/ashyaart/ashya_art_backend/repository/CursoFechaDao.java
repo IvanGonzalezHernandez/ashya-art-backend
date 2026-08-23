@@ -2,6 +2,7 @@ package com.ashyaart.ashya_art_backend.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,11 +17,10 @@ import com.ashyaart.ashya_art_backend.entity.CursoFecha;
 public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
 
     // Buscar por fecha exacta (o todos si fecha es null)
-    @Query("SELECT cf, c.nombre FROM CursoFecha cf " +
-   		   "JOIN FETCH cf.curso c " +
-           "WHERE (:fecha IS NULL OR cf.fecha = :fecha) " +
-   		   "ORDER BY cf.fecha ASC")
-    List<CursoFecha> findByFiltros(@Param("fecha") LocalDate fecha);
+
+	@Query("SELECT cf FROM CursoFecha cf WHERE (:fecha IS NULL OR cf.fecha = :fecha)")
+	Stream<CursoFecha> streamByFiltros(@Param("fecha") LocalDate fecha);
+
 
     boolean existsById(Long id);
 
