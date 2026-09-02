@@ -19,7 +19,10 @@ public class CursoFecha {
     private LocalTime horaInicio;
 
     private LocalTime horaFin;
-    
+
+    @Column(nullable = false)
+    private Boolean estado = true;
+
     @ManyToOne
     @JoinColumn(name = "ID_CURSO", nullable = false)
     private Curso curso;
@@ -81,5 +84,13 @@ public class CursoFecha {
 
     public void setHoraFin(LocalTime horaFin) {
         this.horaFin = horaFin;
+    }
+
+    public Boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
     }
 }

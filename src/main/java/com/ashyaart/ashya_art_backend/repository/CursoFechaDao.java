@@ -18,21 +18,23 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
 
     // Buscar por fecha exacta (o todos si fecha es null)
 
-	@Query("SELECT cf FROM CursoFecha cf WHERE (:fecha IS NULL OR cf.fecha = :fecha)")
+	@Query("SELECT cf FROM CursoFecha cf WHERE cf.estado = true AND (:fecha IS NULL OR cf.fecha = :fecha)")
 	Stream<CursoFecha> streamByFiltros(@Param("fecha") LocalDate fecha);
 
 
     boolean existsById(Long id);
 
-    // Eliminación física (borrado real)
+    // Borrado lógico: la fila se conserva (la referencia curso_compra.id_fecha
+    // depende de ella) pero deja de aparecer en listados y disponibilidad.
     @Modifying
     @Transactional
-    @Query("DELETE FROM CursoFecha cf WHERE cf.id = :id")
+    @Query("UPDATE CursoFecha cf SET cf.estado = false WHERE cf.id = :id")
     int borradoLogico(@Param("id") Long id);
-    
+
     // Método para buscar fechas por id del curso
     @Query("SELECT cf FROM CursoFecha cf " +
     	       "WHERE cf.curso.id = :idCurso " +
+    	       "AND cf.estado = true " +
     	       "AND cf.fecha >= CURRENT_DATE " +
     	       "ORDER BY cf.fecha ASC")
     List<CursoFecha> findByIdCurso(@Param("idCurso") Long idCurso);
