@@ -8,13 +8,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ashyaart.ashya_art_backend.assembler.TarjetaRegaloCompraAssembler;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.filter.TarjetaRegaloCompraFilter;
 import com.ashyaart.ashya_art_backend.model.TarjetaRegaloCompraDto;
+import com.ashyaart.ashya_art_backend.model.TarjetaRegaloCompraEdicionDto;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 
 @Service
@@ -56,6 +59,29 @@ public class TarjetaRegaloCompraService {
             throw new IllegalStateException("No se pudo canjear la compra con ID: " + id);
         }
         logger.info("canjear - Compra ID {} canjeada correctamente", id);
+    }
+
+    @Transactional
+    public TarjetaRegaloCompraDto actualizarCanjeoManual(Long id, TarjetaRegaloCompraEdicionDto dto) {
+        logger.info("actualizarCanjeoManual - Editando canjeo manual de compra ID {}", id);
+
+        TarjetaRegaloCompra compra = tarjetaRegaloCompraDao.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Compra de tarjeta regalo no encontrada con ID: " + id));
+
+        boolean canjeada = Boolean.TRUE.equals(dto.getCanjeada());
+
+        if (canjeada && dto.getFechaBaja() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La fecha de canjeo (Redeemed On) es obligatoria al marcar la tarjeta como canjeada.");
+        }
+
+        compra.setCanjeada(canjeada);
+        compra.setEstado(!canjeada);
+        compra.setFechaBaja(canjeada ? dto.getFechaBaja() : null);
+
+        TarjetaRegaloCompra guardada = tarjetaRegaloCompraDao.save(compra);
+        logger.info("actualizarCanjeoManual - Compra ID {} actualizada correctamente", id);
+        return TarjetaRegaloCompraAssembler.toDto(guardada);
     }
 
     @Transactional

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.ashyaart.ashya_art_backend.filter.TarjetaRegaloCompraFilter;
 import com.ashyaart.ashya_art_backend.model.TarjetaRegaloCompraDto;
+import com.ashyaart.ashya_art_backend.model.TarjetaRegaloCompraEdicionDto;
 import com.ashyaart.ashya_art_backend.service.TarjetaRegaloCompraService;
 
 @RestController
@@ -36,6 +37,16 @@ public class TarjetaRegaloCompraController {
         tarjetaRegaloCompraService.canjear(id);
         logger.info("canjear - Tarjeta regalo compra con ID {} canjeada correctamente", id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TarjetaRegaloCompraDto> actualizarCanjeoManual(
+            @PathVariable Long id,
+            @RequestBody TarjetaRegaloCompraEdicionDto dto) {
+        logger.info("actualizarCanjeoManual - Solicitud PUT para editar canjeo manual de compra ID: {}", id);
+        TarjetaRegaloCompraDto actualizado = tarjetaRegaloCompraService.actualizarCanjeoManual(id, dto);
+        logger.info("actualizarCanjeoManual - Compra ID {} actualizada correctamente", id);
+        return ResponseEntity.ok(actualizado);
     }
 
     @DeleteMapping("/{id}")
