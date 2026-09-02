@@ -78,6 +78,10 @@ public class TarjetaRegaloCompraService {
         compra.setCanjeada(canjeada);
         compra.setEstado(!canjeada);
         compra.setFechaBaja(canjeada ? dto.getFechaBaja() : null);
+        if (!canjeada) {
+            // Ya no está canjeada: el importe utilizado deja de tener sentido.
+            compra.setMontoUtilizado(null);
+        }
 
         TarjetaRegaloCompra guardada = tarjetaRegaloCompraDao.save(compra);
         logger.info("actualizarCanjeoManual - Compra ID {} actualizada correctamente", id);

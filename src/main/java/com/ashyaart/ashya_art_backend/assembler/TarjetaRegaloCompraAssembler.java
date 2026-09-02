@@ -14,6 +14,7 @@ public class TarjetaRegaloCompraAssembler {
         dto.setFechaCompra(entity.getFechaCompra());
         dto.setFechaCaducidad(entity.getFechaCaducidad());
         dto.setFechaBaja(entity.getFechaBaja());
+        dto.setMontoUtilizado(entity.getMontoUtilizado());
         dto.setEstado(entity.isEstado());
 
         dto.setIdTarjeta(entity.getTarjetaRegalo() != null ? entity.getTarjetaRegalo().getId() : null);

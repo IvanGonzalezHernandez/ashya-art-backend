@@ -16,6 +16,7 @@ public class TarjetaRegaloCompraDto {
     private LocalDate fechaCompra;
     private LocalDate fechaCaducidad;
     private LocalDate fechaBaja;
+    private BigDecimal montoUtilizado;
 
     private Boolean estado;
 
@@ -50,6 +51,9 @@ public class TarjetaRegaloCompraDto {
 
     public LocalDate getFechaBaja() { return fechaBaja; }
     public void setFechaBaja(LocalDate fechaBaja) { this.fechaBaja = fechaBaja; }
+
+    public BigDecimal getMontoUtilizado() { return montoUtilizado; }
+    public void setMontoUtilizado(BigDecimal montoUtilizado) { this.montoUtilizado = montoUtilizado; }
 
     public Boolean getEstado() { return estado; }
     public void setEstado(Boolean estado) { this.estado = estado; }

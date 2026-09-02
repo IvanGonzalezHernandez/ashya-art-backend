@@ -175,8 +175,10 @@ public class NoStripeService {
 
             // 7) Marcar la tarjeta como usada SOLO si no es compra gratuita
             if (!compraGratuita && codigoTarjeta != null) {
-                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta);
-                logger.info("Tarjeta regalo {} marcada como usada", codigoTarjeta);
+                // El carrito está cubierto al 100% por la tarjeta (validado en el paso 3),
+                // así que el importe realmente consumido es el total del carrito, no el precio de la tarjeta.
+                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta, total);
+                logger.info("Tarjeta regalo {} marcada como usada (importe utilizado: {}€)", codigoTarjeta, total);
             } else if (compraGratuita) {
                 logger.info("Compra gratuita procesada — no se ha usado tarjeta regalo");
             }

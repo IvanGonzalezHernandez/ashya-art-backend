@@ -1,6 +1,7 @@
 package com.ashyaart.ashya_art_backend.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -28,6 +29,9 @@ public class TarjetaRegaloCompra {
     
     @Column(name = "FECHA_BAJA")
     private LocalDate fechaBaja;
+
+    @Column(name = "MONTO_UTILIZADO", precision = 10, scale = 2)
+    private BigDecimal montoUtilizado;
 
     @Column(nullable = false)
     private Boolean estado;
@@ -127,6 +131,14 @@ public class TarjetaRegaloCompra {
 
     public void setFechaBaja(LocalDate fechaBaja) {
         this.fechaBaja = fechaBaja;
+    }
+
+    public BigDecimal getMontoUtilizado() {
+        return montoUtilizado;
+    }
+
+    public void setMontoUtilizado(BigDecimal montoUtilizado) {
+        this.montoUtilizado = montoUtilizado;
     }
     
     public Compra getCompra() { return compra; }

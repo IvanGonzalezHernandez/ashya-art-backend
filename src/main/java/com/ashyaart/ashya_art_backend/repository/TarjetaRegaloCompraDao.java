@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,11 +18,11 @@ public interface TarjetaRegaloCompraDao extends JpaRepository<TarjetaRegaloCompr
     @Query("SELECT t FROM TarjetaRegaloCompra t WHERE t.codigo = :codigo")
     Optional<TarjetaRegaloCompra> findByCodigo(@Param("codigo") String codigo);
 
-    // Canjear por CÓDIGO 
+    // Canjear por CÓDIGO (usado durante el checkout, con el importe realmente consumido del carrito)
     @Modifying
     @Transactional
-    @Query("UPDATE TarjetaRegaloCompra t SET t.canjeada = true, t.estado = false, t.fechaBaja = CURRENT_DATE WHERE t.codigo = :codigo")
-    int marcarTarjetaRegaloComoUsada(@Param("codigo") String codigo);
+    @Query("UPDATE TarjetaRegaloCompra t SET t.canjeada = true, t.estado = false, t.fechaBaja = CURRENT_DATE, t.montoUtilizado = :montoUtilizado WHERE t.codigo = :codigo")
+    int marcarTarjetaRegaloComoUsada(@Param("codigo") String codigo, @Param("montoUtilizado") BigDecimal montoUtilizado);
 
     // Canjear por ID
     @Modifying

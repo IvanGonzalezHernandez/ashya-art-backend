@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.controller;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.entity.Carrito;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.repository.CarritoDao;
@@ -135,7 +137,20 @@ public class StripeWebhookController {
                     ? session.getMetadata().get("codigoTarjeta")
                     : null;
             if (codigoTarjeta != null && !codigoTarjeta.isBlank()) {
-                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta.trim().toUpperCase());
+                String codigoNormalizado = codigoTarjeta.trim().toUpperCase();
+
+                BigDecimal subtotalCarrito = carritoDto.getItems().stream()
+                        .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                Optional<TarjetaRegaloCompra> tarjeta = tarjetaRegaloCompraDao.findByCodigo(codigoNormalizado);
+                BigDecimal precioTarjeta = tarjeta.map(t -> t.getTarjetaRegalo().getPrecio()).orElse(subtotalCarrito);
+
+                // El cupón descuenta el precio completo de la tarjeta, pero nunca puede consumirse
+                // más de lo que costaba el carrito: lo no usado se pierde (no se acumula saldo).
+                BigDecimal montoUtilizado = precioTarjeta.min(subtotalCarrito);
+
+                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoNormalizado, montoUtilizado);
             }
 
             // 10) Marcar carrito como consumido (idempotencia)
