@@ -77,6 +77,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/cursos-fecha/**").permitAll()
                 .requestMatchers("/api/productos-compra/**").permitAll()
                 .requestMatchers("/api/carrito/**").permitAll()
+
+                // 🔓 PUBLICO (config: el sitio necesita saber si está en mantenimiento)
+                .requestMatchers(HttpMethod.GET, "/api/config/**").permitAll()
+                // 🔒 PRIVADO (config: solo el admin puede cambiarla)
+                .requestMatchers(HttpMethod.PUT, "/api/config/**").authenticated()
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
                 .requestMatchers("/api/studio/**").permitAll()
