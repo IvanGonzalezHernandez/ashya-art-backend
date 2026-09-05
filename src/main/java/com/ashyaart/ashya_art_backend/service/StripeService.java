@@ -22,8 +22,6 @@ import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
 import com.ashyaart.ashya_art_backend.entity.Producto;
 import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
-import com.ashyaart.ashya_art_backend.entity.Secreto;
-import com.ashyaart.ashya_art_backend.entity.SecretoCompra;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.model.CarritoClienteDto;
@@ -36,8 +34,6 @@ import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.CursoFechaDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.ProductoDao;
-import com.ashyaart.ashya_art_backend.repository.SecretoCompraDao;
-import com.ashyaart.ashya_art_backend.repository.SecretoDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +53,6 @@ import jakarta.annotation.PostConstruct;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
-import com.ashyaart.ashya_art_backend.event.CompraEventos.SecretoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSuccessEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminErrorEvent;
@@ -76,8 +71,6 @@ public class StripeService {
     @Autowired private CompraDao compraDao;
     @Autowired private ProductoDao productoDao;
     @Autowired private ProductoCompraDao productoCompraDao;
-    @Autowired private SecretoDao secretoDao;
-    @Autowired private SecretoCompraDao secretoCompraDao;
     @Autowired private TarjetaRegaloDao tarjetaRegaloDao;
     @Autowired private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
     @Autowired private CarritoDao carritoDao;
@@ -260,9 +253,6 @@ public class StripeService {
                         case "TARJETA":
                             procesarTarjetaRegalo(cliente, compraTotal, item);
                             break;
-                        case "SECRETO":
-                            procesarSecreto(cliente, compraTotal, item);
-                            break;
                         default:
                             logger.warn("Tipo de item desconocido: {}", item.getTipo());
                     }
@@ -354,30 +344,6 @@ public class StripeService {
                     producto.getPrecio()
                 )
          );
-    }
-
-    private void procesarSecreto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
-        Long idSecreto = Long.valueOf(item.getId());
-        Secreto secreto = secretoDao.findById(idSecreto)
-            .orElseThrow(() -> new RuntimeException("Secreto no encontrado: " + idSecreto));
-
-        SecretoCompra compra = new SecretoCompra();
-        compra.setCompra(compraTotal);
-        compra.setFechaCompra(LocalDate.now());
-        compra.setCliente(cliente);
-        compra.setSecreto(secreto);
-        secretoCompraDao.save(compra);
-
-        byte[] pdfBytes = secreto.getPdf();
-
-        eventPublisher.publishEvent(
-            new SecretoCompradoEvent(
-                cliente.getEmail(),
-                cliente.getNombre(),
-                secreto.getNombre(),
-                pdfBytes
-            )
-        );
     }
 
     private void procesarTarjetaRegalo(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {

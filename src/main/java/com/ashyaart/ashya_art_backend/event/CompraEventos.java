@@ -33,13 +33,6 @@ public class CompraEventos {
             BigDecimal precioUnitario
     ) {}
 
-    public record SecretoCompradoEvent(
-    	    String email,
-    	    String nombreCliente,
-    	    String nombreSecreto,
-    	    byte[] pdfBytes
-    ) {}
-
     public record TarjetaRegaloCompradaEvent(
             String email,
             String nombreCliente,

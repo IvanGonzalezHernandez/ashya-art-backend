@@ -436,36 +436,6 @@ public class EmailService {
     sendHtml(emailCliente, asunto, cuerpoHtml);
   }
 
-  public void enviarConfirmacionSecretoIndividual(String emailCliente,
-                                                  String nombreCliente,
-                                                  String nombreSecreto,
-                                                  byte[] pdfBytes) {
-    String asunto = "🔐 Your Secret Purchase - " + nombreSecreto;
-
-    String cuerpoHtml =
-        "<html>" +
-            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
-            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
-            "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
-            "<p>Thank you for your purchase from <b>Ashya Art</b>. Please find attached your PDF document containing the information/instruction you have purchased.</p>" +
-            "<ul style='line-height:1.7; padding-left:20px;'>" +
-            "<li><b>🔐 Secret:</b> " + nombreSecreto + "</li>" +
-            "</ul>" +
-            "<p>If the attachment doesn’t open on your device, feel free to contact me using the details below and I’ll resend it.</p>" +
-            "<p>If you have any questions, you can contact me through any of the following options:</p>" +
-            "<ul style='line-height:1.7; padding-left:20px;'>" +
-            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
-            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
-            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
-            "</ul>" +
-            "<p>Best regards,<br><b>Ashya</b></p>" +
-            "</div>" +
-            "</body></html>";
-
-    sendHtmlWithAttachment(emailCliente, asunto, cuerpoHtml, nombreSecreto + ".pdf", pdfBytes);
-  }
-
   public void enviarConfirmacionTarjetaRegaloIndividual(
 		    String destinatario,
 		    String nombreCliente,

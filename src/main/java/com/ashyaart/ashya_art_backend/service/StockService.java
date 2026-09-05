@@ -28,7 +28,6 @@ public class StockService {
                 stockDisponible = cursoDao.obtenerPlazasPorIdCursoFecha(item.getId());
                 break;
 
-            case "SECRETO":
             case "TARJETA":
                 // Sin límite, cualquier cantidad está permitida
                 return true;

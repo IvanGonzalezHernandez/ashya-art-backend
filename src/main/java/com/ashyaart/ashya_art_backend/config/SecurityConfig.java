@@ -76,8 +76,6 @@ public class SecurityConfig {
 
                 .requestMatchers("/api/cursos-fecha/**").permitAll()
                 .requestMatchers("/api/productos-compra/**").permitAll()
-                .requestMatchers("/api/secretos/**").permitAll()
-                .requestMatchers("/api/secretos-compra/**").permitAll()
                 .requestMatchers("/api/carrito/**").permitAll()
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()

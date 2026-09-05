@@ -11,7 +11,6 @@ import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSucce
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
-import com.ashyaart.ashya_art_backend.event.CompraEventos.SecretoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
 import com.ashyaart.ashya_art_backend.service.EmailService;
 
@@ -58,17 +57,6 @@ public class EmailCompraListener {
             event.precioUnitario()
         );
     }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onSecretoComprado(SecretoCompradoEvent event) throws MessagingException {
-        emailService.enviarConfirmacionSecretoIndividual(
-            event.email(),
-            event.nombreCliente(),
-            event.nombreSecreto(),
-            event.pdfBytes()
-        );
-    }
-
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTarjetaRegaloComprada(TarjetaRegaloCompradaEvent event) throws MessagingException {

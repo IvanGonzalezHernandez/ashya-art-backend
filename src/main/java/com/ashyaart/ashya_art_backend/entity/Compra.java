@@ -42,15 +42,12 @@ public class Compra {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
-    // Relación con items de cursos, productos, secretos y tarjetas regalo
+    // Relación con items de cursos, productos y tarjetas regalo
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CursoCompra> cursosComprados;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductoCompra> productosComprados;
-
-    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SecretoCompra> secretosComprados;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TarjetaRegaloCompra> tarjetasRegaloCompradas;
@@ -76,9 +73,6 @@ public class Compra {
 
     public List<ProductoCompra> getProductosComprados() { return productosComprados; }
     public void setProductosComprados(List<ProductoCompra> productosComprados) { this.productosComprados = productosComprados; }
-
-    public List<SecretoCompra> getSecretosComprados() { return secretosComprados; }
-    public void setSecretosComprados(List<SecretoCompra> secretosComprados) { this.secretosComprados = secretosComprados; }
 
     public List<TarjetaRegaloCompra> getTarjetasRegaloCompradas() { return tarjetasRegaloCompradas; }
     public void setTarjetasRegaloCompradas(List<TarjetaRegaloCompra> tarjetasRegaloCompradas) { this.tarjetasRegaloCompradas = tarjetasRegaloCompradas; }

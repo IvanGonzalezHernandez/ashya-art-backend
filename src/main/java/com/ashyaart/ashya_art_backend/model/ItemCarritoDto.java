@@ -3,7 +3,7 @@ package com.ashyaart.ashya_art_backend.model;
 public class ItemCarritoDto {
 
 	private Long id;
-    private String tipo; // CURSO | PRODUCTO | SECRETO | TARJETA
+    private String tipo; // CURSO | PRODUCTO | TARJETA
     private String nombre;
     private String destinatario;
     private double precio;

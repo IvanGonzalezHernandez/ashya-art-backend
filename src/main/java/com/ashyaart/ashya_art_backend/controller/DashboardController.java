@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
-import com.ashyaart.ashya_art_backend.repository.SecretoCompraDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
 import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
@@ -39,10 +38,7 @@ public class DashboardController {
     
     @Autowired
     private NewsletterDao newsletterDao;
-    
-    @Autowired
-    private SecretoCompraDao secretoCompraDao;
-    
+
     @Autowired
     private StripeService stripeService;
 
@@ -54,7 +50,6 @@ public class DashboardController {
         long totalClientes = clienteDao.count();
         long totalProductos = productoCompraDao.count();
         long totalTarjetasRegalo = tarjetaRegaloCompraDao.count();
-        long totalSecretos = secretoCompraDao.count();
         long totalReservas = cursoCompraDao.count();
         long totalNewsletter = newsletterDao.count();
         
@@ -68,7 +63,6 @@ public class DashboardController {
 
         result.put("totalClientes", totalClientes);
         result.put("totalProductos", totalProductos);
-        result.put("totalSecretos", totalSecretos);
         result.put("totalTarjetasRegalo", totalTarjetasRegalo);
         result.put("totalReservas", totalReservas);
         result.put("totalNewsletter", totalNewsletter);
