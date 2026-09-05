@@ -1,6 +1,5 @@
 package com.ashyaart.ashya_art_backend.advice;
 
-import com.ashyaart.ashya_art_backend.service.LogErrorService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,18 +11,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Captura todas las excepciones no controladas de la aplicación
- * y las guarda en la tabla LOG_ERRORES mediante LogErrorService.
+ * y devuelve una respuesta HTTP limpia en lugar de la página de error por defecto.
  */
 @ControllerAdvice
 public class ManejadorErroresGlobal {
 
     private static final Logger logger = LoggerFactory.getLogger(ManejadorErroresGlobal.class);
-
-    private final LogErrorService logErrorService;
-
-    public ManejadorErroresGlobal(LogErrorService logErrorService) {
-        this.logErrorService = logErrorService;
-    }
 
     /**
      * Maneja ResponseStatusException (como tu 409 de newsletter) respetando el status.
@@ -33,14 +26,6 @@ public class ManejadorErroresGlobal {
 
         logger.warn("ResponseStatusException en la petición {}: {}",
                 request.getRequestURI(), ex.getMessage(), ex);
-
-          //DESCOMENTAR CUANDO SE QUIERA GUARDAR EL ERROR EN LA BBDD
-//        logErrorService.guardar(
-//                ex,
-//                ManejadorErroresGlobal.class.getName(),
-//                request.getMethod(),
-//                request.getRequestURI()
-//        );
 
         return ResponseEntity
                 .status(ex.getStatusCode())
@@ -54,13 +39,6 @@ public class ManejadorErroresGlobal {
     public ResponseEntity<String> manejarExcepcion(HttpServletRequest request, Exception ex) {
 
         logger.error("Error no controlado en la petición: {}", request.getRequestURI(), ex);
-          //DESCOMENTAR CUANDO SE QUIERA GUARDAR EL ERROR EN LA BBDD
-//        logErrorService.guardar(
-//                ex,
-//                ManejadorErroresGlobal.class.getName(),
-//                request.getMethod(),
-//                request.getRequestURI()
-//        );
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

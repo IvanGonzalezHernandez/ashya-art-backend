@@ -80,7 +80,6 @@ public class SecurityConfig {
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
                 .requestMatchers("/api/studio/**").permitAll()
-                .requestMatchers("/api/errores/**").authenticated()
                 .requestMatchers("/api/admin/**").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().permitAll()
