@@ -43,6 +43,12 @@ public class ProductoService {
         return resultado;
     }
     
+    public List<ProductoDto> findProductosHabilitados() {
+        logger.info("findProductosHabilitados - Iniciando búsqueda de productos habilitados");
+        List<Producto> productos = productoDao.findProductosHabilitados();
+        return productos.stream().map(ProductoAssembler::toDto).toList();
+    }
+
     public ProductoDto obtenerProductoPorId(Long id) {
         logger.info("obtenerProductoPorId - Buscando producto con ID: {}", id);
         Optional<Producto> productoOpt = productoDao.findById(id);
@@ -92,6 +98,7 @@ public class ProductoService {
         producto.setPrecio(productoDto.getPrecio());
         producto.setStock(productoDto.getStock());
         producto.setFechaBaja(productoDto.getFechaBaja());
+        producto.setEstado(productoDto.getEstado());
 
         producto.setCategoria(productoDto.getCategoria());
         producto.setMedidas(productoDto.getMedidas());

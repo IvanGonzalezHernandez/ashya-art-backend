@@ -13,12 +13,14 @@ import com.ashyaart.ashya_art_backend.entity.Producto;
 public interface ProductoDao extends JpaRepository<Producto, Long> {
 	
     @Query("SELECT p FROM Producto p " +
-            "WHERE (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT(:nombre, '%'))) " +
-            "AND (p.estado = true)")
+            "WHERE (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT(:nombre, '%')))")
      List<Producto> findByFiltros(
          @Param("nombre") String nombre
      );
-    
+
+    @Query("SELECT p FROM Producto p WHERE p.estado = true")
+    List<Producto> findProductosHabilitados();
+
 	boolean existsById(Long id);
 	
     @Modifying

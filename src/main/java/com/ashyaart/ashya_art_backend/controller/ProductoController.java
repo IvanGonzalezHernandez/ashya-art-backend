@@ -34,6 +34,14 @@ public class ProductoController {
         return ResponseEntity.ok(productosDto);
     }
     
+    @GetMapping("/habilitados")
+    public ResponseEntity<List<ProductoDto>> findProductosHabilitados() {
+        logger.info("findProductosHabilitados - Solicitud GET para obtener productos habilitados");
+        List<ProductoDto> productosDto = productoService.findProductosHabilitados();
+        logger.info("findProductosHabilitados - Se encontraron {} productos", productosDto.size());
+        return ResponseEntity.ok(productosDto);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDto> getProductoById(@PathVariable Long id) {
         logger.info("getProductoById - Solicitud GET para obtener producto con ID: {}", id);
