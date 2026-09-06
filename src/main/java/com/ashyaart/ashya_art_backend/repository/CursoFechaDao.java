@@ -42,4 +42,12 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     
     @Query("SELECT cf.plazasDisponibles FROM CursoFecha cf WHERE cf.id = :idCursoFecha")
     Integer obtenerPlazasPorIdCursoFecha(@Param("idCursoFecha") Long idCursoFecha);
+
+    // Descuento atómico: si dos reservas concurrentes piden las últimas plazas, la
+    // condición "plazasDisponibles >= cantidad" hace que solo una de ellas afecte una
+    // fila; la otra obtiene 0 y debe tratarlo como plazas insuficientes.
+    @Modifying
+    @Transactional
+    @Query("UPDATE CursoFecha cf SET cf.plazasDisponibles = cf.plazasDisponibles - :cantidad WHERE cf.id = :id AND cf.plazasDisponibles >= :cantidad")
+    int descontarPlazas(@Param("id") Long id, @Param("cantidad") Integer cantidad);
 }

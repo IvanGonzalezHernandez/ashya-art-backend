@@ -29,5 +29,12 @@ public interface ProductoDao extends JpaRepository<Producto, Long> {
     @Query("SELECT p.stock FROM Producto p WHERE p.id = :idProducto")
     Integer obtenerStockPorId(@Param("idProducto") Long idProducto);
 
+    // Descuento atómico: si dos compras concurrentes piden las últimas unidades, la
+    // condición "stock >= cantidad" hace que solo una de ellas afecte una fila; la otra
+    // obtiene 0 y debe tratarlo como stock insuficiente (evita vender de más).
+    @Modifying
+    @Transactional
+    @Query("UPDATE Producto p SET p.stock = p.stock - :cantidad WHERE p.id = :id AND p.stock >= :cantidad")
+    int descontarStock(@Param("id") Long id, @Param("cantidad") Integer cantidad);
 
 }

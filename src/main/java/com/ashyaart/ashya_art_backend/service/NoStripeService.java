@@ -45,6 +45,7 @@ public class NoStripeService {
 
     @Autowired private StockService stockService;
     @Autowired private ClienteService clienteService;
+    @Autowired private CarritoPricingService carritoPricingService;
 
     @Autowired private CompraDao compraDao;
     @Autowired private CursoFechaDao cursoFechaDao;
@@ -79,11 +80,8 @@ public class NoStripeService {
                 }
             }
 
-            // 2) Calcular total del carrito
-            BigDecimal total = carrito.getItems().stream()
-                    .map(i -> BigDecimal.valueOf(i.getPrecio())
-                            .multiply(BigDecimal.valueOf(i.getCantidad())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 2) Calcular total del carrito (siempre con el precio real de BBDD, nunca el declarado por el cliente)
+            BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems());
 
             boolean compraGratuita = total.compareTo(BigDecimal.ZERO) == 0;
 
@@ -167,7 +165,11 @@ public class NoStripeService {
             if (!compraGratuita && codigoTarjeta != null) {
                 // El carrito está cubierto al 100% por la tarjeta (validado en el paso 3),
                 // así que el importe realmente consumido es el total del carrito, no el precio de la tarjeta.
-                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta, total);
+                int filasAfectadas = tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoTarjeta, total);
+                if (filasAfectadas == 0) {
+                    logger.error("Intento de doble uso de tarjeta regalo {} detectado (ya estaba canjeada)", codigoTarjeta);
+                    throw new IllegalStateException("La tarjeta regalo " + codigoTarjeta + " ya había sido canjeada");
+                }
                 logger.info("Tarjeta regalo {} marcada como usada (importe utilizado: {}€)", codigoTarjeta, total);
             } else if (compraGratuita) {
                 logger.info("Compra gratuita procesada — no se ha usado tarjeta regalo");
@@ -236,10 +238,8 @@ public class NoStripeService {
                 }
             }
 
-            // 2) Total
-            BigDecimal total = carrito.getItems().stream()
-                    .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 2) Total (siempre con el precio real de BBDD, nunca el declarado por el cliente)
+            BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems());
 
             // 3) Crear/actualizar cliente
             Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
@@ -323,9 +323,12 @@ public class NoStripeService {
         compra.setPrecio(cursoFecha.getCurso().getPrecio());
         cursoCompraDao.save(compra);
 
-        // Actualizar plazas disponibles
-        cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
-        cursoFechaDao.save(cursoFecha);
+        // Actualizar plazas disponibles (decremento atómico, evita sobrevender)
+        int filasPlazas = cursoFechaDao.descontarPlazas(cursoFecha.getId(), item.getCantidad());
+        if (filasPlazas == 0) {
+            throw new IllegalStateException("No hay plazas suficientes para " + cursoFecha.getCurso().getNombre()
+                    + " (posible reserva simultánea)");
+        }
 
         // Evento
         eventPublisher.publishEvent(
@@ -356,9 +359,12 @@ public class NoStripeService {
         compra.setPrecio(producto.getPrecio());
         productoCompraDao.save(compra);
 
-        // Actualizar stock
-        producto.setStock(producto.getStock() - item.getCantidad());
-        productoDao.save(producto);
+        // Actualizar stock (decremento atómico, evita sobrevender)
+        int filasStock = productoDao.descontarStock(producto.getId(), item.getCantidad());
+        if (filasStock == 0) {
+            throw new IllegalStateException("Stock insuficiente para " + producto.getNombre()
+                    + " (posible venta simultánea)");
+        }
 
         // Evento
         eventPublisher.publishEvent(

@@ -22,6 +22,7 @@ import com.ashyaart.ashya_art_backend.model.CarritoDto;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.repository.CarritoDao;
 import com.ashyaart.ashya_art_backend.repository.TarjetaRegaloCompraDao;
+import com.ashyaart.ashya_art_backend.service.CarritoPricingService;
 import com.ashyaart.ashya_art_backend.service.StripeService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,7 @@ public class StripeWebhookController {
     @Autowired private StripeService stripeService;
     @Autowired private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
     @Autowired private CarritoDao carritoDao;
+    @Autowired private CarritoPricingService carritoPricingService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -139,9 +141,7 @@ public class StripeWebhookController {
             if (codigoTarjeta != null && !codigoTarjeta.isBlank()) {
                 String codigoNormalizado = codigoTarjeta.trim().toUpperCase();
 
-                BigDecimal subtotalCarrito = carritoDto.getItems().stream()
-                        .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal subtotalCarrito = carritoPricingService.calcularTotalReal(carritoDto.getItems());
 
                 Optional<TarjetaRegaloCompra> tarjeta = tarjetaRegaloCompraDao.findByCodigo(codigoNormalizado);
                 BigDecimal precioTarjeta = tarjeta.map(t -> t.getTarjetaRegalo().getPrecio()).orElse(subtotalCarrito);
@@ -150,7 +150,12 @@ public class StripeWebhookController {
                 // más de lo que costaba el carrito: lo no usado se pierde (no se acumula saldo).
                 BigDecimal montoUtilizado = precioTarjeta.min(subtotalCarrito);
 
-                tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoNormalizado, montoUtilizado);
+                int filasAfectadas = tarjetaRegaloCompraDao.marcarTarjetaRegaloComoUsada(codigoNormalizado, montoUtilizado);
+                if (filasAfectadas == 0) {
+                    logger.error("Intento de doble uso de tarjeta regalo {} detectado en sesión {} (ya estaba canjeada)",
+                            codigoNormalizado, session.getId());
+                    throw new IllegalStateException("La tarjeta regalo " + codigoNormalizado + " ya había sido canjeada");
+                }
             }
 
             // 10) Marcar carrito como consumido (idempotencia)

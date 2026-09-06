@@ -66,6 +66,7 @@ public class StripeService {
 
     @Autowired private StockService stockService;
     @Autowired private ClienteService clienteService;
+    @Autowired private CarritoPricingService carritoPricingService;
     @Autowired private CursoCompraDao cursoCompraDao;
     @Autowired private CursoFechaDao cursoFechaDao;
     @Autowired private CompraDao compraDao;
@@ -148,12 +149,20 @@ public class StripeService {
                     .orElse("Artículo");
             String desc = safeClip(item.getSubtitulo(), 500);
 
+            // El precio SIEMPRE se recalcula en servidor: el que declara el carrito del
+            // cliente no es de fiar (puede haberse manipulado antes de llegar aquí).
+            BigDecimal precioReal = carritoPricingService.precioUnitarioReal(item);
+            long unitAmountCentimos = precioReal
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .longValueExact();
+
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                 .setQuantity((long) item.getCantidad())
                 .setPriceData(
                     SessionCreateParams.LineItem.PriceData.builder()
                         .setCurrency("eur")
-                        .setUnitAmount(Math.round(item.getPrecio() * 100))
+                        .setUnitAmount(unitAmountCentimos)
                         .setProductData(
                             SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                 .setName(name)
@@ -217,9 +226,7 @@ public class StripeService {
 
             Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
-            BigDecimal total = carritoDto.getItems().stream()
-                .map(i -> BigDecimal.valueOf(i.getPrecio()).multiply(BigDecimal.valueOf(i.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal total = carritoPricingService.calcularTotalReal(carritoDto.getItems());
 
             Compra compraTotal = new Compra();
             compraTotal.setCarritoId(carritoDto.getId());
@@ -304,8 +311,11 @@ public class StripeService {
         compra.setPrecio(cursoFecha.getCurso().getPrecio());
         cursoCompraDao.save(compra);
 
-        cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
-        cursoFechaDao.save(cursoFecha);
+        int filasPlazas = cursoFechaDao.descontarPlazas(cursoFecha.getId(), item.getCantidad());
+        if (filasPlazas == 0) {
+            throw new IllegalStateException("No hay plazas suficientes para " + cursoFecha.getCurso().getNombre()
+                    + " (posible reserva simultánea)");
+        }
 
         eventPublisher.publishEvent(
                 new CursoCompradoEvent(
@@ -334,8 +344,11 @@ public class StripeService {
         compra.setPrecio(producto.getPrecio());
         productoCompraDao.save(compra);
 
-        producto.setStock(producto.getStock() - item.getCantidad());
-        productoDao.save(producto);
+        int filasStock = productoDao.descontarStock(producto.getId(), item.getCantidad());
+        if (filasStock == 0) {
+            throw new IllegalStateException("Stock insuficiente para " + producto.getNombre()
+                    + " (posible venta simultánea)");
+        }
 
         eventPublisher.publishEvent(
                 new ProductoCompradoEvent(

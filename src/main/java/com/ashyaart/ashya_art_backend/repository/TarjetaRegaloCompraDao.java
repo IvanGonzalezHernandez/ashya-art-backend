@@ -18,10 +18,13 @@ public interface TarjetaRegaloCompraDao extends JpaRepository<TarjetaRegaloCompr
     @Query("SELECT t FROM TarjetaRegaloCompra t WHERE t.codigo = :codigo")
     Optional<TarjetaRegaloCompra> findByCodigo(@Param("codigo") String codigo);
 
-    // Canjear por CÓDIGO (usado durante el checkout, con el importe realmente consumido del carrito)
+    // Canjear por CÓDIGO (usado durante el checkout, con el importe realmente consumido del carrito).
+    // El "AND canjeada = false" hace el canjeo atómico: si dos checkouts concurrentes usan el
+    // mismo código, solo el primero en llegar aquí consigue marcarla y afecta una fila; el
+    // segundo obtiene 0 filas afectadas y debe tratarse como intento de doble uso.
     @Modifying
     @Transactional
-    @Query("UPDATE TarjetaRegaloCompra t SET t.canjeada = true, t.estado = false, t.fechaBaja = CURRENT_DATE, t.montoUtilizado = :montoUtilizado WHERE t.codigo = :codigo")
+    @Query("UPDATE TarjetaRegaloCompra t SET t.canjeada = true, t.estado = false, t.fechaBaja = CURRENT_DATE, t.montoUtilizado = :montoUtilizado WHERE t.codigo = :codigo AND t.canjeada = false")
     int marcarTarjetaRegaloComoUsada(@Param("codigo") String codigo, @Param("montoUtilizado") BigDecimal montoUtilizado);
 
     // Canjear por ID
