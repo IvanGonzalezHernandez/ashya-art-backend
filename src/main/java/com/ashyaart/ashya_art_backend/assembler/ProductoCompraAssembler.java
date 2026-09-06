@@ -25,6 +25,7 @@ public class ProductoCompraAssembler {
 
         dto.setCantidad(entity.getCantidad());
         dto.setFechaCompra(entity.getFechaCompra());
+        dto.setPrecio(entity.getPrecio());
 
         return dto;
     }
@@ -38,6 +39,7 @@ public class ProductoCompraAssembler {
         entity.setProducto(producto);
         entity.setCantidad(dto.getCantidad());
         entity.setFechaCompra(dto.getFechaCompra());
+        entity.setPrecio(dto.getPrecio());
 
         return entity;
     }

@@ -33,6 +33,10 @@ public class TarjetaRegaloCompra {
     @Column(name = "MONTO_UTILIZADO", precision = 10, scale = 2)
     private BigDecimal montoUtilizado;
 
+    /** Precio de la tarjeta regalo en el momento de la compra (snapshot, no cambia si luego se edita el precio de la plantilla). */
+    @Column(name = "PRECIO", precision = 12, scale = 2)
+    private BigDecimal precio;
+
     @Column(nullable = false)
     private Boolean estado;
     
@@ -139,6 +143,14 @@ public class TarjetaRegaloCompra {
 
     public void setMontoUtilizado(BigDecimal montoUtilizado) {
         this.montoUtilizado = montoUtilizado;
+    }
+
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
     }
     
     public Compra getCompra() { return compra; }

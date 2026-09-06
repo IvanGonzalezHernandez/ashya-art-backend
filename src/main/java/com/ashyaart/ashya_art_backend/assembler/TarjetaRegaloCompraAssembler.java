@@ -22,7 +22,7 @@ public class TarjetaRegaloCompraAssembler {
         dto.setIdCompra(entity.getCompra() != null ? entity.getCompra().getId() : null);
         
         dto.setEmail(entity.getCliente() != null ? entity.getCliente().getEmail() : null);
-        dto.setPrecio(entity.getTarjetaRegalo() != null ? entity.getTarjetaRegalo().getPrecio() : null);
+        dto.setPrecio(entity.getPrecio());
 
         return dto;
     }
@@ -37,6 +37,7 @@ public class TarjetaRegaloCompraAssembler {
         entity.setFechaCaducidad(dto.getFechaCaducidad());
         entity.setFechaBaja(dto.getFechaBaja());
         entity.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
+        entity.setPrecio(dto.getPrecio());
 
         return entity;
     }

@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class ProductoCompraDto {
@@ -11,6 +12,7 @@ public class ProductoCompraDto {
     private String nombreProducto;
     private Integer cantidad;
     private LocalDateTime fechaCompra;
+    private BigDecimal precio;
 
     public ProductoCompraDto() {}
 
@@ -79,5 +81,13 @@ public class ProductoCompraDto {
 
     public void setFechaCompra(LocalDateTime fechaCompra) {
         this.fechaCompra = fechaCompra;
+    }
+
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
     }
 }

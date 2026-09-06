@@ -59,6 +59,7 @@ public class CursoCompraService {
         reserva.setCursoFecha(fecha);
         reserva.setPlazasReservadas(dto.getPlazasReservadas());
         reserva.setFechaReserva(dto.getFechaReserva());
+        reserva.setPrecio(fecha.getCurso().getPrecio());
 
         CursoCompra guardado = cursoCompraDao.save(reserva);
         CursoCompraDto dtoGuardado = CursoCompraAssembler.toDto(guardado);

@@ -60,6 +60,7 @@ public class ProductoCompraService {
         compra.setProducto(producto);
         compra.setCantidad(dto.getCantidad());
         compra.setFechaCompra(dto.getFechaCompra());
+        compra.setPrecio(producto.getPrecio());
 
         ProductoCompra guardado = productoCompraDao.save(compra);
         ProductoCompraDto dtoGuardado = ProductoCompraAssembler.toDto(guardado);

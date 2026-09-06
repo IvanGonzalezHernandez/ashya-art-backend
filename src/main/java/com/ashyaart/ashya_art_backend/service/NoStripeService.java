@@ -320,6 +320,7 @@ public class NoStripeService {
         compra.setCliente(cliente);
         compra.setPlazasReservadas(item.getCantidad());
         compra.setFechaReserva(LocalDateTime.now());
+        compra.setPrecio(cursoFecha.getCurso().getPrecio());
         cursoCompraDao.save(compra);
 
         // Actualizar plazas disponibles
@@ -352,6 +353,7 @@ public class NoStripeService {
         compra.setCliente(cliente);
         compra.setProducto(producto);
         compra.setCantidad(item.getCantidad());
+        compra.setPrecio(producto.getPrecio());
         productoCompraDao.save(compra);
 
         // Actualizar stock
@@ -389,6 +391,7 @@ public class NoStripeService {
             nueva.setEstado(true);
             nueva.setFechaCompra(LocalDate.now());
             nueva.setFechaCaducidad(LocalDate.now().plusMonths(6));
+            nueva.setPrecio(plantilla.getPrecio());
             tarjetaRegaloCompraDao.save(nueva);
 
             // Evento

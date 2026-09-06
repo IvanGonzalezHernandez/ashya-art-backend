@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +22,10 @@ public class ProductoCompra {
 
     @Column(name = "FECHA_COMPRA", nullable = false)
     private LocalDateTime fechaCompra;
+
+    /** Precio unitario del producto en el momento de la compra (snapshot, no cambia si luego se edita el precio del producto). */
+    @Column(name = "PRECIO", precision = 12, scale = 2)
+    private BigDecimal precio;
     
     @ManyToOne(optional = false)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
@@ -86,4 +91,7 @@ public class ProductoCompra {
     
     public Compra getCompra() { return compra; }
     public void setCompra(Compra compra) { this.compra = compra; }
+
+    public BigDecimal getPrecio() { return precio; }
+    public void setPrecio(BigDecimal precio) { this.precio = precio; }
 }

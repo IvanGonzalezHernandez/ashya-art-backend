@@ -301,6 +301,7 @@ public class StripeService {
         compra.setCliente(cliente);
         compra.setPlazasReservadas(item.getCantidad());
         compra.setFechaReserva(LocalDateTime.now());
+        compra.setPrecio(cursoFecha.getCurso().getPrecio());
         cursoCompraDao.save(compra);
 
         cursoFecha.setPlazasDisponibles(cursoFecha.getPlazasDisponibles() - item.getCantidad());
@@ -330,6 +331,7 @@ public class StripeService {
         compra.setCliente(cliente);
         compra.setProducto(producto);
         compra.setCantidad(item.getCantidad());
+        compra.setPrecio(producto.getPrecio());
         productoCompraDao.save(compra);
 
         producto.setStock(producto.getStock() - item.getCantidad());
@@ -364,6 +366,7 @@ public class StripeService {
             tarjetaCompra.setEstado(true);
             tarjetaCompra.setFechaCompra(LocalDate.now());
             tarjetaCompra.setFechaCaducidad(LocalDate.now().plusMonths(6));
+            tarjetaCompra.setPrecio(plantilla.getPrecio());
             tarjetaRegaloCompraDao.save(tarjetaCompra);
 
             eventPublisher.publishEvent(

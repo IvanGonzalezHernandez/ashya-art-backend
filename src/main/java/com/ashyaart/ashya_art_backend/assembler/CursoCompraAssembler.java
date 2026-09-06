@@ -20,6 +20,7 @@ public class CursoCompraAssembler {
         dto.setNombreCurso(entity.getCursoFecha().getCurso().getNombre());
         dto.setFechaCurso(entity.getCursoFecha().getFecha().toString());
         dto.setPagado(entity.getCompra() != null ? entity.getCompra().getPagado() : false);
+        dto.setPrecio(entity.getPrecio());
         return dto;
     }
 
@@ -29,6 +30,7 @@ public class CursoCompraAssembler {
         entity.setFechaReserva(dto.getFechaReserva());
         entity.setCursoFecha(cursoFecha);
         entity.setCliente(cliente);
+        entity.setPrecio(dto.getPrecio());
         return entity;
     }
 }
