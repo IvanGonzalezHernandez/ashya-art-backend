@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Archivos subidos por usuarios (imagenes de productos/cursos/tarjetas) ###
+/uploads/

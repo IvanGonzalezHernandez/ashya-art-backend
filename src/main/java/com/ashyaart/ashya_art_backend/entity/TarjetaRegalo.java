@@ -18,9 +18,8 @@ public class TarjetaRegalo {
     @Column(nullable = false)
     private BigDecimal precio;
 
-    @Lob
-    @Column(name = "img", columnDefinition = "LONGBLOB")
-    private byte[] img;
+    @Column(name = "img_url", length = 255)
+    private String imgUrl;
 
     @Column(name = "FECHA_ALTA")
     private LocalDate fechaAlta;
@@ -35,10 +34,10 @@ public class TarjetaRegalo {
 
     public TarjetaRegalo() {}
 
-    public TarjetaRegalo(String nombre, BigDecimal precio, byte[] img, LocalDate fechaAlta, LocalDate fechaBaja, boolean estado, List<TarjetaRegaloCompra> compras) {
+    public TarjetaRegalo(String nombre, BigDecimal precio, String imgUrl, LocalDate fechaAlta, LocalDate fechaBaja, boolean estado, List<TarjetaRegaloCompra> compras) {
         this.nombre = nombre;
         this.precio = precio;
-        this.img = img;
+        this.imgUrl = imgUrl;
         this.fechaAlta = fechaAlta;
         this.fechaBaja = fechaBaja;
         this.estado = estado;
@@ -69,8 +68,8 @@ public class TarjetaRegalo {
         this.precio = precio;
     }
 
-    public byte[] getImg() { return img; }
-    public void setImg(byte[] img) { this.img = img; }
+    public String getImgUrl() { return imgUrl; }
+    public void setImgUrl(String imgUrl) { this.imgUrl = imgUrl; }
 
     public LocalDate getFechaAlta() {
         return fechaAlta;

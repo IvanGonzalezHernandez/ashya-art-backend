@@ -18,12 +18,12 @@ public class CursoDto {
     private String localizacion;
     private BigDecimal precio;
 
-    // Imágenes en bytes (persistidas)
-    private byte[] img1;
-    private byte[] img2;
-    private byte[] img3;
-    private byte[] img4;
-    private byte[] img5;
+    // URLs de las imágenes (archivos en disco, servidos vía /uploads/**)
+    private String img1Url;
+    private String img2Url;
+    private String img3Url;
+    private String img4Url;
+    private String img5Url;
 
     // Flags para borrar imágenes concretas en actualización
     private Boolean deleteImg1;
@@ -94,20 +94,20 @@ public class CursoDto {
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
 
-    public byte[] getImg1() { return img1; }
-    public void setImg1(byte[] img1) { this.img1 = img1; }
+    public String getImg1Url() { return img1Url; }
+    public void setImg1Url(String img1Url) { this.img1Url = img1Url; }
 
-    public byte[] getImg2() { return img2; }
-    public void setImg2(byte[] img2) { this.img2 = img2; }
+    public String getImg2Url() { return img2Url; }
+    public void setImg2Url(String img2Url) { this.img2Url = img2Url; }
 
-    public byte[] getImg3() { return img3; }
-    public void setImg3(byte[] img3) { this.img3 = img3; }
+    public String getImg3Url() { return img3Url; }
+    public void setImg3Url(String img3Url) { this.img3Url = img3Url; }
 
-    public byte[] getImg4() { return img4; }
-    public void setImg4(byte[] img4) { this.img4 = img4; }
+    public String getImg4Url() { return img4Url; }
+    public void setImg4Url(String img4Url) { this.img4Url = img4Url; }
 
-    public byte[] getImg5() { return img5; }
-    public void setImg5(byte[] img5) { this.img5 = img5; }
+    public String getImg5Url() { return img5Url; }
+    public void setImg5Url(String img5Url) { this.img5Url = img5Url; }
 
     public Boolean getDeleteImg1() { return deleteImg1; }
     public void setDeleteImg1(Boolean deleteImg1) { this.deleteImg1 = deleteImg1; }

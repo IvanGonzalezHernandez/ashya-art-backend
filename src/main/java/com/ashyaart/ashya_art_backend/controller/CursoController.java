@@ -72,13 +72,7 @@ public class CursoController {
             @RequestPart(value = "img5", required = false) MultipartFile img5
     ) {
         try {
-            if (img1 != null) cursoDto.setImg1(img1.getBytes());
-            if (img2 != null) cursoDto.setImg2(img2.getBytes());
-            if (img3 != null) cursoDto.setImg3(img3.getBytes());
-            if (img4 != null) cursoDto.setImg4(img4.getBytes());
-            if (img5 != null) cursoDto.setImg5(img5.getBytes());
-
-            CursoDto nuevo = cursoService.crearCurso(cursoDto);
+            CursoDto nuevo = cursoService.crearCurso(cursoDto, img1, img2, img3, img4, img5);
             return ResponseEntity.ok(nuevo);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -103,13 +97,6 @@ public class CursoController {
     ) throws IOException {
         cursoDto.setId(id);
 
-        // pasar los bytes al DTO sólo si hay reemplazo
-        if (img1 != null) cursoDto.setImg1(img1.getBytes());
-        if (img2 != null) cursoDto.setImg2(img2.getBytes());
-        if (img3 != null) cursoDto.setImg3(img3.getBytes());
-        if (img4 != null) cursoDto.setImg4(img4.getBytes());
-        if (img5 != null) cursoDto.setImg5(img5.getBytes());
-
         // flags de borrado
         cursoDto.setDeleteImg1(deleteImg1);
         cursoDto.setDeleteImg2(deleteImg2);
@@ -117,38 +104,9 @@ public class CursoController {
         cursoDto.setDeleteImg4(deleteImg4);
         cursoDto.setDeleteImg5(deleteImg5);
 
-        CursoDto actualizado = cursoService.actualizarCurso(cursoDto);
+        CursoDto actualizado = cursoService.actualizarCurso(cursoDto, img1, img2, img3, img4, img5);
         return ResponseEntity.ok(actualizado);
     }
-
-    
-    @GetMapping("/{id}/imagen/{slot}")
-    public ResponseEntity<byte[]> obtenerImagen(
-            @PathVariable Long id,
-            @PathVariable int slot
-    ) {
-        CursoDto curso = cursoService.obtenerCursoPorId(id);
-        if (curso == null) return ResponseEntity.notFound().build();
-
-        byte[] data = switch (slot) {
-            case 1 -> curso.getImg1();
-            case 2 -> curso.getImg2();
-            case 3 -> curso.getImg3();
-            case 4 -> curso.getImg4();
-            case 5 -> curso.getImg5();
-            default -> null;
-        };
-
-        if (data == null || data.length == 0) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity
-                .ok()
-                .contentType(MediaType.parseMediaType("image/webp"))
-                .body(data);
-    }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCurso(@PathVariable Long id) {

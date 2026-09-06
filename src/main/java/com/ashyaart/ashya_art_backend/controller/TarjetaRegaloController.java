@@ -62,10 +62,7 @@ public class TarjetaRegaloController {
             @RequestPart(value = "img", required = false) MultipartFile img) {
         logger.info("crearTarjetaRegalo - POST (multipart)");
         try {
-            if (img != null && !img.isEmpty()) {
-                tarjetaDto.setImg(img.getBytes());
-            }
-            TarjetaRegaloDto nueva = tarjetaRegaloService.crearTarjetaRegalo(tarjetaDto);
+            TarjetaRegaloDto nueva = tarjetaRegaloService.crearTarjetaRegalo(tarjetaDto, img);
             return ResponseEntity.ok(nueva);
         } catch (IOException e) {
             logger.error("crearTarjetaRegalo - Error leyendo imagen", e);
@@ -84,29 +81,13 @@ public class TarjetaRegaloController {
         logger.info("actualizarTarjetaRegalo - PUT (multipart) ID: {}", id);
         try {
             tarjetaDto.setId(id);
-            byte[] nuevaImagen = null;
-            if (img != null && !img.isEmpty()) {
-                nuevaImagen = img.getBytes();
-            }
             boolean mustDelete = deleteImg != null && "true".equalsIgnoreCase(deleteImg);
-            TarjetaRegaloDto actualizada = tarjetaRegaloService.actualizarTarjetaRegalo(tarjetaDto, nuevaImagen, mustDelete);
+            TarjetaRegaloDto actualizada = tarjetaRegaloService.actualizarTarjetaRegalo(tarjetaDto, img, mustDelete);
             return ResponseEntity.ok(actualizada);
         } catch (IOException e) {
             logger.error("actualizarTarjetaRegalo - Error leyendo imagen", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    }
-
-    // SERVIR IMAGEN
-    @GetMapping("/{id}/imagen")
-    public ResponseEntity<byte[]> obtenerImagen(@PathVariable Long id) {
-        TarjetaRegaloDto tarjeta = tarjetaRegaloService.obtenerTarjetaPorId(id);
-        if (tarjeta == null || tarjeta.getImg() == null || tarjeta.getImg().length == 0) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // ajusta si guardas webp/png
-                .body(tarjeta.getImg());
     }
 
     // ELIMINAR (borrado lógico)

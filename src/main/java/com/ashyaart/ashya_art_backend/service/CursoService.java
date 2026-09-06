@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ashyaart.ashya_art_backend.assembler.CursoAssembler;
 import com.ashyaart.ashya_art_backend.entity.Curso;
@@ -24,11 +26,16 @@ public class CursoService {
 
     private static final Logger logger = LoggerFactory.getLogger(CursoService.class);
 
+    private static final String SUBFOLDER = "cursos";
+
     @Autowired
     private CursoDao cursoDao;
-    
+
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public List<CursoDto> findByFilter(CursoFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de cursos con filtro: {}", filter);
@@ -60,10 +67,18 @@ public class CursoService {
 
 
     @Transactional
-    public CursoDto crearCurso(CursoDto cursoDto) {
+    public CursoDto crearCurso(CursoDto cursoDto, MultipartFile img1, MultipartFile img2, MultipartFile img3,
+            MultipartFile img4, MultipartFile img5) throws IOException {
         logger.info("crearCurso - Creando nuevo curso: {}", cursoDto);
         Curso curso = CursoAssembler.toEntity(cursoDto);
         curso.setId(null);
+
+        curso.setImg1Url(storeIfPresent(img1));
+        curso.setImg2Url(storeIfPresent(img2));
+        curso.setImg3Url(storeIfPresent(img3));
+        curso.setImg4Url(storeIfPresent(img4));
+        curso.setImg5Url(storeIfPresent(img5));
+
         Curso cursoGuardado = cursoDao.save(curso);
         CursoDto dtoGuardado = CursoAssembler.toDto(cursoGuardado);
         logger.info("crearCurso - Curso creado con ID: {}", dtoGuardado.getId());
@@ -71,7 +86,8 @@ public class CursoService {
     }
 
     @Transactional
-    public CursoDto actualizarCurso(CursoDto cursoDto) {
+    public CursoDto actualizarCurso(CursoDto cursoDto, MultipartFile img1, MultipartFile img2, MultipartFile img3,
+            MultipartFile img4, MultipartFile img5) throws IOException {
         Curso curso = cursoDao.findById(cursoDto.getId())
             .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado con ID: " + cursoDto.getId()));
 
@@ -89,23 +105,35 @@ public class CursoService {
         curso.setPlazasMaximas(cursoDto.getPlazasMaximas());
         curso.setOrden(cursoDto.getOrden());
         curso.setEstado(cursoDto.getEstado());
-        
-        // Borrados explícitos
-        if (Boolean.TRUE.equals(cursoDto.getDeleteImg1())) curso.setImg1(null);
-        if (Boolean.TRUE.equals(cursoDto.getDeleteImg2())) curso.setImg2(null);
-        if (Boolean.TRUE.equals(cursoDto.getDeleteImg3())) curso.setImg3(null);
-        if (Boolean.TRUE.equals(cursoDto.getDeleteImg4())) curso.setImg4(null);
-        if (Boolean.TRUE.equals(cursoDto.getDeleteImg5())) curso.setImg5(null);
 
-        // Reemplazos (si llegaron bytes nuevos tienen prioridad sobre el flag)
-        if (cursoDto.getImg1() != null) curso.setImg1(cursoDto.getImg1());
-        if (cursoDto.getImg2() != null) curso.setImg2(cursoDto.getImg2());
-        if (cursoDto.getImg3() != null) curso.setImg3(cursoDto.getImg3());
-        if (cursoDto.getImg4() != null) curso.setImg4(cursoDto.getImg4());
-        if (cursoDto.getImg5() != null) curso.setImg5(cursoDto.getImg5());
+        // Imágenes: borrar -> elimina archivo y deja null; reemplazar -> borra la anterior y guarda la nueva; nada -> conserva
+        curso.setImg1Url(mergeImagen(curso.getImg1Url(), img1, Boolean.TRUE.equals(cursoDto.getDeleteImg1())));
+        curso.setImg2Url(mergeImagen(curso.getImg2Url(), img2, Boolean.TRUE.equals(cursoDto.getDeleteImg2())));
+        curso.setImg3Url(mergeImagen(curso.getImg3Url(), img3, Boolean.TRUE.equals(cursoDto.getDeleteImg3())));
+        curso.setImg4Url(mergeImagen(curso.getImg4Url(), img4, Boolean.TRUE.equals(cursoDto.getDeleteImg4())));
+        curso.setImg5Url(mergeImagen(curso.getImg5Url(), img5, Boolean.TRUE.equals(cursoDto.getDeleteImg5())));
 
         Curso guardado = cursoDao.save(curso);
         return CursoAssembler.toDto(guardado);
+    }
+
+    private String storeIfPresent(MultipartFile file) throws IOException {
+        if (file != null && !file.isEmpty()) {
+            return fileStorageService.store(file, SUBFOLDER);
+        }
+        return null;
+    }
+
+    private String mergeImagen(String urlActual, MultipartFile nuevaImagen, boolean eliminar) throws IOException {
+        if (nuevaImagen != null && !nuevaImagen.isEmpty()) {
+            fileStorageService.delete(urlActual);
+            return fileStorageService.store(nuevaImagen, SUBFOLDER);
+        }
+        if (eliminar) {
+            fileStorageService.delete(urlActual);
+            return null;
+        }
+        return urlActual;
     }
 
 

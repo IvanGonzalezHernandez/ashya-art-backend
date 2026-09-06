@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,11 +27,16 @@ public class TarjetaRegaloService {
 
     private static final Logger logger = LoggerFactory.getLogger(TarjetaRegaloService.class);
 
+    private static final String SUBFOLDER = "tarjetas";
+
     @Autowired
     private TarjetaRegaloDao tarjetaRegaloDao;
 
     @Autowired
     private TarjetaRegaloCompraDao tarjetaRegaloCompraDao;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public List<TarjetaRegaloDto> findByFilter(TarjetaRegaloFilter filter) {
         List<TarjetaRegalo> tarjetas = tarjetaRegaloDao.findByFiltros(filter.getNombre());
@@ -47,21 +54,24 @@ public class TarjetaRegaloService {
     }
 
     @Transactional
-    public TarjetaRegaloDto crearTarjetaRegalo(TarjetaRegaloDto tarjetaDto) {
+    public TarjetaRegaloDto crearTarjetaRegalo(TarjetaRegaloDto tarjetaDto, MultipartFile img) throws IOException {
         TarjetaRegalo tarjeta = TarjetaRegaloAssembler.toEntity(tarjetaDto);
         tarjeta.setId(null);
+        if (img != null && !img.isEmpty()) {
+            tarjeta.setImgUrl(fileStorageService.store(img, SUBFOLDER));
+        }
         TarjetaRegalo guardada = tarjetaRegaloDao.save(tarjeta);
         return TarjetaRegaloAssembler.toDto(guardada);
     }
 
     /**
      * Actualiza tarjeta regalo con control de imagen:
-     * - Si mustDelete = true -> elimina imagen (setImg(null))
-     * - Si nuevaImagen != null -> reemplaza imagen
-     * - Si neither -> mantiene imagen actual
+     * - Si mustDelete = true -> borra el archivo y deja la URL en null
+     * - Si nuevaImagen != null -> borra el archivo anterior (si había) y guarda el nuevo
+     * - Si ninguno -> mantiene la imagen actual
      */
     @Transactional
-    public TarjetaRegaloDto actualizarTarjetaRegalo(TarjetaRegaloDto dto, byte[] nuevaImagen, boolean mustDelete) {
+    public TarjetaRegaloDto actualizarTarjetaRegalo(TarjetaRegaloDto dto, MultipartFile nuevaImagen, boolean mustDelete) throws IOException {
         TarjetaRegalo tarjeta = tarjetaRegaloDao.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Tarjeta regalo no encontrada con ID: " + dto.getId()));
 
@@ -73,10 +83,12 @@ public class TarjetaRegaloService {
         tarjeta.setFechaBaja(dto.getFechaBaja());
 
         // Imagen
-        if (mustDelete) {
-            tarjeta.setImg(null);
-        } else if (nuevaImagen != null) {
-            tarjeta.setImg(nuevaImagen);
+        if (nuevaImagen != null && !nuevaImagen.isEmpty()) {
+            fileStorageService.delete(tarjeta.getImgUrl());
+            tarjeta.setImgUrl(fileStorageService.store(nuevaImagen, SUBFOLDER));
+        } else if (mustDelete) {
+            fileStorageService.delete(tarjeta.getImgUrl());
+            tarjeta.setImgUrl(null);
         } // else -> mantener la actual
 
         TarjetaRegalo actualizada = tarjetaRegaloDao.save(tarjeta);

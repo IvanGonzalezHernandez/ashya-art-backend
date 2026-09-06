@@ -8,7 +8,7 @@ public class TarjetaRegaloDto {
     private Long id;
     private String nombre;
     private BigDecimal precio;
-    private byte[] img;
+    private String imgUrl;
     private LocalDate fechaAlta;
     private LocalDate fechaBaja;
     private Boolean estado;
@@ -41,12 +41,12 @@ public class TarjetaRegaloDto {
         this.precio = precio;
     }
 
-    public byte[] getImg() {
-        return img;
+    public String getImgUrl() {
+        return imgUrl;
     }
 
-    public void setImg(byte[] img) {
-        this.img = img;
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
     }
 
     public LocalDate getFechaAlta() {

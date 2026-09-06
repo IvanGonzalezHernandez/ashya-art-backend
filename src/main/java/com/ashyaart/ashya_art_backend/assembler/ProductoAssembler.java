@@ -20,11 +20,11 @@ public class ProductoAssembler {
         dto.setMedidas(producto.getMedidas());
         dto.setMaterial(producto.getMaterial());
 
-        dto.setImg1(producto.getImg1());
-        dto.setImg2(producto.getImg2());
-        dto.setImg3(producto.getImg3());
-        dto.setImg4(producto.getImg4());
-        dto.setImg5(producto.getImg5());
+        dto.setImg1Url(producto.getImg1Url());
+        dto.setImg2Url(producto.getImg2Url());
+        dto.setImg3Url(producto.getImg3Url());
+        dto.setImg4Url(producto.getImg4Url());
+        dto.setImg5Url(producto.getImg5Url());
 
         return dto;
     }
@@ -44,11 +44,11 @@ public class ProductoAssembler {
         producto.setMedidas(dto.getMedidas());
         producto.setMaterial(dto.getMaterial());
 
-        producto.setImg1(dto.getImg1());
-        producto.setImg2(dto.getImg2());
-        producto.setImg3(dto.getImg3());
-        producto.setImg4(dto.getImg4());
-        producto.setImg5(dto.getImg5());
+        producto.setImg1Url(dto.getImg1Url());
+        producto.setImg2Url(dto.getImg2Url());
+        producto.setImg3Url(dto.getImg3Url());
+        producto.setImg4Url(dto.getImg4Url());
+        producto.setImg5Url(dto.getImg5Url());
 
         return producto;
     }

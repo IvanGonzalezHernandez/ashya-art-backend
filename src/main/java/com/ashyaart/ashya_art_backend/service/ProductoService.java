@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ashyaart.ashya_art_backend.assembler.ProductoAssembler;
 import com.ashyaart.ashya_art_backend.entity.Producto;
@@ -23,8 +25,13 @@ public class ProductoService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductoService.class);
 
+    private static final String SUBFOLDER = "productos";
+
     @Autowired
     private ProductoDao productoDao;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public List<ProductoDto> findByFilter(ProductoFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de productos");
@@ -52,10 +59,18 @@ public class ProductoService {
 
 
     @Transactional
-    public ProductoDto crearProducto(ProductoDto productoDto) {
+    public ProductoDto crearProducto(ProductoDto productoDto, MultipartFile img1, MultipartFile img2,
+            MultipartFile img3, MultipartFile img4, MultipartFile img5) throws IOException {
         logger.info("crearProducto - Creando nuevo producto: {}", productoDto);
         Producto producto = ProductoAssembler.toEntity(productoDto);
         producto.setId(null);
+
+        producto.setImg1Url(storeIfPresent(img1));
+        producto.setImg2Url(storeIfPresent(img2));
+        producto.setImg3Url(storeIfPresent(img3));
+        producto.setImg4Url(storeIfPresent(img4));
+        producto.setImg5Url(storeIfPresent(img5));
+
         Producto productoGuardado = productoDao.save(producto);
         ProductoDto dtoGuardado = ProductoAssembler.toDto(productoGuardado);
         logger.info("crearProducto - Producto creado con ID: {}", dtoGuardado.getId());
@@ -63,7 +78,8 @@ public class ProductoService {
     }
 
     @Transactional
-    public ProductoDto actualizarProducto(ProductoDto productoDto) {
+    public ProductoDto actualizarProducto(ProductoDto productoDto, MultipartFile img1, MultipartFile img2,
+            MultipartFile img3, MultipartFile img4, MultipartFile img5) throws IOException {
         logger.info("actualizarProducto - Actualizando producto con ID: {}", productoDto.getId());
 
         Producto producto = productoDao.findById(productoDto.getId())
@@ -81,23 +97,34 @@ public class ProductoService {
         producto.setMedidas(productoDto.getMedidas());
         producto.setMaterial(productoDto.getMaterial());
 
-        // --- Imágenes: borrar -> null; reemplazar -> bytes; conservar -> valor actual ---
-        // Borrados explícitos (como en CursoService)
-        if (Boolean.TRUE.equals(productoDto.getDeleteImg1())) producto.setImg1(null);
-        if (Boolean.TRUE.equals(productoDto.getDeleteImg2())) producto.setImg2(null);
-        if (Boolean.TRUE.equals(productoDto.getDeleteImg3())) producto.setImg3(null);
-        if (Boolean.TRUE.equals(productoDto.getDeleteImg4())) producto.setImg4(null);
-        if (Boolean.TRUE.equals(productoDto.getDeleteImg5())) producto.setImg5(null);
-
-        // Reemplazos (si llegaron bytes nuevos tienen prioridad)
-        if (productoDto.getImg1() != null) producto.setImg1(productoDto.getImg1());
-        if (productoDto.getImg2() != null) producto.setImg2(productoDto.getImg2());
-        if (productoDto.getImg3() != null) producto.setImg3(productoDto.getImg3());
-        if (productoDto.getImg4() != null) producto.setImg4(productoDto.getImg4());
-        if (productoDto.getImg5() != null) producto.setImg5(productoDto.getImg5());
+        // --- Imágenes: borrar -> elimina archivo y deja null; reemplazar -> borra la anterior y guarda la nueva; nada -> conserva ---
+        producto.setImg1Url(mergeImagen(producto.getImg1Url(), img1, Boolean.TRUE.equals(productoDto.getDeleteImg1())));
+        producto.setImg2Url(mergeImagen(producto.getImg2Url(), img2, Boolean.TRUE.equals(productoDto.getDeleteImg2())));
+        producto.setImg3Url(mergeImagen(producto.getImg3Url(), img3, Boolean.TRUE.equals(productoDto.getDeleteImg3())));
+        producto.setImg4Url(mergeImagen(producto.getImg4Url(), img4, Boolean.TRUE.equals(productoDto.getDeleteImg4())));
+        producto.setImg5Url(mergeImagen(producto.getImg5Url(), img5, Boolean.TRUE.equals(productoDto.getDeleteImg5())));
 
         Producto guardado = productoDao.save(producto);
         return ProductoAssembler.toDto(guardado);
+    }
+
+    private String storeIfPresent(MultipartFile file) throws IOException {
+        if (file != null && !file.isEmpty()) {
+            return fileStorageService.store(file, SUBFOLDER);
+        }
+        return null;
+    }
+
+    private String mergeImagen(String urlActual, MultipartFile nuevaImagen, boolean eliminar) throws IOException {
+        if (nuevaImagen != null && !nuevaImagen.isEmpty()) {
+            fileStorageService.delete(urlActual);
+            return fileStorageService.store(nuevaImagen, SUBFOLDER);
+        }
+        if (eliminar) {
+            fileStorageService.delete(urlActual);
+            return null;
+        }
+        return urlActual;
     }
 
     @Transactional
