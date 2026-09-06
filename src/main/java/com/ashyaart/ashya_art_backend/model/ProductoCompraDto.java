@@ -8,6 +8,7 @@ public class ProductoCompraDto {
     private Long id;
     private Long idCliente;
     private String nombreCliente;
+    private String emailCliente;
     private Long idProducto;
     private String nombreProducto;
     private Integer cantidad;
@@ -50,6 +51,14 @@ public class ProductoCompraDto {
 
     public void setNombreCliente(String nombreCliente) {
         this.nombreCliente = nombreCliente;
+    }
+
+    public String getEmailCliente() {
+        return emailCliente;
+    }
+
+    public void setEmailCliente(String emailCliente) {
+        this.emailCliente = emailCliente;
     }
 
     public Long getIdProducto() {

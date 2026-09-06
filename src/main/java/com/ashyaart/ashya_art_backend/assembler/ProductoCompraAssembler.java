@@ -16,6 +16,7 @@ public class ProductoCompraAssembler {
         if (entity.getCliente() != null) {
             dto.setIdCliente(entity.getCliente().getId());
             dto.setNombreCliente(entity.getCliente().getNombre());
+            dto.setEmailCliente(entity.getCliente().getEmail());
         }
 
         if (entity.getProducto() != null) {
