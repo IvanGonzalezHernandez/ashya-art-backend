@@ -65,4 +65,11 @@ public class CompraEventos {
             Compra compra
     ) {}
 
+    public record SeguimientoProductoActualizadoEvent(
+            String email,
+            String nombreCliente,
+            String nombreProducto,
+            String numeroSeguimiento
+    ) {}
+
 }

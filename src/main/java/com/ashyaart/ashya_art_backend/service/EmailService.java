@@ -436,6 +436,37 @@ public class EmailService {
     sendHtml(emailCliente, asunto, cuerpoHtml);
   }
 
+  public void enviarNumeroSeguimientoProducto(String emailCliente,
+                                              String nombreCliente,
+                                              String nombreProducto,
+                                              String numeroSeguimiento) {
+    String asunto = "📦 Your order is on its way - " + nombreProducto;
+
+    String cuerpoHtml =
+        "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
+            "<p>Great news! Your order from <b>Ashya Art</b> has been shipped.</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li><b>🛍️ Product:</b> " + nombreProducto + "</li>" +
+            "<li><b>📦 Tracking number:</b> " + numeroSeguimiento + "</li>" +
+            "</ul>" +
+            "<p>You can use this tracking number with your local postal carrier to follow your delivery.</p>" +
+            "<p>If you have any questions about your purchase, you can contact me through any of the following options:</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
+            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+            "</ul>" +
+            "<p>Best regards,<br><b>Ashya</b></p>" +
+            "</div>" +
+            "</body></html>";
+
+    sendHtml(emailCliente, asunto, cuerpoHtml);
+  }
+
   public void enviarConfirmacionTarjetaRegaloIndividual(
 		    String destinatario,
 		    String nombreCliente,

@@ -11,6 +11,7 @@ import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSucce
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.SeguimientoProductoActualizadoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
 import com.ashyaart.ashya_art_backend.service.EmailService;
 
@@ -94,5 +95,15 @@ public class EmailCompraListener {
             return;
         }
         emailService.enviarNotificacionAdminCompraNoStripe(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onSeguimientoProductoActualizado(SeguimientoProductoActualizadoEvent event) {
+        emailService.enviarNumeroSeguimientoProducto(
+            event.email(),
+            event.nombreCliente(),
+            event.nombreProducto(),
+            event.numeroSeguimiento()
+        );
     }
 }

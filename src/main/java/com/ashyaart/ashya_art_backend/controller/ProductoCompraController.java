@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.ashyaart.ashya_art_backend.filter.ProductoCompraFilter;
 import com.ashyaart.ashya_art_backend.model.ProductoCompraDto;
+import com.ashyaart.ashya_art_backend.model.ProductoCompraSeguimientoDto;
 import com.ashyaart.ashya_art_backend.service.ProductoCompraService;
 
 import org.slf4j.Logger;
@@ -44,6 +45,16 @@ public class ProductoCompraController {
         ProductoCompraDto compraActualizada = productoCompraService.actualizarProductoCompra(productoCompraDto);
         logger.info("actualizarProductoCompra - Compra actualizada con ID: {}", compraActualizada.getId());
         return ResponseEntity.ok(compraActualizada);
+    }
+
+    @PutMapping("/{id}/seguimiento")
+    public ResponseEntity<ProductoCompraDto> actualizarSeguimiento(
+            @PathVariable Long id,
+            @RequestBody ProductoCompraSeguimientoDto dto) {
+        logger.info("actualizarSeguimiento - Solicitud PUT para fijar numero de seguimiento de compra ID: {}", id);
+        ProductoCompraDto actualizada = productoCompraService.actualizarSeguimiento(id, dto.getNumeroSeguimiento());
+        logger.info("actualizarSeguimiento - Compra ID {} actualizada y email enviado", id);
+        return ResponseEntity.ok(actualizada);
     }
 
     @DeleteMapping("/{id}")

@@ -13,6 +13,7 @@ public class ProductoCompraDto {
     private Integer cantidad;
     private LocalDateTime fechaCompra;
     private BigDecimal precio;
+    private String numeroSeguimiento;
 
     public ProductoCompraDto() {}
 
@@ -89,5 +90,13 @@ public class ProductoCompraDto {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public String getNumeroSeguimiento() {
+        return numeroSeguimiento;
+    }
+
+    public void setNumeroSeguimiento(String numeroSeguimiento) {
+        this.numeroSeguimiento = numeroSeguimiento;
     }
 }

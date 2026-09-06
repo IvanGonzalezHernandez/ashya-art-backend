@@ -26,6 +26,7 @@ public class ProductoCompraAssembler {
         dto.setCantidad(entity.getCantidad());
         dto.setFechaCompra(entity.getFechaCompra());
         dto.setPrecio(entity.getPrecio());
+        dto.setNumeroSeguimiento(entity.getNumeroSeguimiento());
 
         return dto;
     }

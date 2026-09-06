@@ -26,7 +26,11 @@ public class ProductoCompra {
     /** Precio unitario del producto en el momento de la compra (snapshot, no cambia si luego se edita el precio del producto). */
     @Column(name = "PRECIO", precision = 12, scale = 2)
     private BigDecimal precio;
-    
+
+    @Column(name = "NUMERO_SEGUIMIENTO", length = 100)
+    private String numeroSeguimiento;
+
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
     private Cliente cliente;
@@ -94,4 +98,7 @@ public class ProductoCompra {
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
+
+    public String getNumeroSeguimiento() { return numeroSeguimiento; }
+    public void setNumeroSeguimiento(String numeroSeguimiento) { this.numeroSeguimiento = numeroSeguimiento; }
 }

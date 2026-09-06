@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import com.ashyaart.ashya_art_backend.assembler.ProductoCompraAssembler;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.Producto;
 import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.SeguimientoProductoActualizadoEvent;
 import com.ashyaart.ashya_art_backend.filter.ProductoCompraFilter;
 import com.ashyaart.ashya_art_backend.model.ProductoCompraDto;
 import com.ashyaart.ashya_art_backend.repository.ClienteDao;
@@ -34,6 +36,9 @@ public class ProductoCompraService {
 
     @Autowired
     private ProductoDao productoDao;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public List<ProductoCompraDto> findByFilter(ProductoCompraFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de compras de productos");
@@ -88,6 +93,33 @@ public class ProductoCompraService {
         ProductoCompraDto dtoActualizada = ProductoCompraAssembler.toDto(actualizada);
         logger.info("actualizarProductoCompra - Compra actualizada con ID: {}", dtoActualizada.getId());
         return dtoActualizada;
+    }
+
+    @Transactional
+    public ProductoCompraDto actualizarSeguimiento(Long id, String numeroSeguimiento) {
+        logger.info("actualizarSeguimiento - Actualizando numero de seguimiento de compra ID: {}", id);
+        ProductoCompra compra = productoCompraDao.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Compra no encontrada con ID: " + id));
+
+        compra.setNumeroSeguimiento(numeroSeguimiento);
+        ProductoCompra actualizada = productoCompraDao.save(compra);
+
+        Cliente cliente = actualizada.getCliente();
+        if (cliente != null && cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            eventPublisher.publishEvent(
+                new SeguimientoProductoActualizadoEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    actualizada.getProducto() != null ? actualizada.getProducto().getNombre() : "",
+                    numeroSeguimiento
+                )
+            );
+        } else {
+            logger.warn("actualizarSeguimiento - Compra ID {} sin email de cliente, no se envia email", id);
+        }
+
+        logger.info("actualizarSeguimiento - Numero de seguimiento actualizado para compra ID: {}", id);
+        return ProductoCompraAssembler.toDto(actualizada);
     }
 
     @Transactional
