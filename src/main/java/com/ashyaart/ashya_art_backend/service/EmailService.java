@@ -48,6 +48,16 @@ import com.itextpdf.text.pdf.PdfWriter;
 public class EmailService {
 
   private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+
+  private static final String LOGO_URL = "https://ashya-art.com/assets/logo/logo.png";
+
+  /** Cabecera con el logo, para anteponer al contenido de los emails dirigidos a clientes. */
+  private static String logoHeader() {
+    return "<div style='text-align:center; margin-bottom:20px;'>" +
+             "<img src='" + LOGO_URL + "' alt='Ashya Art' width='70' height='70' style='border-radius:50%;' />" +
+           "</div>";
+  }
+
   //Rate limit sencillo para Resend (máx. ~1 email cada 700 ms)
   private final Object rateLimitLock = new Object();
   private long lastEmailTimestamp = 0L;
@@ -208,6 +218,7 @@ public class EmailService {
           "<html>" +
             "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
               "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+                logoHeader() +
                 "<h2 style='color:#333; margin-top:0;'>Welcome to Ashya Art!</h2>" +
                 "<p>Thank you for subscribing to our <b>newsletter</b>.</p>" +
                 "<p>You'll now receive updates about our upcoming workshops, new ceramic collections, and exclusive offers.</p>" +
@@ -248,6 +259,7 @@ public class EmailService {
 		      "<html>" +
 		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            logoHeader() +
 		            "<h2 style='color:#333; margin-top:0;'>🎨 Course Request Confirmation</h2>" +
 		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
 		            "<p>We have received your request for the course: <b>" + tipoClase + "</b>.</p>" +
@@ -339,6 +351,7 @@ public class EmailService {
 	      "<html>" +
 	        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 	          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+	            logoHeader() +
 	            "<h2 style='color:#333; margin-top:0;'>" + titulo + "</h2>" +
 	            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
 	             parrafoIntro +
@@ -377,6 +390,7 @@ public class EmailService {
         "<html>" +
             "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
             "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            logoHeader() +
             "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
             "<p>Thank you for purchasing the <b>" + nombreCurso + "</b> from Ashya Art.</p>" +
             "<p>The course will start at <b>" + horaCurso + "</b>.<br>" +
@@ -415,6 +429,7 @@ public class EmailService {
         "<html>" +
             "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
             "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            logoHeader() +
             "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
             "<p>Thank you for purchasing ceramic art from <b>Ashya Art</b>.</p>" +
             "<ul style='line-height:1.7; padding-left:20px;'>" +
@@ -446,6 +461,7 @@ public class EmailService {
         "<html>" +
             "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
             "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            logoHeader() +
             "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
             "<p>Great news! Your order from <b>Ashya Art</b> has been shipped.</p>" +
             "<ul style='line-height:1.7; padding-left:20px;'>" +
@@ -486,6 +502,7 @@ public class EmailService {
 		        "<html>" +
 		            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 		            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            logoHeader() +
 
 		            "<h2 style='color:#333; margin-top:0;'>🎁 Your Ashya Art Gift Card</h2>" +
 		            "<p>Hello <b>" + nombreCliente + "</b>!</p>" +
@@ -547,6 +564,7 @@ public class EmailService {
 		      "<html>" +
 		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            logoHeader() +
 		            "<h2 style='color:#333; margin-top:0;'>🔥 Firing Service Request Received</h2>" +
 		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
 		            "<p>We have received your request for the firing service: <b>" + mapTipoServicio(tipoServicio) + "</b>.</p>" +
@@ -628,6 +646,7 @@ public class EmailService {
 		      "<html>" +
 		        "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
 		          "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+		            logoHeader() +
 		            "<h2 style='margin-top:0;'>🎨 Open Studio Request Received</h2>" +
 		            "<p>Hello <b>" + nombreCliente + "</b>,</p>" +
 		            "<p>Thank you for your interest in joining the <b>Open Studio</b>.</p>" +
