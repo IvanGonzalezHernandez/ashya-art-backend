@@ -56,4 +56,32 @@ public class CarritoPricingService {
                 .map(i -> precioUnitarioReal(i).multiply(BigDecimal.valueOf(i.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    /** El carrito necesita un metodo de entrega en cuanto contiene algun PRODUCTO. */
+    public boolean requiereEnvio(List<ItemCarritoDto> items) {
+        return items.stream().anyMatch(i -> "PRODUCTO".equalsIgnoreCase(i.getTipo()));
+    }
+
+    /**
+     * Coste de envio segun el metodo elegido, calculado siempre en servidor (nunca a partir
+     * de un importe que declare el cliente). Solo aplica cuando el carrito contiene algun
+     * PRODUCTO; en otro caso el metodo es irrelevante y el coste es cero. Por ahora solo se
+     * hacen envios a Alemania y al resto de la UE (mas recogida gratuita en el taller).
+     */
+    public BigDecimal costeEnvio(List<ItemCarritoDto> items, String metodoEnvio) {
+        if (!requiereEnvio(items)) {
+            return BigDecimal.ZERO;
+        }
+
+        if (metodoEnvio == null) {
+            throw new IllegalArgumentException("Debe indicarse un metodo de entrega para los productos del carrito.");
+        }
+
+        return switch (metodoEnvio.toUpperCase()) {
+            case "PICKUP" -> BigDecimal.ZERO;
+            case "GERMANY" -> BigDecimal.valueOf(10);
+            case "EU" -> BigDecimal.valueOf(20);
+            default -> throw new IllegalArgumentException("Metodo de entrega no soportado: " + metodoEnvio);
+        };
+    }
 }

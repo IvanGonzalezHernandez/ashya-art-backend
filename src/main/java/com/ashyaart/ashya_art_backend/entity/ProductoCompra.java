@@ -30,6 +30,10 @@ public class ProductoCompra {
     @Column(name = "NUMERO_SEGUIMIENTO", length = 100)
     private String numeroSeguimiento;
 
+    /** Metodo de entrega elegido para esta compra: PICKUP, GERMANY o EU. */
+    @Column(name = "METODO_ENVIO", length = 20)
+    private String metodoEnvio;
+
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
@@ -101,4 +105,7 @@ public class ProductoCompra {
 
     public String getNumeroSeguimiento() { return numeroSeguimiento; }
     public void setNumeroSeguimiento(String numeroSeguimiento) { this.numeroSeguimiento = numeroSeguimiento; }
+
+    public String getMetodoEnvio() { return metodoEnvio; }
+    public void setMetodoEnvio(String metodoEnvio) { this.metodoEnvio = metodoEnvio; }
 }

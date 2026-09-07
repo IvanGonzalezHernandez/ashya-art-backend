@@ -119,6 +119,10 @@ public class StripeService {
             }
         }
 
+        // Coste de envio: siempre calculado en servidor a partir del metodo elegido, nunca de un
+        // importe declarado por el cliente. Lanza si el carrito tiene productos y el metodo falta o no es valido.
+        BigDecimal costeEnvio = carritoPricingService.costeEnvio(carritoDto.getItems(), carritoDto.getMetodoEnvio());
+
         // 2) Descuento por tarjeta regalo
         BigDecimal descuento = BigDecimal.ZERO;
         Coupon coupon = null;
@@ -174,6 +178,29 @@ public class StripeService {
             lineItems.add(lineItem);
         }
 
+        // 3b) Línea de envío (si aplica)
+        if (costeEnvio.compareTo(BigDecimal.ZERO) > 0) {
+            long envioAmountCentimos = costeEnvio
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .longValueExact();
+
+            lineItems.add(
+                SessionCreateParams.LineItem.builder()
+                    .setQuantity(1L)
+                    .setPriceData(
+                        SessionCreateParams.LineItem.PriceData.builder()
+                            .setCurrency("eur")
+                            .setUnitAmount(envioAmountCentimos)
+                            .setProductData(
+                                SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                    .setName("Shipping")
+                                    .build()
+                            ).build()
+                    ).build()
+            );
+        }
+
         // 4) Construir params (sin JSON en metadata)
         SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
         	    .addAllLineItem(lineItems)
@@ -226,7 +253,8 @@ public class StripeService {
 
             Cliente cliente = clienteService.crearActualizarCliente(clienteDto);
 
-            BigDecimal total = carritoPricingService.calcularTotalReal(carritoDto.getItems());
+            BigDecimal total = carritoPricingService.calcularTotalReal(carritoDto.getItems())
+                    .add(carritoPricingService.costeEnvio(carritoDto.getItems(), carritoDto.getMetodoEnvio()));
 
             Compra compraTotal = new Compra();
             compraTotal.setCarritoId(carritoDto.getId());
@@ -255,7 +283,7 @@ public class StripeService {
                             procesarCurso(cliente, compraTotal, item);
                             break;
                         case "PRODUCTO":
-                            procesarProducto(cliente, compraTotal, item);
+                            procesarProducto(cliente, compraTotal, item, carritoDto.getMetodoEnvio());
                             break;
                         case "TARJETA":
                             procesarTarjetaRegalo(cliente, compraTotal, item);
@@ -330,7 +358,7 @@ public class StripeService {
          );
     }
 
-    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item, String metodoEnvio) {
         Long idProducto = Long.valueOf(item.getId());
         Producto producto = productoDao.findById(idProducto)
             .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + idProducto));
@@ -342,6 +370,7 @@ public class StripeService {
         compra.setProducto(producto);
         compra.setCantidad(item.getCantidad());
         compra.setPrecio(producto.getPrecio());
+        compra.setMetodoEnvio(metodoEnvio);
         productoCompraDao.save(compra);
 
         int filasStock = productoDao.descontarStock(producto.getId(), item.getCantidad());

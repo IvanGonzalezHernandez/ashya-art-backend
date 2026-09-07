@@ -15,6 +15,7 @@ public class ProductoCompraDto {
     private LocalDateTime fechaCompra;
     private BigDecimal precio;
     private String numeroSeguimiento;
+    private String metodoEnvio;
 
     public ProductoCompraDto() {}
 
@@ -107,5 +108,13 @@ public class ProductoCompraDto {
 
     public void setNumeroSeguimiento(String numeroSeguimiento) {
         this.numeroSeguimiento = numeroSeguimiento;
+    }
+
+    public String getMetodoEnvio() {
+        return metodoEnvio;
+    }
+
+    public void setMetodoEnvio(String metodoEnvio) {
+        this.metodoEnvio = metodoEnvio;
     }
 }

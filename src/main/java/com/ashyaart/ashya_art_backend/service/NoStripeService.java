@@ -81,7 +81,8 @@ public class NoStripeService {
             }
 
             // 2) Calcular total del carrito (siempre con el precio real de BBDD, nunca el declarado por el cliente)
-            BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems());
+            BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems())
+                    .add(carritoPricingService.costeEnvio(carrito.getItems(), carrito.getMetodoEnvio()));
 
             boolean compraGratuita = total.compareTo(BigDecimal.ZERO) == 0;
 
@@ -147,7 +148,7 @@ public class NoStripeService {
                             procesarCurso(cliente, compra, item);
                             break;
                         case "PRODUCTO":
-                            procesarProducto(cliente, compra, item);
+                            procesarProducto(cliente, compra, item, carrito.getMetodoEnvio());
                             break;
                         case "TARJETA":
                             procesarTarjetaRegalo(cliente, compra, item);
@@ -344,7 +345,7 @@ public class NoStripeService {
         );
     }
 
-    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item) {
+    private void procesarProducto(Cliente cliente, Compra compraTotal, ItemCarritoDto item, String metodoEnvio) {
 
         Long idProducto = Long.valueOf(item.getId());
         Producto producto = productoDao.findById(idProducto)
@@ -357,6 +358,7 @@ public class NoStripeService {
         compra.setProducto(producto);
         compra.setCantidad(item.getCantidad());
         compra.setPrecio(producto.getPrecio());
+        compra.setMetodoEnvio(metodoEnvio);
         productoCompraDao.save(compra);
 
         // Actualizar stock (decremento atómico, evita sobrevender)
