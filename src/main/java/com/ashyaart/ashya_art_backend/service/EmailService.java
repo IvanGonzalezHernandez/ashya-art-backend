@@ -422,8 +422,13 @@ public class EmailService {
                                                    String nombreCliente,
                                                    String nombreProducto,
                                                    int cantidad,
-                                                   BigDecimal precioUnitario) {
+                                                   BigDecimal precioUnitario,
+                                                   String metodoEnvio) {
     String asunto = "🏺 Confirmation for your product purchase - " + nombreProducto;
+
+    String parrafoEntrega = "PICKUP".equalsIgnoreCase(metodoEnvio)
+        ? "<p>You chose to pick up your order at our studio: <b>Pinneberger Ch. 74, 22523 Hamburg</b>. We'll let you know as soon as it's ready for pickup!</p>"
+        : "<p>Soon I will provide your tracking number so you can follow your delivery.</p>";
 
     String cuerpoHtml =
         "<html>" +
@@ -436,7 +441,7 @@ public class EmailService {
             "<li><b>🛍️ Product:</b> " + nombreProducto + "</li>" +
             "<li><b>👥 Quantity:</b> " + cantidad + "</li>" +
             "</ul>" +
-            "<p>Soon I will provide your delivery number so you can track your purchase.</p>" +
+            parrafoEntrega +
             "<p>If you have any questions about your purchase, you can contact me through any of the following options:</p>" +
             "<ul style='line-height:1.7; padding-left:20px;'>" +
             "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +

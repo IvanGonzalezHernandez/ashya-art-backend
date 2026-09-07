@@ -385,7 +385,8 @@ public class StripeService {
                     cliente.getNombre(),
                     producto.getNombre(),
                     item.getCantidad(),
-                    producto.getPrecio()
+                    producto.getPrecio(),
+                    metodoEnvio
                 )
          );
     }

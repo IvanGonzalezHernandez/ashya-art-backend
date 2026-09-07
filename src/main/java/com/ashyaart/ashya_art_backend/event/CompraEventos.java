@@ -30,7 +30,8 @@ public class CompraEventos {
             String nombreCliente,
             String nombreProducto,
             int cantidad,
-            BigDecimal precioUnitario
+            BigDecimal precioUnitario,
+            String metodoEnvio
     ) {}
 
     public record TarjetaRegaloCompradaEvent(

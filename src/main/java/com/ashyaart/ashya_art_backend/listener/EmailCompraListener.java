@@ -55,7 +55,8 @@ public class EmailCompraListener {
             event.nombreCliente(),
             event.nombreProducto(),
             event.cantidad(),
-            event.precioUnitario()
+            event.precioUnitario(),
+            event.metodoEnvio()
         );
     }
 
