@@ -34,8 +34,10 @@ public class ClienteDto {
     private LocalDate fechaBaja;
     
     private List<CursoClienteDto> cursos;
-    
+
     private List<TarjetaClienteDto> tarjetas;
+
+    private List<ProductoClienteDto> productos;
 
     public ClienteDto() {}
 
@@ -168,6 +170,14 @@ public class ClienteDto {
 	public void setTarjetas(List<TarjetaClienteDto> tarjetas) {
 		this.tarjetas = tarjetas;
 	}
-	
-	
+
+	public List<ProductoClienteDto> getProductos() {
+		return productos;
+	}
+
+	public void setProductos(List<ProductoClienteDto> productos) {
+		this.productos = productos;
+	}
+
+
 }

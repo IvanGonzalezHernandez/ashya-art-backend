@@ -5,9 +5,11 @@ import java.util.List;
 
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
+import com.ashyaart.ashya_art_backend.entity.ProductoCompra;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.model.ClienteDto;
 import com.ashyaart.ashya_art_backend.model.CursoClienteDto;
+import com.ashyaart.ashya_art_backend.model.ProductoClienteDto;
 import com.ashyaart.ashya_art_backend.model.TarjetaClienteDto;
 
 public class ClienteAssembler {
@@ -82,6 +84,32 @@ public class ClienteAssembler {
             }
 
             dto.setTarjetas(tarjetas);
+        }
+
+        if (cliente.getComprasProductos() != null) {
+            List<ProductoClienteDto> productos = new ArrayList<>();
+
+            for (ProductoCompra compraProducto : cliente.getComprasProductos()) {
+                ProductoClienteDto productoDto = new ProductoClienteDto();
+
+                if (compraProducto.getProducto() != null) {
+                    productoDto.setProducto(compraProducto.getProducto().getNombre());
+                }
+
+                productoDto.setCantidad(compraProducto.getCantidad());
+                productoDto.setPrecio(compraProducto.getPrecio());
+
+                if (compraProducto.getFechaCompra() != null) {
+                    productoDto.setFechaCompra(compraProducto.getFechaCompra().toString());
+                }
+
+                productoDto.setMetodoEnvio(compraProducto.getMetodoEnvio());
+                productoDto.setNumeroSeguimiento(compraProducto.getNumeroSeguimiento());
+
+                productos.add(productoDto);
+            }
+
+            dto.setProductos(productos);
         }
 
         return dto;
