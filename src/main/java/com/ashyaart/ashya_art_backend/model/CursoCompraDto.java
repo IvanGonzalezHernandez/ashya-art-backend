@@ -7,6 +7,7 @@ public class CursoCompraDto {
 
     private Long id;
     private Long idFecha;
+    private Long idCurso;
     private Long idCliente;
     private Integer plazasReservadas;
     private LocalDateTime fechaReserva;
@@ -43,6 +44,14 @@ public class CursoCompraDto {
 
     public void setIdFecha(Long idFecha) {
         this.idFecha = idFecha;
+    }
+
+    public Long getIdCurso() {
+        return idCurso;
+    }
+
+    public void setIdCurso(Long idCurso) {
+        this.idCurso = idCurso;
     }
 
     public Long getIdCliente() {

@@ -11,6 +11,7 @@ public class CursoCompraAssembler {
         CursoCompraDto dto = new CursoCompraDto();
         dto.setId(entity.getId());
         dto.setIdFecha(entity.getCursoFecha().getId());
+        dto.setIdCurso(entity.getCursoFecha().getCurso().getId());
         dto.setIdCliente(entity.getCliente().getId());
         dto.setPlazasReservadas(entity.getPlazasReservadas());
         dto.setFechaReserva(entity.getFechaReserva());

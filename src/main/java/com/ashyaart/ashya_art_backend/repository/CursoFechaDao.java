@@ -50,4 +50,10 @@ public interface CursoFechaDao extends JpaRepository<CursoFecha, Long> {
     @Transactional
     @Query("UPDATE CursoFecha cf SET cf.plazasDisponibles = cf.plazasDisponibles - :cantidad WHERE cf.id = :id AND cf.plazasDisponibles >= :cantidad")
     int descontarPlazas(@Param("id") Long id, @Param("cantidad") Integer cantidad);
+
+    // Inverso de descontarPlazas: libera plazas al cancelar o reprogramar una reserva.
+    @Modifying
+    @Transactional
+    @Query("UPDATE CursoFecha cf SET cf.plazasDisponibles = cf.plazasDisponibles + :cantidad WHERE cf.id = :id")
+    void sumarPlazas(@Param("id") Long id, @Param("cantidad") Integer cantidad);
 }
