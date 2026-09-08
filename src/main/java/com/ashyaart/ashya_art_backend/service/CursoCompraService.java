@@ -68,61 +68,22 @@ public class CursoCompraService {
     }
 
     /**
-     * Actualizacion limitada desde el dashboard admin: plazas reservadas y/o fecha del curso
-     * (reprogramar). El metodo de pago no se toca aqui: es fijo, se paga por la web o en el
-     * atelier. Cualquier cambio de plazas u fecha ajusta cf.plazasDisponibles para que la
-     * disponibilidad publica siga siendo correcta.
+     * Cancela una reserva: borrado logico (se conserva para historial, deja de listarse) y
+     * libera las plazas reservadas en CursoFecha para que vuelvan a estar disponibles.
      */
     @Transactional
-    public CursoCompraDto actualizarProducto(CursoCompraDto dto) {
-        logger.info("actualizarProducto - Actualizando reserva con ID: {}", dto.getId());
-        CursoCompra reserva = cursoCompraDao.findById(dto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada con ID: " + dto.getId()));
-
-        Integer plazasNuevas = dto.getPlazasReservadas();
-
-        if (dto.getIdFecha() != null && !dto.getIdFecha().equals(reserva.getCursoFecha().getId())) {
-            // Reprogramar: libera las plazas de la fecha anterior y descuenta de la nueva.
-            CursoFecha fechaNueva = cursoFechaDao.findById(dto.getIdFecha())
-                    .orElseThrow(() -> new EntityNotFoundException("CursoFecha no encontrada: " + dto.getIdFecha()));
-
-            cursoFechaDao.sumarPlazas(reserva.getCursoFecha().getId(), reserva.getPlazasReservadas());
-
-            int filasPlazas = cursoFechaDao.descontarPlazas(fechaNueva.getId(), plazasNuevas);
-            if (filasPlazas == 0) {
-                throw new IllegalStateException("No hay plazas suficientes en la fecha seleccionada");
-            }
-
-            reserva.setCursoFecha(fechaNueva);
-            reserva.setPrecio(fechaNueva.getCurso().getPrecio());
-        } else {
-            int delta = plazasNuevas - reserva.getPlazasReservadas();
-            if (delta > 0) {
-                int filasPlazas = cursoFechaDao.descontarPlazas(reserva.getCursoFecha().getId(), delta);
-                if (filasPlazas == 0) {
-                    throw new IllegalStateException("No hay plazas suficientes para aumentar la reserva");
-                }
-            } else if (delta < 0) {
-                cursoFechaDao.sumarPlazas(reserva.getCursoFecha().getId(), -delta);
-            }
-        }
-
-        reserva.setPlazasReservadas(plazasNuevas);
-
-        CursoCompra actualizada = cursoCompraDao.save(reserva);
-        CursoCompraDto dtoActualizada = CursoCompraAssembler.toDto(actualizada);
-        logger.info("actualizarProducto - Reserva actualizada con ID: {}", dtoActualizada.getId());
-        return dtoActualizada;
-    }
-
-    @Transactional
     public void eliminarProducto(Long id) {
-        logger.info("eliminarProducto - Intentando eliminar reserva con ID: {}", id);
+        logger.info("eliminarProducto - Cancelando reserva con ID: {}", id);
         CursoCompra reserva = cursoCompraDao.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva con id " + id + " no encontrada"));
 
+        int filas = cursoCompraDao.borradoLogico(id);
+        if (filas == 0) {
+            logger.info("eliminarProducto - Reserva con ID {} ya estaba cancelada", id);
+            return;
+        }
+
         cursoFechaDao.sumarPlazas(reserva.getCursoFecha().getId(), reserva.getPlazasReservadas());
-        cursoCompraDao.deleteById(id);
-        logger.info("eliminarProducto - Reserva con ID {} eliminada correctamente (plazas liberadas)", id);
+        logger.info("eliminarProducto - Reserva con ID {} cancelada correctamente (plazas liberadas)", id);
     }
 }

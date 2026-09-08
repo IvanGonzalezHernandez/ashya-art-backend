@@ -38,15 +38,6 @@ public class CursoCompraController {
         return ResponseEntity.ok(nuevaReserva);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CursoCompraDto> actualizarProducto(@PathVariable Long id, @RequestBody CursoCompraDto reservaDto) {
-        logger.info("actualizarProducto - Solicitud PUT para actualizar reserva con ID {}: {}", id, reservaDto);
-        reservaDto.setId(id);
-        CursoCompraDto reservaActualizada = cursoCompraService.actualizarProducto(reservaDto);
-        logger.info("actualizarProducto - Reserva actualizada con ID: {}", reservaActualizada.getId());
-        return ResponseEntity.ok(reservaActualizada);
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
         logger.info("eliminarProducto - Solicitud DELETE para eliminar reserva con ID: {}", id);

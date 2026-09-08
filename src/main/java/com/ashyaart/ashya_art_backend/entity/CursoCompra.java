@@ -40,6 +40,10 @@ public class CursoCompra {
     @JoinColumn(name = "id_compra", nullable = false)
     private Compra compra;
 
+    /** Borrado logico: false = reserva cancelada (se conserva para historial, pero deja de listarse). */
+    @Column(name = "ESTADO", nullable = false)
+    private boolean estado = true;
+
     public CursoCompra() {}
 
     public CursoCompra(CursoFecha cursoFecha, Cliente cliente, Integer plazasReservadas, LocalDateTime fechaReserva) {
@@ -91,4 +95,7 @@ public class CursoCompra {
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
+
+    public boolean isEstado() { return estado; }
+    public void setEstado(boolean estado) { this.estado = estado; }
 }

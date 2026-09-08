@@ -16,16 +16,18 @@ public interface CursoCompraDao extends JpaRepository<CursoCompra, Long> {
 		       "JOIN FETCH cc.cliente cli " +
 		       "JOIN FETCH cc.cursoFecha cf " +
 		       "JOIN FETCH cf.curso c " +
-		       "WHERE (:cliente IS NULL OR LOWER(cli.nombre) LIKE LOWER(CONCAT('%', :cliente, '%'))) " +
+		       "WHERE cc.estado = true " +
+		       "AND (:cliente IS NULL OR LOWER(cli.nombre) LIKE LOWER(CONCAT('%', :cliente, '%'))) " +
 		       "ORDER BY cc.id DESC")
 		List<CursoCompra> findByFiltros(@Param("cliente") String cliente);
 
 
     boolean existsById(Long id);
 
+    // Borrado logico: la fila se conserva para historial, pero deja de listarse/contar.
     @Modifying
     @Transactional
-    @Query("DELETE FROM CursoCompra cc WHERE cc.id = :id")
-    int borradoLogico(@Param("id") Long id); // AÑADIR COLUMNA Y CAMBIAR A UPDATE
+    @Query("UPDATE CursoCompra cc SET cc.estado = false WHERE cc.id = :id AND cc.estado = true")
+    int borradoLogico(@Param("id") Long id);
 
 }
