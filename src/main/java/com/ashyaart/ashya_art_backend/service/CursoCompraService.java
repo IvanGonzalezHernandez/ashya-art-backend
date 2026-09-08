@@ -67,21 +67,22 @@ public class CursoCompraService {
         return dtoGuardado;
     }
 
+    /**
+     * Actualizacion limitada desde el dashboard admin: solo plazas reservadas y estado de
+     * pago (para marcar como pagado un booking "Atelier" cuando el cliente paga en persona).
+     * No se tocan cliente/curso/fecha desde aqui.
+     */
     @Transactional
     public CursoCompraDto actualizarProducto(CursoCompraDto dto) {
         logger.info("actualizarProducto - Actualizando reserva con ID: {}", dto.getId());
         CursoCompra reserva = cursoCompraDao.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada con ID: " + dto.getId()));
 
-        Cliente cliente = clienteDao.findById(dto.getIdCliente())
-                .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado con ID: " + dto.getIdCliente()));
-        CursoFecha fecha = cursoFechaDao.findById(dto.getIdFecha())
-                .orElseThrow(() -> new EntityNotFoundException("CursoFecha no encontrado con ID: " + dto.getIdFecha()));
-
-        reserva.setCliente(cliente);
-        reserva.setCursoFecha(fecha);
         reserva.setPlazasReservadas(dto.getPlazasReservadas());
-        reserva.setFechaReserva(dto.getFechaReserva());
+
+        if (reserva.getCompra() != null) {
+            reserva.getCompra().setPagado(dto.isPagado());
+        }
 
         CursoCompra actualizada = cursoCompraDao.save(reserva);
         CursoCompraDto dtoActualizada = CursoCompraAssembler.toDto(actualizada);
