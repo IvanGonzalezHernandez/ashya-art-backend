@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.ashyaart.ashya_art_backend.entity.Compra;
+import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraNoStripeAdminEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminErrorEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSuccessEvent;
@@ -985,6 +986,21 @@ public class EmailService {
 
 
   /* ===================== PDF de tarjeta regalo  ===================== */
+
+  /**
+   * Regenera el PDF de una tarjeta regalo ya comprada, a partir de los datos guardados en BD
+   * (no se conserva copia del PDF original enviado por email; se reconstruye igual que en el
+   * momento de la compra). Usado por el dashboard admin para poder visualizarlo.
+   */
+  public byte[] generarPdfTarjetaRegalo(TarjetaRegaloCompra tarjetaCompra) throws Exception {
+    return generarTarjetaRegaloPdf(
+        tarjetaCompra.getCodigo(),
+        tarjetaCompra.getDestinatario(),
+        tarjetaCompra.getPrecio(),
+        tarjetaCompra.getCliente().getNombre(),
+        tarjetaCompra.getFechaCaducidad()
+    );
+  }
 
   /* ===== Wrapper con firma original (compat) ===== */
   private byte[] generarTarjetaRegaloPdf(
