@@ -190,7 +190,54 @@ public class EmailService {
     // mismo contenido que antes (texto plano)
     sendText(para, asunto, cuerpo);
   }
-  
+
+  /**
+   * Lista los emails enviados a través de Resend (para mostrarlos en el dashboard admin).
+   * Proxy directo al endpoint GET /emails de Resend.
+   */
+  public Map<String, Object> listarEmailsEnviados(int limit, String after, String before) {
+    StringBuilder url = new StringBuilder("https://api.resend.com/emails?limit=" + limit);
+    if (after != null && !after.isBlank()) {
+      url.append("&after=").append(URLEncoder.encode(after, StandardCharsets.UTF_8));
+    } else if (before != null && !before.isBlank()) {
+      url.append("&before=").append(URLEncoder.encode(before, StandardCharsets.UTF_8));
+    }
+
+    return getResend(url.toString());
+  }
+
+  /**
+   * Obtiene el detalle (incluyendo el HTML) de un email ya enviado, para poder
+   * previsualizarlo en el dashboard admin. Proxy directo al endpoint GET /emails/{id} de Resend.
+   */
+  public Map<String, Object> obtenerEmail(String id) {
+    String url = "https://api.resend.com/emails/" + URLEncoder.encode(id, StandardCharsets.UTF_8);
+    return getResend(url);
+  }
+
+  private Map<String, Object> getResend(String url) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(apiKey);
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    RequestEntity<Void> req = RequestEntity
+        .get(url)
+        .headers(headers)
+        .build();
+
+    try {
+      ResponseEntity<Map<String, Object>> resp =
+          http.exchange(req, new ParameterizedTypeReference<>() {});
+      return resp.getBody();
+    } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+      log.error("[Resend] Error en la petición a {} -> status={} body={}", url, ex.getStatusCode(), ex.getResponseBodyAsString());
+      throw new org.springframework.web.server.ResponseStatusException(
+          org.springframework.http.HttpStatus.BAD_GATEWAY,
+          "Resend rejected the request: " + ex.getResponseBodyAsString()
+      );
+    }
+  }
+
 
 
   private String resolveBaseUrl() {
