@@ -700,7 +700,6 @@ public class EmailService {
 	  private String mapStudioOption(String option) {
 		  return switch (option) {
 		    case "1_time_entry" -> "1 time entry — 30€ / person";
-		    case "10_times_entry" -> "10 times entry — 200€ / person";
 		    case "unlimited_entry" -> "Unlimited entry — 50€ / month";
 		    default -> option;
 		  };
