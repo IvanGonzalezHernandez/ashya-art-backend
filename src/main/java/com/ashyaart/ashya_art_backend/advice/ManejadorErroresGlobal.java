@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Captura todas las excepciones no controladas de la aplicación
@@ -30,6 +31,22 @@ public class ManejadorErroresGlobal {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .body(ex.getReason()); // "This email is already subscribed."
+    }
+
+    /**
+     * Peticiones a recursos estáticos inexistentes (/robots.txt, /favicon.ico, etc.,
+     * pedidos automáticamente por navegadores y crawlers). No es un error real de la
+     * aplicación, así que se registra en debug y se devuelve un 404 limpio en vez de
+     * caer en el manejador genérico como un 500.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<String> manejarRecursoNoEncontrado(HttpServletRequest request, NoResourceFoundException ex) {
+
+        logger.debug("Recurso no encontrado: {}", request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Recurso no encontrado.");
     }
 
     /**
