@@ -24,6 +24,10 @@ public interface CursoCompraDao extends JpaRepository<CursoCompra, Long> {
 
     boolean existsById(Long id);
 
+    long countByCompra_PagadoTrue();
+
+    long countByCompra_PagadoFalse();
+
     // Borrado logico: la fila se conserva para historial, pero deja de listarse/contar.
     @Modifying
     @Transactional

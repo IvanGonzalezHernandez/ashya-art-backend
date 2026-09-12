@@ -51,7 +51,11 @@ public class DashboardController {
         long totalTarjetasRegalo = tarjetaRegaloCompraDao.count();
         long totalReservas = cursoCompraDao.count();
         long totalNewsletter = newsletterDao.count();
-        
+        long reservasOnline = cursoCompraDao.countByCompra_PagadoTrue();
+        long reservasAtelier = cursoCompraDao.countByCompra_PagadoFalse();
+        long tarjetasRegaloCanjeadas = tarjetaRegaloCompraDao.countByCanjeadaTrue();
+        long tarjetasRegaloNoCanjeadas = tarjetaRegaloCompraDao.countByCanjeadaFalse();
+
         //BigDecimal totalIngresos = compraDao.sumTotalPagado();
         Map<String, Object> estadisticasStripe = stripeService.calcularEstadisticasStripe();
 
@@ -60,6 +64,10 @@ public class DashboardController {
         result.put("totalTarjetasRegalo", totalTarjetasRegalo);
         result.put("totalReservas", totalReservas);
         result.put("totalNewsletter", totalNewsletter);
+        result.put("reservasOnline", reservasOnline);
+        result.put("reservasAtelier", reservasAtelier);
+        result.put("tarjetasRegaloCanjeadas", tarjetasRegaloCanjeadas);
+        result.put("tarjetasRegaloNoCanjeadas", tarjetasRegaloNoCanjeadas);
         result.putAll(estadisticasStripe);
 
         return result;

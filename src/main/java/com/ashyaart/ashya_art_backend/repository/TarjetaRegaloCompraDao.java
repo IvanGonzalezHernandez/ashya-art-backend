@@ -18,6 +18,10 @@ public interface TarjetaRegaloCompraDao extends JpaRepository<TarjetaRegaloCompr
     @Query("SELECT t FROM TarjetaRegaloCompra t WHERE t.codigo = :codigo")
     Optional<TarjetaRegaloCompra> findByCodigo(@Param("codigo") String codigo);
 
+    long countByCanjeadaTrue();
+
+    long countByCanjeadaFalse();
+
     // Canjear por CÓDIGO (usado durante el checkout, con el importe realmente consumido del carrito).
     // El "AND canjeada = false" hace el canjeo atómico: si dos checkouts concurrentes usan el
     // mismo código, solo el primero en llegar aquí consigue marcarla y afecta una fila; el
