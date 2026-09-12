@@ -425,15 +425,26 @@ public class StripeService {
         }
     }
     
-    public BigDecimal calcularIngresosTotalesStripe() throws Exception {
+    /**
+     * Recorre los PaymentIntents y las BalanceTransactions de Stripe en una única
+     * pasada cada uno (en vez de un recorrido paginado completo por cada estadística)
+     * y devuelve todas las métricas del dashboard a la vez.
+     */
+    public Map<String, Object> calcularEstadisticasStripe() throws Exception {
 
-        long totalCentimos = 0L;
+        long totalIngresosCentimos = 0L;
+        long totalPagos = 0;
+        long pagosTarjeta = 0;
+        long pagosPaypal = 0;
+        long pagosOtros = 0;
+        Map<String, Long> ingresosPorMesCentimos = new LinkedHashMap<>();
+
         String ultimoIdPago = null;
         boolean hayMasPagos = true;
 
         while (hayMasPagos) {
             PaymentIntentListParams.Builder parametrosConsulta =
-                    		PaymentIntentListParams.builder()
+                    PaymentIntentListParams.builder()
                             .setLimit(100L);
 
             if (ultimoIdPago != null) {
@@ -445,7 +456,29 @@ public class StripeService {
             for (PaymentIntent pago : coleccionPagos.getData()) {
 
                 if ("succeeded".equals(pago.getStatus())) {
-                    totalCentimos += pago.getAmount();
+
+                    totalIngresosCentimos += pago.getAmount();
+                    totalPagos++;
+
+                    String metodo = pago.getPaymentMethodTypes().get(0);
+
+                    if ("card".equals(metodo)) {
+                        pagosTarjeta++;
+                    } else if ("paypal".equals(metodo)) {
+                        pagosPaypal++;
+                    } else {
+                        pagosOtros++;
+                    }
+
+                    LocalDate fechaPago = Instant.ofEpochSecond(pago.getCreated())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    String mes = fechaPago.getYear() + "-" +
+                            String.format("%02d", fechaPago.getMonthValue());
+
+                    long totalMes = ingresosPorMesCentimos.getOrDefault(mes, 0L);
+                    ingresosPorMesCentimos.put(mes, totalMes + pago.getAmount());
                 }
 
                 ultimoIdPago = pago.getId();
@@ -454,12 +487,7 @@ public class StripeService {
             hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
         }
 
-        return BigDecimal.valueOf(totalCentimos).divide(BigDecimal.valueOf(100));
-    }
-    
-    public BigDecimal calcularComisionesStripe() throws Exception {
-
-        long totalCentimos = 0L;
+        long totalComisionesCentimos = 0L;
         String ultimaTransaccionId = null;
         boolean hayMasTransacciones = true;
 
@@ -479,7 +507,7 @@ public class StripeService {
 
             for (BalanceTransaction transaccion : coleccionTransacciones.getData()) {
 
-                totalCentimos += transaccion.getFee();
+                totalComisionesCentimos += transaccion.getFee();
 
                 ultimaTransaccionId = transaccion.getId();
             }
@@ -487,104 +515,9 @@ public class StripeService {
             hayMasTransacciones = Boolean.TRUE.equals(coleccionTransacciones.getHasMore());
         }
 
-        return BigDecimal.valueOf(totalCentimos)
+        BigDecimal totalIngresos = BigDecimal.valueOf(totalIngresosCentimos).divide(BigDecimal.valueOf(100));
+        BigDecimal totalComisiones = BigDecimal.valueOf(totalComisionesCentimos)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-    }
-    
-    public Map<String, Long> calcularPagosPorMetodo() throws Exception {
-
-        long totalPagos = 0;
-        long pagosTarjeta = 0;
-        long pagosPaypal = 0;
-        long pagosOtros = 0;
-
-        String ultimoIdPago = null;
-        boolean hayMasPagos = true;
-
-        while (hayMasPagos) {
-
-            PaymentIntentListParams.Builder parametrosConsulta =
-                    PaymentIntentListParams.builder()
-                            .setLimit(100L);
-
-            if (ultimoIdPago != null) {
-                parametrosConsulta.setStartingAfter(ultimoIdPago);
-            }
-
-            PaymentIntentCollection coleccionPagos =
-                    PaymentIntent.list(parametrosConsulta.build());
-
-            for (PaymentIntent pago : coleccionPagos.getData()) {
-
-                if ("succeeded".equals(pago.getStatus())) {
-
-                    totalPagos++;
-
-                    String metodo = pago.getPaymentMethodTypes().get(0);
-
-                    if ("card".equals(metodo)) {
-                        pagosTarjeta++;
-                    } else if ("paypal".equals(metodo)) {
-                        pagosPaypal++;
-                    } else {
-                        pagosOtros++;
-                    }
-                }
-
-                ultimoIdPago = pago.getId();
-            }
-
-            hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
-        }
-
-        Map<String, Long> resultado = new HashMap<>();
-        resultado.put("totalPagos", totalPagos);
-        resultado.put("pagosTarjeta", pagosTarjeta);
-        resultado.put("pagosPaypal", pagosPaypal);
-        resultado.put("pagosOtros", pagosOtros);
-
-        return resultado;
-    }
-    
-    public Map<String, Object> calcularIngresosPorMesStripe() throws Exception {
-
-        Map<String, Long> ingresosPorMesCentimos = new LinkedHashMap<>();
-
-        String ultimoIdPago = null;
-        boolean hayMasPagos = true;
-
-        while (hayMasPagos) {
-
-            PaymentIntentListParams.Builder parametrosConsulta =
-                    PaymentIntentListParams.builder().setLimit(100L);
-
-            if (ultimoIdPago != null) {
-                parametrosConsulta.setStartingAfter(ultimoIdPago);
-            }
-
-            PaymentIntentCollection coleccionPagos =
-                    PaymentIntent.list(parametrosConsulta.build());
-
-            for (PaymentIntent pago : coleccionPagos.getData()) {
-
-                if ("succeeded".equals(pago.getStatus())) {
-
-                    LocalDate fechaPago = Instant.ofEpochSecond(pago.getCreated())
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate();
-
-                    String mes = fechaPago.getYear() + "-" +
-                            String.format("%02d", fechaPago.getMonthValue());
-
-                    long totalMes = ingresosPorMesCentimos.getOrDefault(mes, 0L);
-                    ingresosPorMesCentimos.put(mes, totalMes + pago.getAmount());
-                }
-
-                ultimoIdPago = pago.getId();
-            }
-
-            hayMasPagos = Boolean.TRUE.equals(coleccionPagos.getHasMore());
-        }
 
         List<String> labels = new ArrayList<>();
         List<BigDecimal> datos = new ArrayList<>();
@@ -600,6 +533,13 @@ public class StripeService {
                 });
 
         Map<String, Object> resultado = new HashMap<>();
+        resultado.put("totalIngresos", totalIngresos);
+        resultado.put("totalComisiones", totalComisiones);
+        resultado.put("totalIngresosNetos", totalIngresos.subtract(totalComisiones));
+        resultado.put("totalPagos", totalPagos);
+        resultado.put("pagosTarjeta", pagosTarjeta);
+        resultado.put("pagosPaypal", pagosPaypal);
+        resultado.put("pagosOtros", pagosOtros);
         resultado.put("resumenLabels", labels);
         resultado.put("resumenDatos", datos);
 

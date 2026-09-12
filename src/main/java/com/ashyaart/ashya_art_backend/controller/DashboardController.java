@@ -1,6 +1,5 @@
 package com.ashyaart.ashya_art_backend.controller;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,28 +53,14 @@ public class DashboardController {
         long totalNewsletter = newsletterDao.count();
         
         //BigDecimal totalIngresos = compraDao.sumTotalPagado();
-        BigDecimal totalIngresos = stripeService.calcularIngresosTotalesStripe();
-        BigDecimal totalComisiones = stripeService.calcularComisionesStripe();
-        BigDecimal totalIngresosNetos = totalIngresos.subtract(totalComisiones);
-
-        Map<String, Long> pagos = stripeService.calcularPagosPorMetodo();
-        Map<String, Object> ingresosPorMes = stripeService.calcularIngresosPorMesStripe();
+        Map<String, Object> estadisticasStripe = stripeService.calcularEstadisticasStripe();
 
         result.put("totalClientes", totalClientes);
         result.put("totalProductos", totalProductos);
         result.put("totalTarjetasRegalo", totalTarjetasRegalo);
         result.put("totalReservas", totalReservas);
         result.put("totalNewsletter", totalNewsletter);
-        result.put("totalIngresos", totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
-        result.put("totalIngresosNetos", totalIngresosNetos != null ? totalIngresosNetos : BigDecimal.ZERO);
-        result.put("totalComisiones", totalComisiones != null ? totalComisiones : BigDecimal.ZERO);
-
-        result.put("totalPagos", pagos.get("totalPagos"));
-        result.put("pagosTarjeta", pagos.get("pagosTarjeta"));
-        result.put("pagosPaypal", pagos.get("pagosPaypal"));
-        result.put("pagosOtros", pagos.get("pagosOtros"));
-
-        result.putAll(ingresosPorMes);
+        result.putAll(estadisticasStripe);
 
         return result;
     }
