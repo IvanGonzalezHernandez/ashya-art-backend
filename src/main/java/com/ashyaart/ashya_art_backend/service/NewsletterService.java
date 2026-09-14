@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -190,10 +192,27 @@ public class NewsletterService {
                         " is required on both to leave room for other emails.");
             }
 
-            destinatarios = newsletterDao.findByEstadoTrue().stream()
+            List<String> emailsActivos = newsletterDao.findByEstadoTrue().stream()
                     .map(Newsletter::getEmail)
                     .filter(email -> email != null && !email.isBlank())
                     .toList();
+
+            if (dto.getDestinatarios() != null && !dto.getDestinatarios().isEmpty()) {
+                // Solo se admiten emails que sigan activos (por si la seleccion del admin
+                // quedo desactualizada, p.ej. alguien se desuscribio mientras tanto).
+                Set<String> seleccionados = dto.getDestinatarios().stream()
+                        .map(this::normalizarEmail)
+                        .collect(Collectors.toSet());
+                destinatarios = emailsActivos.stream()
+                        .filter(seleccionados::contains)
+                        .toList();
+            } else {
+                destinatarios = emailsActivos;
+            }
+
+            if (destinatarios.isEmpty()) {
+                throw new IllegalArgumentException("No active subscribers to send to.");
+            }
         }
 
         logger.info("enviarCampana - Enviando '{}' a {} destinatario(s) (prueba={})",
