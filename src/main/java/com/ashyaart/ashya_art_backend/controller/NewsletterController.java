@@ -1,8 +1,10 @@
 package com.ashyaart.ashya_art_backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ashyaart.ashya_art_backend.filter.NewsletterFilter;
+import com.ashyaart.ashya_art_backend.model.NewsletterCampanaDto;
 import com.ashyaart.ashya_art_backend.model.NewsletterDto;
 import com.ashyaart.ashya_art_backend.service.NewsletterService;
 
@@ -79,6 +81,15 @@ public class NewsletterController {
         return ResponseEntity.ok().build();
     }
     
+    @PostMapping("/send-campaign")
+    public ResponseEntity<Map<String, Object>> enviarCampana(@RequestBody NewsletterCampanaDto dto) {
+        logger.info("enviarCampana - Solicitud POST para enviar campana de newsletter. Asunto: {}",
+                dto != null ? dto.getAsunto() : null);
+        Map<String, Object> resultado = newsletterService.enviarCampana(dto);
+        logger.info("enviarCampana - Resultado: {}", resultado);
+        return ResponseEntity.ok(resultado);
+    }
+
     @GetMapping("/unsubscribe")
     public ResponseEntity<String> unsubscribe(@RequestParam("email") String email) {
         logger.info("unsubscribe - Solicitud GET para desuscribir email: {}", email);

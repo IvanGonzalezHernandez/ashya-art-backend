@@ -363,7 +363,38 @@ public class EmailService {
       sendHtml(destinatario, asunto, contenidoHtml);
   }
 
-  
+  /**
+   * Envia una campana de newsletter con contenido libre (escrito por el admin) a un
+   * destinatario, con la misma cabecera de marca que el resto de emails y el enlace de
+   * unsubscribe correspondiente a ese destinatario.
+   */
+  public void enviarCampanaNewsletter(String destinatario, String asunto, String mensajeHtml) {
+      String baseUrl = resolveBaseUrl();
+      String encodedEmail = URLEncoder.encode(destinatario, StandardCharsets.UTF_8);
+      String unsubscribeUrl = baseUrl + "/api/newsletters/unsubscribe?email=" + encodedEmail;
+
+      String contenidoHtml =
+          "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+              "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+                logoHeader() +
+                "<div style='line-height:1.6;'>" + mensajeHtml + "</div>" +
+
+                "<hr style='border:none; border-top:1px solid #eee; margin:20px 0;'/>" +
+
+                "<p style='font-size:12px; color:#777;'>If you no longer want to receive our newsletters, you can " +
+                  "<a href='" + unsubscribeUrl + "' style='color:#1a73e8;'>unsubscribe here</a>." +
+                "</p>" +
+
+                "<p style='margin-top:24px;'>Best regards,<br><b>Ashya Art Team</b></p>" +
+              "</div>" +
+            "</body>" +
+          "</html>";
+
+      sendHtml(destinatario, asunto, contenidoHtml);
+  }
+
+
   public void enviarConfirmacionSolicitudCursoCliente(
 		    String nombreCliente,
 		    String tipoClase,

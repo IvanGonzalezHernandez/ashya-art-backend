@@ -2,7 +2,9 @@ package com.ashyaart.ashya_art_backend.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -18,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.ashyaart.ashya_art_backend.assembler.NewsletterAssembler;
 import com.ashyaart.ashya_art_backend.entity.Newsletter;
 import com.ashyaart.ashya_art_backend.filter.NewsletterFilter;
+import com.ashyaart.ashya_art_backend.model.NewsletterCampanaDto;
 import com.ashyaart.ashya_art_backend.model.NewsletterDto;
 import com.ashyaart.ashya_art_backend.repository.NewsletterDao;
 
@@ -145,6 +148,86 @@ public class NewsletterService {
         } catch (Exception e) {
             logger.warn("suscribirNewsletterCheckout - No se pudo suscribir email=" + emailNormalizado + " (no se corta el pago)", e);
         }
+    }
+
+    /* ================= ENVIO DE CAMPAÑA ================= */
+
+    /**
+     * Envia un email a los suscriptores activos del newsletter (o a un unico email de
+     * prueba, si se indica testEmail). No aborta el envio si falla un destinatario
+     * concreto: sigue con el resto y devuelve cuantos se enviaron/fallaron.
+     */
+    public Map<String, Object> enviarCampana(NewsletterCampanaDto dto) {
+        if (dto == null || dto.getAsunto() == null || dto.getAsunto().isBlank()
+                || dto.getMensaje() == null || dto.getMensaje().isBlank()) {
+            throw new IllegalArgumentException("El asunto y el mensaje son obligatorios");
+        }
+
+        String asunto = dto.getAsunto().trim();
+        String mensajeHtml = formatearMensaje(dto.getMensaje());
+
+        boolean esPrueba = dto.getTestEmail() != null && !dto.getTestEmail().isBlank();
+        List<String> destinatarios;
+
+        if (esPrueba) {
+            destinatarios = List.of(normalizarEmail(dto.getTestEmail()));
+            asunto = "[TEST] " + asunto;
+        } else {
+            // Colchon minimo de cuota de Resend: si queda menos de esto (diario o mensual),
+            // no se manda la campana para no dejar sin margen los emails transaccionales
+            // (confirmaciones de compra, tarjetas regalo, etc.).
+            final int COLCHON_MINIMO = 30;
+            Map<String, Object> uso = emailService.obtenerUsoResend();
+            int dailyRemaining = ((Number) uso.get("dailyRemaining")).intValue();
+            int monthlyRemaining = ((Number) uso.get("monthlyRemaining")).intValue();
+
+            if (dailyRemaining < COLCHON_MINIMO || monthlyRemaining < COLCHON_MINIMO) {
+                logger.warn("enviarCampana - Cuota insuficiente (daily={}, monthly={}), no se envia la campana",
+                        dailyRemaining, monthlyRemaining);
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                        "Not enough Resend quota left to send a campaign (daily remaining: " + dailyRemaining +
+                        ", monthly remaining: " + monthlyRemaining + "). A minimum of " + COLCHON_MINIMO +
+                        " is required on both to leave room for other emails.");
+            }
+
+            destinatarios = newsletterDao.findByEstadoTrue().stream()
+                    .map(Newsletter::getEmail)
+                    .filter(email -> email != null && !email.isBlank())
+                    .toList();
+        }
+
+        logger.info("enviarCampana - Enviando '{}' a {} destinatario(s) (prueba={})",
+                asunto, destinatarios.size(), esPrueba);
+
+        int enviados = 0;
+        int fallidos = 0;
+        for (String destinatario : destinatarios) {
+            try {
+                emailService.enviarCampanaNewsletter(destinatario, asunto, mensajeHtml);
+                enviados++;
+            } catch (Exception e) {
+                fallidos++;
+                logger.error("enviarCampana - Error enviando a {}", destinatario, e);
+            }
+        }
+
+        logger.info("enviarCampana - Enviados {}/{} (fallidos: {})", enviados, destinatarios.size(), fallidos);
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("recipients", destinatarios.size());
+        resultado.put("sent", enviados);
+        resultado.put("failed", fallidos);
+        resultado.put("test", esPrueba);
+        return resultado;
+    }
+
+    /** Escapa HTML basico del texto escrito por el admin y convierte saltos de linea en &lt;br&gt;. */
+    private String formatearMensaje(String texto) {
+        String escapado = texto
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+        return escapado.replace("\r\n", "\n").replace("\n", "<br>");
     }
 
     /* ================= DESUSCRIPCIÓN ================= */
