@@ -31,4 +31,9 @@ public class EmailAdminController {
   public Map<String, Object> obtenerEmail(@PathVariable String id) {
     return emailService.obtenerEmail(id);
   }
+
+  @GetMapping("/usage")
+  public Map<String, Object> obtenerUso() {
+    return emailService.obtenerUsoResend();
+  }
 }

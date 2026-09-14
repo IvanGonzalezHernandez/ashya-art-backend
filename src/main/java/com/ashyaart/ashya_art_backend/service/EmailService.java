@@ -7,10 +7,13 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Currency;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -78,6 +81,12 @@ public class EmailService {
   
   @Value("${entorno.nombre:LOCAL}")
   private String entornoNombre;
+
+  @Value("${resend.daily-limit:100}")
+  private int resendLimiteDiario;
+
+  @Value("${resend.monthly-limit:3000}")
+  private int resendLimiteMensual;
 
   public EmailService(
       @Value("${resend.api.key}") String apiKey,
@@ -205,6 +214,65 @@ public class EmailService {
     }
 
     return getResend(url.toString());
+  }
+
+  /**
+   * Calcula cuantos emails se han enviado hoy y este mes (UTC, igual que Resend) y cuantos
+   * quedan segun los limites configurados, recorriendo el listado de /emails de Resend.
+   * Resend no expone un endpoint de cuota para lecturas (las cabeceras x-resend-*-quota solo
+   * vienen en la respuesta al ENVIAR un email), asi que se cuenta a partir del propio historial.
+   */
+  public Map<String, Object> obtenerUsoResend() {
+    LocalDate hoyUtc = LocalDate.now(ZoneOffset.UTC);
+    String inicioHoy = hoyUtc.toString() + " 00:00:00";
+    String inicioMes = hoyUtc.withDayOfMonth(1).toString() + " 00:00:00";
+
+    int usadosHoy = 0;
+    int usadosMes = 0;
+    String after = null;
+    boolean seguirPaginando = true;
+
+    while (seguirPaginando) {
+      Map<String, Object> pagina = listarEmailsEnviados(100, after, null);
+
+      @SuppressWarnings("unchecked")
+      List<Map<String, Object>> data = pagina != null && pagina.get("data") instanceof List
+          ? (List<Map<String, Object>>) pagina.get("data")
+          : new ArrayList<>();
+
+      if (data.isEmpty()) {
+        break;
+      }
+
+      for (Map<String, Object> email : data) {
+        String creadoEn = String.valueOf(email.get("created_at"));
+        if (creadoEn.compareTo(inicioMes) < 0) {
+          // Los resultados vienen ordenados del mas reciente al mas antiguo:
+          // en cuanto salimos del mes actual ya no hace falta seguir paginando.
+          seguirPaginando = false;
+          break;
+        }
+        usadosMes++;
+        if (creadoEn.compareTo(inicioHoy) >= 0) {
+          usadosHoy++;
+        }
+      }
+
+      boolean hasMore = Boolean.TRUE.equals(pagina.get("has_more"));
+      if (!seguirPaginando || !hasMore) {
+        break;
+      }
+      after = String.valueOf(data.get(data.size() - 1).get("id"));
+    }
+
+    Map<String, Object> resultado = new HashMap<>();
+    resultado.put("dailyLimit", resendLimiteDiario);
+    resultado.put("dailyUsed", usadosHoy);
+    resultado.put("dailyRemaining", Math.max(0, resendLimiteDiario - usadosHoy));
+    resultado.put("monthlyLimit", resendLimiteMensual);
+    resultado.put("monthlyUsed", usadosMes);
+    resultado.put("monthlyRemaining", Math.max(0, resendLimiteMensual - usadosMes));
+    return resultado;
   }
 
   /**
