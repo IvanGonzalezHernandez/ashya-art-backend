@@ -20,10 +20,7 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 	
-	/* Filtro que valida el token en cada request. */
-	// Actualmente la lógica no está funcionando. Par que funcione en el front en cada peteicion que se haga se debe enviar el toke
-	// Y después en las rutas del back con .authenticated() se valida si el token es correcto.
-	// Para ellos también habra que separar laas rutas públicas de las privadas.
+	/* Filtro que valida el token firmado en cada request; las rutas .authenticated() exigen uno válido. */
     @Autowired
     private TokenFilter tokenFilter;
 
@@ -33,9 +30,21 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/cursos/**").permitAll()
-                .requestMatchers("/api/productos/**").permitAll()
-                
+                // 🔓 PUBLICO (cursos)
+                .requestMatchers(HttpMethod.GET, "/api/cursos/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/cursos/solicitud-curso").permitAll()
+                // 🔒 PRIVADO (cursos)
+                .requestMatchers(HttpMethod.POST, "/api/cursos").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/cursos/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/cursos/**").authenticated()
+
+                // 🔓 PUBLICO (productos)
+                .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
+                // 🔒 PRIVADO (productos)
+                .requestMatchers(HttpMethod.POST, "/api/productos").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/productos/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").authenticated()
+
                 // 🔓 PUBLICO (tarjetas regalo)
                 .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tarjetas-regalo/*").permitAll()
@@ -74,7 +83,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/cursos-compra/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/cursos-compra/**").authenticated()
 
-                .requestMatchers("/api/cursos-fecha/**").permitAll()
+                // 🔓 PUBLICO (fechas de curso)
+                .requestMatchers(HttpMethod.GET, "/api/cursos-fecha/**").permitAll()
+                // 🔒 PRIVADO (fechas de curso)
+                .requestMatchers(HttpMethod.POST, "/api/cursos-fecha").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/cursos-fecha/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/cursos-fecha/**").authenticated()
+
                 .requestMatchers("/api/productos-compra/**").permitAll()
                 .requestMatchers("/api/carrito/**").permitAll()
 
