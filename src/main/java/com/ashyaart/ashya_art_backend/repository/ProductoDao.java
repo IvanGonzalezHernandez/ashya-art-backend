@@ -39,4 +39,10 @@ public interface ProductoDao extends JpaRepository<Producto, Long> {
     @Query("UPDATE Producto p SET p.stock = p.stock - :cantidad WHERE p.id = :id AND p.stock >= :cantidad")
     int descontarStock(@Param("id") Long id, @Param("cantidad") Integer cantidad);
 
+    // Repone stock (al borrar/editar una compra ya registrada, o al reducir su cantidad).
+    @Modifying
+    @Transactional
+    @Query("UPDATE Producto p SET p.stock = p.stock + :cantidad WHERE p.id = :id")
+    int sumarStock(@Param("id") Long id, @Param("cantidad") Integer cantidad);
+
 }

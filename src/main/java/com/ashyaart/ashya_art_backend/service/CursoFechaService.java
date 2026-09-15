@@ -9,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ashyaart.ashya_art_backend.assembler.CursoFechaAssembler;
 import com.ashyaart.ashya_art_backend.entity.Curso;
@@ -68,7 +70,17 @@ public class CursoFechaService {
         
         Curso curso = cursoDao.findById(cursoFechaDto.getIdCurso())
             .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado con ID: " + cursoFechaDto.getIdCurso()));
-        
+
+        Integer plazasSolicitadas = cursoFechaDto.getPlazasDisponibles();
+        if (plazasSolicitadas == null || plazasSolicitadas < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las plazas disponibles no pueden ser negativas.");
+        }
+        if (curso.getPlazasMaximas() != null && plazasSolicitadas > curso.getPlazasMaximas()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Las plazas disponibles (" + plazasSolicitadas + ") no pueden superar el aforo máximo del curso ("
+                            + curso.getPlazasMaximas() + ").");
+        }
+
         fecha.setCurso(curso);
         fecha.setFecha(cursoFechaDto.getFecha());
         fecha.setHoraInicio(cursoFechaDto.getHoraInicio());

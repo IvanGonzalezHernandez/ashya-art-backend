@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ashyaart.ashya_art_backend.assembler.ProductoCompraAssembler;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
@@ -84,6 +86,8 @@ public class ProductoCompraService {
         Producto producto = productoDao.findById(dto.getIdProducto())
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + dto.getIdProducto()));
 
+        ajustarStockPorEdicion(compra, producto, dto.getCantidad());
+
         compra.setCliente(cliente);
         compra.setProducto(producto);
         compra.setCantidad(dto.getCantidad());
@@ -93,6 +97,44 @@ public class ProductoCompraService {
         ProductoCompraDto dtoActualizada = ProductoCompraAssembler.toDto(actualizada);
         logger.info("actualizarProductoCompra - Compra actualizada con ID: {}", dtoActualizada.getId());
         return dtoActualizada;
+    }
+
+    /**
+     * Ajusta el stock del/de los producto(s) implicados para que refleje la nueva cantidad/producto
+     * de una compra ya existente: repone lo que ya no corresponde y descuenta lo que se añade,
+     * evitando que el stock quede desincronizado (o se sobrevenda) al corregir un pedido a mano.
+     */
+    private void ajustarStockPorEdicion(ProductoCompra compraActual, Producto productoNuevo, Integer cantidadNuevaDto) {
+        Producto productoAnterior = compraActual.getProducto();
+        int cantidadAnterior = compraActual.getCantidad() != null ? compraActual.getCantidad() : 0;
+        int cantidadNueva = cantidadNuevaDto != null ? cantidadNuevaDto : 0;
+
+        boolean mismoProducto = productoAnterior != null && productoAnterior.getId().equals(productoNuevo.getId());
+
+        if (mismoProducto) {
+            int delta = cantidadNueva - cantidadAnterior;
+            if (delta > 0) {
+                descontarStockOrThrow(productoNuevo, delta);
+            } else if (delta < 0) {
+                productoDao.sumarStock(productoNuevo.getId(), -delta);
+            }
+            return;
+        }
+
+        if (productoAnterior != null && cantidadAnterior > 0) {
+            productoDao.sumarStock(productoAnterior.getId(), cantidadAnterior);
+        }
+        if (cantidadNueva > 0) {
+            descontarStockOrThrow(productoNuevo, cantidadNueva);
+        }
+    }
+
+    private void descontarStockOrThrow(Producto producto, int cantidad) {
+        int filas = productoDao.descontarStock(producto.getId(), cantidad);
+        if (filas == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No hay suficiente stock de \"" + producto.getNombre() + "\" para esa cantidad.");
+        }
     }
 
     @Transactional
@@ -125,12 +167,17 @@ public class ProductoCompraService {
     @Transactional
     public void eliminarProductoCompra(Long id) {
         logger.info("eliminarProductoCompra - Intentando eliminar compra con ID: {}", id);
-        if (!productoCompraDao.existsById(id)) {
-            logger.warn("eliminarProductoCompra - Compra con ID {} no encontrada", id);
-            throw new RuntimeException("Compra con id " + id + " no encontrada");
+        ProductoCompra compra = productoCompraDao.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("eliminarProductoCompra - Compra con ID {} no encontrada", id);
+                    return new EntityNotFoundException("Compra con id " + id + " no encontrada");
+                });
+
+        if (compra.getProducto() != null && compra.getCantidad() != null && compra.getCantidad() > 0) {
+            productoDao.sumarStock(compra.getProducto().getId(), compra.getCantidad());
         }
 
         productoCompraDao.deleteById(id);
-        logger.info("eliminarProductoCompra - Compra con ID {} eliminada correctamente", id);
+        logger.info("eliminarProductoCompra - Compra con ID {} eliminada y stock repuesto correctamente", id);
     }
 }
