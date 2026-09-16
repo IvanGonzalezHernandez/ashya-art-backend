@@ -82,7 +82,7 @@ public class NewsletterService {
             existente.setFechaBaja(null);
             Newsletter reactivado = newsletterDao.save(existente);
 
-            emailService.enviarConfirmacionNewsletter(emailNormalizado);
+            enviarConfirmacionSinRomperSuscripcion(emailNormalizado);
 
             return NewsletterAssembler.toDto(reactivado);
         }
@@ -100,11 +100,24 @@ public class NewsletterService {
         Newsletter newsletterGuardado = newsletterDao.save(newsletter);
 
         // Enviar email HTML desde EmailService
-        emailService.enviarConfirmacionNewsletter(emailNormalizado);
+        enviarConfirmacionSinRomperSuscripcion(emailNormalizado);
 
         NewsletterDto dtoGuardado = NewsletterAssembler.toDto(newsletterGuardado);
         logger.info("crearNewsletter - Newsletter creado con ID: {}", dtoGuardado.getId());
         return dtoGuardado;
+    }
+
+    /**
+     * El email de confirmación es "best effort": si Resend falla (clave inválida, límite
+     * alcanzado, red, etc.) la suscripción ya guardada en BD no debe perderse ni devolver
+     * un 500 al cliente por un problema que no es suyo.
+     */
+    private void enviarConfirmacionSinRomperSuscripcion(String email) {
+        try {
+            emailService.enviarConfirmacionNewsletter(email);
+        } catch (Exception e) {
+            logger.warn("crearNewsletter - No se pudo enviar el email de confirmación a {}", email, e);
+        }
     }
     
     /** ================= SUSCRIPCIÓN DESDE CHECKOUT ================= */

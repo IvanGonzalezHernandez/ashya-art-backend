@@ -1,6 +1,9 @@
 package com.ashyaart.ashya_art_backend.advice;
 
+import java.util.stream.Collectors;
+
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -47,6 +50,26 @@ public class ManejadorErroresGlobal {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body("Recurso no encontrado.");
+    }
+
+    /**
+     * Datos que no cumplen las restricciones de la entidad (campos obligatorios vacíos,
+     * precio <= 0, etc.), detectados por Bean Validation al persistir. Antes caía en el
+     * manejador genérico como un 500; ahora se responde con un 400 y el detalle de qué
+     * campos fallaron.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> manejarViolacionRestricciones(HttpServletRequest request, ConstraintViolationException ex) {
+
+        logger.warn("Datos inválidos en la petición {}: {}", request.getRequestURI(), ex.getMessage());
+
+        String detalle = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Datos inválidos: " + detalle);
     }
 
     /**
