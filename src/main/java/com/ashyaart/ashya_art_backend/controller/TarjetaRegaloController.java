@@ -38,8 +38,7 @@ public class TarjetaRegaloController {
         return ResponseEntity.ok(tarjetasDto);
     }
     
-    @RequestMapping("/habilitadas")
-    @GetMapping
+    @GetMapping("/habilitadas")
     public ResponseEntity<List<TarjetaRegaloDto>> findTarjetasHabilitadas() {
         logger.info("findTarjetasHabilitadas - Solicitud GET para obtener tarjetas regalo");
         List<TarjetaRegaloDto> tarjetasDto = tarjetaRegaloService.findTarjetasHabilitadas();

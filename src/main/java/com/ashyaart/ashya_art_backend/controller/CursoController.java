@@ -36,8 +36,7 @@ public class CursoController {
         return ResponseEntity.ok(cursosDto);
     }
     
-    @RequestMapping("/habilitados")
-    @GetMapping
+    @GetMapping("/habilitados")
     public ResponseEntity<List<CursoDto>> findCursosHabilitados() {
         logger.info("findCursosHabilitados - Solicitud GET para obtener cursos habilitados");
 
