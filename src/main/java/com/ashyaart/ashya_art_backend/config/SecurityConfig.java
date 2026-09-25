@@ -95,6 +95,7 @@ public class SecurityConfig {
 
                 // 🔓 PUBLICO (config: el sitio necesita saber si está en mantenimiento)
                 .requestMatchers(HttpMethod.GET, "/api/config/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/config/mantenimiento/desbloquear").permitAll()
                 // 🔒 PRIVADO (config: solo el admin puede cambiarla)
                 .requestMatchers(HttpMethod.PUT, "/api/config/**").authenticated()
                 .requestMatchers("/stripe/webhook/**").permitAll()
