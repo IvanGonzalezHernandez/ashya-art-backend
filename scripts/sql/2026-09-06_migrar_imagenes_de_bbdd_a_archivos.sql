@@ -13,9 +13,10 @@
 --      despliegues, ya que si el App Service se reinicia, la carpeta "uploads" tal cual está
 --      configurada en local no persiste), y hacer UPDATE de la columna *_url correspondiente con
 --      la ruta resultante (p.ej. "/uploads/productos/<uuid>.webp"). En local esto se hizo con un
---      script de Node (mysql2) leyendo cada blob y escribiendo el archivo; para producción hay
---      que adaptarlo para escribir en el volumen persistente que se use (o subir a un storage
---      tipo S3 y ajustar el codigo para servir desde ahi en vez de disco local).
+--      script de Node (mysql2) leyendo cada blob y escribiendo el archivo. En producción lo
+--      hace el propio backend al arrancar con MIGRAR_IMAGENES=true (MigracionImagenesRunner),
+--      escribiendo en UPLOAD_DIR (el disco persistente). Es idempotente; quitar la variable
+--      cuando el log confirme que se han migrado todas.
 --   4) Una vez verificado que todas las imagenes cargan bien desde las nuevas URLs, ejecutar el
 --      PASO 2 (DROP COLUMN) de este script para eliminar las columnas BLOB, ya sin uso.
 --
