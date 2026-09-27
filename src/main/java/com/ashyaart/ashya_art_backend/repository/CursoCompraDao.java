@@ -24,6 +24,11 @@ public interface CursoCompraDao extends JpaRepository<CursoCompra, Long> {
 
     boolean existsById(Long id);
 
+    /** Reservas activas compradas entre dos fechas: [id del curso, fecha de compra] (estadísticas). */
+    @Query("SELECT c.id, co.fechaCompra FROM CursoCompra cc JOIN cc.cursoFecha cf JOIN cf.curso c JOIN cc.compra co "
+            + "WHERE cc.estado = true AND co.fechaCompra BETWEEN :desde AND :hasta")
+    List<Object[]> findCursoYFechaDeReservasEntre(@Param("desde") java.time.LocalDate desde, @Param("hasta") java.time.LocalDate hasta);
+
     long countByCompra_PagadoTrue();
 
     long countByCompra_PagadoFalse();

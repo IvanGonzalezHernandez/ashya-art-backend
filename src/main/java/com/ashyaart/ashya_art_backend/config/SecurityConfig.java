@@ -98,6 +98,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/config/mantenimiento/desbloquear").permitAll()
                 // 🔒 PRIVADO (config: solo el admin puede cambiarla)
                 .requestMatchers(HttpMethod.PUT, "/api/config/**").authenticated()
+                // 🔓 PUBLICO (estadísticas: la web registra cada página vista; el resumen va en /api/admin)
+                .requestMatchers(HttpMethod.POST, "/api/estadisticas/visita").permitAll()
                 .requestMatchers("/stripe/webhook/**").permitAll()
                 .requestMatchers("/api/firing/**").permitAll()
                 .requestMatchers("/api/studio/**").permitAll()
