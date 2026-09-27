@@ -1,5 +1,9 @@
 package com.ashyaart.ashya_art_backend.entity;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import jakarta.persistence.Convert;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -251,4 +255,17 @@ public class Curso {
 		this.orden = orden;
 	}
 	
+
+    /** Alemán y español: { "de": { "nombre": ... }, "es": { ... } }. Las columnas normales son el inglés. */
+    @Convert(converter = TraduccionesConverter.class)
+    @Column(name = "traducciones", columnDefinition = "LONGTEXT")
+    private Map<String, Map<String, String>> traducciones = new LinkedHashMap<>();
+
+    public Map<String, Map<String, String>> getTraducciones() {
+        return traducciones;
+    }
+
+    public void setTraducciones(Map<String, Map<String, String>> traducciones) {
+        this.traducciones = traducciones != null ? traducciones : new LinkedHashMap<>();
+    }
 }

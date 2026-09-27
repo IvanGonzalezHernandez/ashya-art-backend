@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.assembler;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import com.ashyaart.ashya_art_backend.model.ProductoDto;
 import com.ashyaart.ashya_art_backend.entity.Producto;
 
@@ -9,6 +11,7 @@ public class ProductoAssembler {
         ProductoDto dto = new ProductoDto();
         dto.setId(producto.getId());
         dto.setNombre(producto.getNombre());
+	    dto.setTraducciones(producto.getTraducciones());
         dto.setSubtitulo(producto.getSubtitulo());
         dto.setDescripcion(producto.getDescripcion());
         dto.setPrecio(producto.getPrecio());
@@ -33,6 +36,7 @@ public class ProductoAssembler {
         Producto producto = new Producto();
         producto.setId(dto.getId());
         producto.setNombre(dto.getNombre());
+	    producto.setTraducciones(Traducciones.limpiar(dto.getTraducciones(), Traducciones.CAMPOS_PRODUCTO));
         producto.setSubtitulo(dto.getSubtitulo());
         producto.setDescripcion(dto.getDescripcion());
         producto.setPrecio(dto.getPrecio());

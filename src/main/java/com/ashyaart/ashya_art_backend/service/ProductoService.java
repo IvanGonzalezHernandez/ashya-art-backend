@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -93,6 +95,9 @@ public class ProductoService {
 
         // --- Campos normales ---
         producto.setNombre(productoDto.getNombre());
+        if (productoDto.getTraducciones() != null) { // sin el campo, se conservan las que había
+            producto.setTraducciones(Traducciones.limpiar(productoDto.getTraducciones(), Traducciones.CAMPOS_PRODUCTO));
+        }
         producto.setSubtitulo(productoDto.getSubtitulo());
         producto.setDescripcion(productoDto.getDescripcion());
         producto.setPrecio(productoDto.getPrecio());

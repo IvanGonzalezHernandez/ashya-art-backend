@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.model;
 
+import java.util.Map;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -189,4 +191,15 @@ public class ProductoDto {
     public void setDeleteImg4(Boolean deleteImg4) { this.deleteImg4 = deleteImg4; }
     public Boolean getDeleteImg5() { return deleteImg5; }
     public void setDeleteImg5(Boolean deleteImg5) { this.deleteImg5 = deleteImg5; }
+
+    /** Textos en alemán y español: { "de": { "nombre": ... }, "es": { ... } }. Null = no se envían (se conservan). */
+    private Map<String, Map<String, String>> traducciones;
+
+    public Map<String, Map<String, String>> getTraducciones() {
+        return traducciones;
+    }
+
+    public void setTraducciones(Map<String, Map<String, String>> traducciones) {
+        this.traducciones = traducciones;
+    }
 }

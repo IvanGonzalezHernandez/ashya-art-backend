@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.model;
 
+import java.util.Map;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -77,4 +79,15 @@ public class TarjetaRegaloDto {
     public Boolean getDeleteImg() { return deleteImg; }
     public void setDeleteImg(Boolean deleteImg) { this.deleteImg = deleteImg; }
 
+
+    /** Textos en alemán y español: { "de": { "nombre": ... }, "es": { ... } }. Null = no se envían (se conservan). */
+    private Map<String, Map<String, String>> traducciones;
+
+    public Map<String, Map<String, String>> getTraducciones() {
+        return traducciones;
+    }
+
+    public void setTraducciones(Map<String, Map<String, String>> traducciones) {
+        this.traducciones = traducciones;
+    }
 }

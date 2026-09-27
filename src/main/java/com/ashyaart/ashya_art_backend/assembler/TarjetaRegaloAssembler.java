@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.assembler;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import com.ashyaart.ashya_art_backend.model.TarjetaRegaloDto;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
 
@@ -9,6 +11,7 @@ public class TarjetaRegaloAssembler {
         TarjetaRegaloDto dto = new TarjetaRegaloDto();
         dto.setId(tarjeta.getId());
         dto.setNombre(tarjeta.getNombre());
+	    dto.setTraducciones(tarjeta.getTraducciones());
         dto.setPrecio(tarjeta.getPrecio());
         dto.setImgUrl(tarjeta.getImgUrl());
         dto.setFechaAlta(tarjeta.getFechaAlta());
@@ -22,6 +25,7 @@ public class TarjetaRegaloAssembler {
         TarjetaRegalo tarjeta = new TarjetaRegalo();
         tarjeta.setId(dto.getId());
         tarjeta.setNombre(dto.getNombre());
+	    tarjeta.setTraducciones(Traducciones.limpiar(dto.getTraducciones(), Traducciones.CAMPOS_TARJETA));
         tarjeta.setPrecio(dto.getPrecio());
         tarjeta.setImgUrl(dto.getImgUrl());
         tarjeta.setFechaAlta(dto.getFechaAlta());

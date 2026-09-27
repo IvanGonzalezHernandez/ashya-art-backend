@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import com.ashyaart.ashya_art_backend.assembler.TarjetaRegaloAssembler;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegalo;
 import com.ashyaart.ashya_art_backend.entity.TarjetaRegaloCompra;
@@ -77,6 +79,9 @@ public class TarjetaRegaloService {
 
         // Campos básicos (sin idReferencia)
         tarjeta.setNombre(dto.getNombre());
+        if (dto.getTraducciones() != null) { // sin el campo, se conservan las que había
+            tarjeta.setTraducciones(Traducciones.limpiar(dto.getTraducciones(), Traducciones.CAMPOS_TARJETA));
+        }
         tarjeta.setPrecio(dto.getPrecio());
         tarjeta.setEstado(dto.getEstado());
         tarjeta.setFechaAlta(dto.getFechaAlta());

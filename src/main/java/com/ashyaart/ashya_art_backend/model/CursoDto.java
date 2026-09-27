@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.model;
 
+import java.util.Map;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -146,5 +148,16 @@ public class CursoDto {
             case 5 -> Boolean.TRUE.equals(deleteImg5);
             default -> false;
         };
+    }
+
+    /** Textos en alemán y español: { "de": { "nombre": ... }, "es": { ... } }. Null = no se envían (se conservan). */
+    private Map<String, Map<String, String>> traducciones;
+
+    public Map<String, Map<String, String>> getTraducciones() {
+        return traducciones;
+    }
+
+    public void setTraducciones(Map<String, Map<String, String>> traducciones) {
+        this.traducciones = traducciones;
     }
 }

@@ -1,5 +1,9 @@
 package com.ashyaart.ashya_art_backend.entity;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import jakarta.persistence.Convert;
+
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -102,4 +106,17 @@ public class TarjetaRegalo {
 	public void setCompras(List<TarjetaRegaloCompra> compras) {
 		this.compras = compras;
 	}
+
+    /** Alemán y español: { "de": { "nombre": ... }, "es": { ... } }. Las columnas normales son el inglés. */
+    @Convert(converter = TraduccionesConverter.class)
+    @Column(name = "traducciones", columnDefinition = "LONGTEXT")
+    private Map<String, Map<String, String>> traducciones = new LinkedHashMap<>();
+
+    public Map<String, Map<String, String>> getTraducciones() {
+        return traducciones;
+    }
+
+    public void setTraducciones(Map<String, Map<String, String>> traducciones) {
+        this.traducciones = traducciones != null ? traducciones : new LinkedHashMap<>();
+    }
 }

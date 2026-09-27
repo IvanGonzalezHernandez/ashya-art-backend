@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.assembler;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import com.ashyaart.ashya_art_backend.model.CursoDto;
 import com.ashyaart.ashya_art_backend.entity.Curso;
 
@@ -9,6 +11,7 @@ public class CursoAssembler {
 	    CursoDto dto = new CursoDto();
 	    dto.setId(curso.getId());
 	    dto.setNombre(curso.getNombre());
+	    dto.setTraducciones(curso.getTraducciones());
 	    dto.setSubtitulo(curso.getSubtitulo());
 	    dto.setDescripcion(curso.getDescripcion());
 	    dto.setNivel(curso.getNivel());
@@ -36,6 +39,7 @@ public class CursoAssembler {
 	    Curso curso = new Curso();
 	    curso.setId(dto.getId());
 	    curso.setNombre(dto.getNombre());
+	    curso.setTraducciones(Traducciones.limpiar(dto.getTraducciones(), Traducciones.CAMPOS_CURSO));
 	    curso.setSubtitulo(dto.getSubtitulo());
 	    curso.setDescripcion(dto.getDescripcion());
 	    curso.setNivel(dto.getNivel());

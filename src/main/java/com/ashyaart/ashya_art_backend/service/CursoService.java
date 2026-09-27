@@ -1,5 +1,7 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import com.ashyaart.ashya_art_backend.util.Traducciones;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -93,6 +95,9 @@ public class CursoService {
 
         // Campos normales
         curso.setNombre(cursoDto.getNombre());
+        if (cursoDto.getTraducciones() != null) { // sin el campo, se conservan las que había
+            curso.setTraducciones(Traducciones.limpiar(cursoDto.getTraducciones(), Traducciones.CAMPOS_CURSO));
+        }
         curso.setSubtitulo(cursoDto.getSubtitulo());
         curso.setDescripcion(cursoDto.getDescripcion());
         curso.setPrecio(cursoDto.getPrecio());
