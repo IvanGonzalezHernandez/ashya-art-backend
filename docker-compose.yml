@@ -1,0 +1,51 @@
+# Entorno de desarrollo local (sustituye a XAMPP).
+# El backend (./mvnw spring-boot:run) y el frontend (ng serve) se siguen ejecutando fuera de Docker.
+#
+#   docker compose up -d                   -> BD + phpMyAdmin
+#   docker compose --profile stripe up -d  -> además, el listener de Stripe
+#   docker compose logs stripe             -> ver el whsec_... para STRIPE_WEBHOOK_SECRET
+
+services:
+  db:
+    image: mariadb:10.11
+    container_name: ashya-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ashyaartdb_local
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+      TZ: Europe/Madrid
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: ashya-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ""
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8090:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  stripe:
+    image: stripe/stripe-cli:latest
+    container_name: ashya-stripe
+    profiles: ["stripe"]
+    restart: unless-stopped
+    command: listen --api-key ${STRIPE_SECRET_KEY} --all-snapshot --forward-to host.docker.internal:8080/stripe/webhook
+
+volumes:
+  db-data:

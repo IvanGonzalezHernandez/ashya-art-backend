@@ -34,3 +34,6 @@ build/
 
 ### Archivos subidos por usuarios (imagenes de productos/cursos/tarjetas) ###
 /uploads/
+
+### Variables locales de docker compose ###
+.env
