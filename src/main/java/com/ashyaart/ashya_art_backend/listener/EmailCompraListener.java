@@ -11,6 +11,7 @@ import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraStripeAdminSucce
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CompraTotalConfirmadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.CursoCompradoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ProductoCompradoEvent;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.ReservaCursoCanceladaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ReservaCursoReprogramadaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.SeguimientoProductoActualizadoEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.TarjetaRegaloCompradaEvent;
@@ -57,6 +58,18 @@ public class EmailCompraListener {
             event.nombreCurso(),
             event.fechaAnterior().toString(),
             event.fechaNueva().toString(),
+            event.horaInicio(),
+            event.plazas()
+        );
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onReservaCursoCancelada(ReservaCursoCanceladaEvent event) {
+        emailService.enviarCancelacionCurso(
+            event.email(),
+            event.nombreCliente(),
+            event.nombreCurso(),
+            event.fecha().toString(),
             event.horaInicio(),
             event.plazas()
         );

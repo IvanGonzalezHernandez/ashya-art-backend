@@ -607,6 +607,39 @@ public class EmailService {
     sendHtml(emailCliente, asunto, cuerpoHtml);
   }
 
+  public void enviarCancelacionCurso(String emailCliente, String nombreCliente,
+                                     String nombreCurso, String fechaCurso, String horaCurso,
+                                     int plazasReservadas) {
+    String asunto = "❌ Your course booking has been cancelled - " + nombreCurso;
+
+    String cuerpoHtml =
+        "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            logoHeader() +
+            "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
+            "<p>Your booking for the <b>" + nombreCurso + "</b> has been cancelled.</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li><b>📘 Course:</b> " + nombreCurso + "</li>" +
+            "<li><b>📅 Date:</b> <s>" + fechaCurso + "</s></li>" +
+            "<li><b>🕒 Start time:</b> " + horaCurso + "</li>" +
+            "<li><b>👥 Seats:</b> " + plazasReservadas + "</li>" +
+            "</ul>" +
+            "<p>If you have any questions about this cancellation or would like to book another date, " +
+            "you can contact me through any of the following options:</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
+            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+            "</ul>" +
+            "<p>Best regards,<br><b>Ashya</b></p>" +
+            "</div>" +
+            "</body></html>";
+
+    sendHtml(emailCliente, asunto, cuerpoHtml);
+  }
+
   public void enviarConfirmacionProductoIndividual(String emailCliente,
                                                    String nombreCliente,
                                                    String nombreProducto,

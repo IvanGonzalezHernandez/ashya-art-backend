@@ -35,6 +35,15 @@ public class CompraEventos {
             int plazas
     ) {}
 
+    public record ReservaCursoCanceladaEvent(
+            String email,
+            String nombreCliente,
+            String nombreCurso,
+            LocalDate fecha,
+            String horaInicio,
+            int plazas
+    ) {}
+
     public record ProductoCompradoEvent(
             String email,
             String nombreCliente,

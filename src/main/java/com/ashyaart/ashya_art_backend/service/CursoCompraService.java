@@ -19,6 +19,7 @@ import com.ashyaart.ashya_art_backend.assembler.CursoCompraAssembler;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.ReservaCursoCanceladaEvent;
 import com.ashyaart.ashya_art_backend.event.CompraEventos.ReservaCursoReprogramadaEvent;
 import com.ashyaart.ashya_art_backend.filter.CursoCompraFilter;
 import com.ashyaart.ashya_art_backend.model.CursoCompraDto;
@@ -78,6 +79,7 @@ public class CursoCompraService {
     /**
      * Cancela una reserva: borrado logico (se conserva para historial, deja de listarse) y
      * libera las plazas reservadas en CursoFecha para que vuelvan a estar disponibles.
+     * Avisa al cliente por email (no reembolsa: eso se hace a mano en Stripe).
      */
     @Transactional
     public void eliminarProducto(Long id) {
@@ -91,7 +93,25 @@ public class CursoCompraService {
             return;
         }
 
-        cursoFechaDao.sumarPlazas(reserva.getCursoFecha().getId(), reserva.getPlazasReservadas());
+        CursoFecha fecha = reserva.getCursoFecha();
+        cursoFechaDao.sumarPlazas(fecha.getId(), reserva.getPlazasReservadas());
+
+        Cliente cliente = reserva.getCliente();
+        if (cliente != null && cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            eventPublisher.publishEvent(
+                new ReservaCursoCanceladaEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    fecha.getCurso().getNombre(),
+                    fecha.getFecha(),
+                    fecha.getHoraInicio() != null ? fecha.getHoraInicio().toString() : "",
+                    reserva.getPlazasReservadas()
+                )
+            );
+        } else {
+            logger.warn("eliminarProducto - Reserva ID {} sin email de cliente, no se envia email", id);
+        }
+
         logger.info("eliminarProducto - Reserva con ID {} cancelada correctamente (plazas liberadas)", id);
     }
 
