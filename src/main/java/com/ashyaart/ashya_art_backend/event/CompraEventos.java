@@ -25,6 +25,16 @@ public class CompraEventos {
             BigDecimal precio
     ) {}
 
+    public record ReservaCursoReprogramadaEvent(
+            String email,
+            String nombreCliente,
+            String nombreCurso,
+            LocalDate fechaAnterior,
+            LocalDate fechaNueva,
+            String horaInicio,
+            int plazas
+    ) {}
+
     public record ProductoCompradoEvent(
             String email,
             String nombreCliente,

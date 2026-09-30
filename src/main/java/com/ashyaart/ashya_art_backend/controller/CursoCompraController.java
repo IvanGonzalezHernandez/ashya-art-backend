@@ -2,6 +2,7 @@ package com.ashyaart.ashya_art_backend.controller;
 
 import java.util.List;
 
+import com.ashyaart.ashya_art_backend.model.CursoCompraCambioFechaDto;
 import com.ashyaart.ashya_art_backend.model.CursoCompraDto;
 import com.ashyaart.ashya_art_backend.filter.CursoCompraFilter;
 import com.ashyaart.ashya_art_backend.service.CursoCompraService;
@@ -36,6 +37,14 @@ public class CursoCompraController {
         CursoCompraDto nuevaReserva = cursoCompraService.crearProducto(reservaDto);
         logger.info("crearProducto - Reserva creada con ID: {}", nuevaReserva.getId());
         return ResponseEntity.ok(nuevaReserva);
+    }
+
+    @PutMapping("/{id}/fecha")
+    public ResponseEntity<CursoCompraDto> cambiarFecha(@PathVariable Long id, @RequestBody CursoCompraCambioFechaDto dto) {
+        logger.info("cambiarFecha - Solicitud PUT para mover la reserva ID {} a la fecha ID {}", id, dto.getIdFecha());
+        CursoCompraDto actualizada = cursoCompraService.cambiarFecha(id, dto.getIdFecha());
+        logger.info("cambiarFecha - Reserva ID {} movida correctamente", id);
+        return ResponseEntity.ok(actualizada);
     }
 
     @DeleteMapping("/{id}")

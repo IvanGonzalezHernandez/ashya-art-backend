@@ -565,6 +565,48 @@ public class EmailService {
     sendHtml(emailCliente, asunto, cuerpoHtml);
   }
 
+  public void enviarCambioFechaCurso(String emailCliente, String nombreCliente,
+                                     String nombreCurso, String fechaAnterior, String fechaNueva,
+                                     String horaCurso, int plazasReservadas) {
+    String asunto = "📅 Your course date has changed - " + nombreCurso;
+
+    String direccionTexto = "Ashya Art & Keramik Studio, Pinneberger Ch 74, 22523 Hamburg";
+    String mapsUrl = "https://www.google.com/maps/search/?api=1&query=" +
+        URLEncoder.encode(direccionTexto, StandardCharsets.UTF_8);
+
+    String cuerpoHtml =
+        "<html>" +
+            "<body style='background-color:#F9F3EC; font-family: Arial, sans-serif; color:#333; padding:20px;'>" +
+            "<div style='max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:8px;'>" +
+            logoHeader() +
+            "<h2 style='color:#333;'>Dear " + nombreCliente + ",</h2>" +
+            "<p>Your booking for the <b>" + nombreCurso + "</b> has been moved to a new date.</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li><b>📘 Course:</b> " + nombreCurso + "</li>" +
+            "<li><b>❌ Previous date:</b> <s>" + fechaAnterior + "</s></li>" +
+            "<li><b>📅 New date:</b> " + fechaNueva + "</li>" +
+            "<li><b>🕒 Start time:</b> " + horaCurso + "</li>" +
+            "<li><b>👥 Seats reserved:</b> " + plazasReservadas + "</li>" +
+            "<li><b>📍 Address:</b> " +
+            "<a href='" + mapsUrl + "' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>" +
+            direccionTexto + "</a></li>" +
+            "</ul>" +
+            "<p>We kindly ask you to arrive <b>10–15 minutes before</b> the scheduled time. " +
+            "Nothing else changes in your booking and no additional payment is needed.</p>" +
+            "<p>If this new date doesn't suit you, please contact me through any of the following options:</p>" +
+            "<ul style='line-height:1.7; padding-left:20px;'>" +
+            "<li>📞 Phone: <a href='tel:+491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📱 WhatsApp: <a href='https://wa.me/491638681397' style='color:#1a73e8; text-decoration:none;'>+49 163 8681397</a></li>" +
+            "<li>📧 Email: <a href='mailto:ashyaxart@gmail.com' style='color:#1a73e8; text-decoration:none;'>ashyaxart@gmail.com</a></li>" +
+            "<li>📷 Instagram: <a href='https://www.instagram.com/ashya_art' style='color:#1a73e8; text-decoration:none;' target='_blank' rel='noopener noreferrer'>@ashya_art</a></li>" +
+            "</ul>" +
+            "<p>Best regards,<br><b>Ashya</b></p>" +
+            "</div>" +
+            "</body></html>";
+
+    sendHtml(emailCliente, asunto, cuerpoHtml);
+  }
+
   public void enviarConfirmacionProductoIndividual(String emailCliente,
                                                    String nombreCliente,
                                                    String nombreProducto,

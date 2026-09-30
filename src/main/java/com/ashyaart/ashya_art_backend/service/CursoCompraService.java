@@ -1,5 +1,6 @@
 package com.ashyaart.ashya_art_backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -8,13 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ashyaart.ashya_art_backend.assembler.CursoCompraAssembler;
 import com.ashyaart.ashya_art_backend.entity.CursoCompra;
 import com.ashyaart.ashya_art_backend.entity.Cliente;
 import com.ashyaart.ashya_art_backend.entity.CursoFecha;
+import com.ashyaart.ashya_art_backend.event.CompraEventos.ReservaCursoReprogramadaEvent;
 import com.ashyaart.ashya_art_backend.filter.CursoCompraFilter;
 import com.ashyaart.ashya_art_backend.model.CursoCompraDto;
 import com.ashyaart.ashya_art_backend.repository.CursoCompraDao;
@@ -34,6 +39,9 @@ public class CursoCompraService {
 
     @Autowired
     private CursoFechaDao cursoFechaDao;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public List<CursoCompraDto> findByFilter(CursoCompraFilter filter) {
         logger.info("findByFilter - Iniciando búsqueda de reservas");
@@ -85,5 +93,63 @@ public class CursoCompraService {
 
         cursoFechaDao.sumarPlazas(reserva.getCursoFecha().getId(), reserva.getPlazasReservadas());
         logger.info("eliminarProducto - Reserva con ID {} cancelada correctamente (plazas liberadas)", id);
+    }
+
+    /**
+     * Mueve una reserva a otra fecha del mismo curso (p. ej. el cliente no puede venir el dia
+     * reservado). Todo en una transaccion: descuenta las plazas en la fecha nueva (de forma
+     * atomica, falla si no hay sitio), libera las de la fecha anterior y avisa al cliente por email.
+     */
+    @Transactional
+    public CursoCompraDto cambiarFecha(Long id, Long idFechaNueva) {
+        logger.info("cambiarFecha - Moviendo reserva ID {} a la fecha ID {}", id, idFechaNueva);
+        CursoCompra reserva = cursoCompraDao.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found."));
+        if (!reserva.isEstado()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This booking is cancelled and cannot be moved.");
+        }
+
+        CursoFecha anterior = reserva.getCursoFecha();
+        if (anterior.getId().equals(idFechaNueva)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The booking is already on that date.");
+        }
+
+        CursoFecha nueva = cursoFechaDao.findById(idFechaNueva)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course date not found."));
+        if (!nueva.getCurso().getId().equals(anterior.getCurso().getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The new date must belong to the same course.");
+        }
+        if (!Boolean.TRUE.equals(nueva.getEstado()) || nueva.getFecha().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The new date is not available.");
+        }
+
+        int plazas = reserva.getPlazasReservadas();
+        if (cursoFechaDao.descontarPlazas(nueva.getId(), plazas) == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Not enough free seats on the new date.");
+        }
+        cursoFechaDao.sumarPlazas(anterior.getId(), plazas);
+
+        reserva.setCursoFecha(nueva);
+        CursoCompra guardada = cursoCompraDao.save(reserva);
+
+        Cliente cliente = guardada.getCliente();
+        if (cliente != null && cliente.getEmail() != null && !cliente.getEmail().isBlank()) {
+            eventPublisher.publishEvent(
+                new ReservaCursoReprogramadaEvent(
+                    cliente.getEmail(),
+                    cliente.getNombre(),
+                    nueva.getCurso().getNombre(),
+                    anterior.getFecha(),
+                    nueva.getFecha(),
+                    nueva.getHoraInicio() != null ? nueva.getHoraInicio().toString() : "",
+                    plazas
+                )
+            );
+        } else {
+            logger.warn("cambiarFecha - Reserva ID {} sin email de cliente, no se envia email", id);
+        }
+
+        logger.info("cambiarFecha - Reserva ID {} movida de la fecha ID {} a la ID {}", id, anterior.getId(), nueva.getId());
+        return CursoCompraAssembler.toDto(guardada);
     }
 }
