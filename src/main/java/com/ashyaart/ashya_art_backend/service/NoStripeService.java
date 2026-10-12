@@ -73,12 +73,8 @@ public class NoStripeService {
                 : null;
 
         try {
-            // 1) Validar stock/plazas
-            for (ItemCarritoDto item : carrito.getItems()) {
-                if (!stockService.hayStockSuficiente(item)) {
-                    throw new IllegalArgumentException("No hay suficiente stock o plazas para: " + item.getNombre());
-                }
-            }
+            // 1) Validar stock/plazas (sumando las líneas repetidas del mismo producto/fecha)
+            stockService.validarCarrito(carrito.getItems());
 
             // 2) Calcular total del carrito (siempre con el precio real de BBDD, nunca el declarado por el cliente)
             BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems())
@@ -233,11 +229,8 @@ public class NoStripeService {
                 if (!"CURSO".equalsIgnoreCase(item.getTipo())) {
                     throw new IllegalArgumentException("Solo se pueden reservar cursos para pagar en el Atelier.");
                 }
-
-                if (!stockService.hayStockSuficiente(item)) {
-                    throw new IllegalArgumentException("No hay plazas suficientes para: " + item.getNombre());
-                }
             }
+            stockService.validarCarrito(carrito.getItems());
 
             // 2) Total (siempre con el precio real de BBDD, nunca el declarado por el cliente)
             BigDecimal total = carritoPricingService.calcularTotalReal(carrito.getItems());

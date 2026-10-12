@@ -110,13 +110,12 @@ public class StripeService {
 
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
 
-        // 1) Validar stock/plazas
-        for (ItemCarritoDto item : carritoDto.getItems()) {
-            logger.info("Validando stock para item: {} - Cantidad: {}", item.getNombre(), item.getCantidad());
-            if (!stockService.hayStockSuficiente(item)) {
-                logger.warn("No hay suficiente stock/plazas para {}", item.getNombre());
-                throw new IllegalArgumentException("No hay suficiente stock o plazas para: " + item.getNombre());
-            }
+        // 1) Validar stock/plazas (sumando las líneas repetidas del mismo producto/fecha)
+        try {
+            stockService.validarCarrito(carritoDto.getItems());
+        } catch (IllegalArgumentException e) {
+            logger.warn("Carrito rechazado: {}", e.getMessage());
+            throw e;
         }
 
         // Coste de envio: siempre calculado en servidor a partir del metodo elegido, nunca de un
